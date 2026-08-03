@@ -235,6 +235,12 @@
         <div class="kv" id="backendDoc" style="white-space:pre-wrap"></div>
         <a class="dl" id="dlDoc" download="backend-config.md">⬇ 下载后端配置 .md</a>
       </div>
+      <div class="outcard" id="snapCard" style="display:none">
+        <h4>📋 项目快照（可同步到 WorkBuddy 任务）</h4>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">包含本次全部开发数据（品牌/类型/后端/备注），下载后在 WorkBuddy 中新建任务并导入即可追溯。</p>
+        <div class="dm" id="snapJson" style="max-height:300px;overflow:auto;white-space:pre"></div>
+        <a class="dl" id="dlSnap" download="project-snapshot.json">⬇ 下载项目快照 .json</a>
+      </div>
     </div>
   </section>
 </main>
@@ -453,36 +459,196 @@ function renderSummary(){
     <div class="sumrow"><span class="k">文档补充</span><span class="v">${state.docs?esc(state.docs.slice(0,200))+(state.docs.length>200?'…':''):'（无）'}</span></div>`;
 }
 
-/* ---------- generate ---------- */
+/* ---------- generate (high-quality output per DESIGN_QUALITY.md) ---------- */
 function buildSite(brand,type){
-  const c=(brand.swatches&&brand.swatches.length)?brand.swatches:[(brand.primary||'#667eea')];
-  const primary=c[0];const ink=c[1]||'#1b1d29';const canvas=c[2]||'#ffffff';const soft=c[3]||'#f6f7f9';
-  const font=(brand.fonts&&brand.fonts[0])||'system-ui,sans-serif';
-  const lightOnP=onLight(primary);
-  const sections=type.structure.map((s,i)=>{
-    const al=i%2?`background:${soft};`:'';
-    return `<section style="padding:54px 24px;${al}"><div class="wrap"><h2 style="font-size:24px;margin:0 0 10px">${esc(s)}</h2><p style="color:#6b7080;max-width:640px">基于 ${esc(brand.title)} 设计规范生成的「${esc(type.name)}」板块。此处放置该模块的真实内容与组件。</p></div></section>`;
+  /* ── Brand tokens ── */
+  const sw=(brand.swatches&&brand.swatches.length>=4)?brand.swatches:
+    (brand.swatches&&brand.swatches.length)?[brand.swatches[0],brand.swatches[0]||'#1b1d29','#ffffff','#f6f7f9']:
+    [(brand.primary||'#667eea'),'#1b1d29','#ffffff','#f6f7f9'];
+  const P=sw[0],INK=sw[1],CAN=sw[2],SFT=sw[3];
+  const fontStack=(brand.fonts&&brand.fonts[0])||'-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif';
+  const mono='ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
+  const tone=(brand.tone||'').toLowerCase();
+  const isLight=onLight(P);
+  const txtOnP=isLight?'#111111':'#ffffff';
+  const subOnP=isLight?'rgba(17,17,17,.75)':'rgba(255,255,255,.85)';
+  const accent2=sw[4]||P; /* optional 5th color or fallback to primary */
+  const radius='12px';
+  const cat=type.category||'';
+  /* ── Content helpers: derive real copy from type data ── */
+  const mods=(type.modules&&type.modules.length)?type.modules:[];
+  const structs=(type.structure&&type.structure.length)?type.structure:['首页','关于我们','服务展示','联系我们'];
+  const dmFields=(type.dataModel&&type.dataModel.length)?type.dataModel.map(d=>(typeof d==='string'?d:(d.name||d.field||''))).filter(Boolean):[];
+  const promptHead=(type.prompt||'').split('\n')[0]||type.name;
+  /* section-aware headline */
+  const heroH1=type.name;
+  const heroSub=promptHead.length>200?promptHead.slice(0,200)+'…':promptHead;
+  /* feature cards from modules */
+  const featCards=mods.slice(0,6).map((m,i)=>{
+    const label=typeof m==='string'?m:(m.name||m.title||m||'');
+    const desc=typeof m==='object'&&m.desc?m.desc:(typeof m==='object'&&m.description?m.description:'');
+    return `<div class="g-feat" style="--delay:${i*80}ms"><div class="g-ficon">✦</div><div><strong>${esc(label)}</strong>${desc?`<span>${esc(desc)}</span>`:''}</div></div>`;
   }).join('');
-  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(type.name)} · ${esc(brand.title)}</title>
+  /* stats row */
+  const stats=[
+    {n:mods.length,l:'核心模块'},
+    {n:structs.length,l:'页面结构'},
+    {n:dmFields.length||'-',l:'数据字段'},
+    {n:cat,l:'所属分类'}
+  ];
+  const statsHtml=stats.map(s=>`<div class="g-stat"><b>${s.n}</b><span>${s.l}</span></div>`).join('');
+  /* process steps from structure */
+  const stepsHtml=structs.slice(0,5).map((s,i)=>`
+    <div class="g-step"><div class="g-snum">${i+1}</div><div><b>${esc(s)}</b><p>按 ${esc(brand.title)} 设计规范构建此板块的布局、交互与视觉细节。</p></div></div>`).join('');
+  /* data model table if exists */
+  const dmTable=dmFields.length?`<section class="g-sec g-alt"><div class="g-wrap">
+    <h2>数据模型</h2><p>基于业务需求定义的数据结构，支撑 ${esc(type.name)} 的完整信息流转。</p>
+    <div class="g-dm-table">${dmFields.map(f=>`<div class="g-dm-row"><code>${esc(f)}</code><span>字段</span></div>`).join('')}</div></div></section>`:'';
+  /* CTA text by category */
+  const ctaMap={'电商':'立即选购','SaaS':'免费试用','企业官网':'了解更多','社区论坛':'加入讨论','教育在线':'开始学习','博客资讯':'订阅更新','作品集':'查看作品','问答社区':'提问交流','着陆页':'立即行动','门户':'进入平台'};
+  const ctaText=ctaMap[cat]||'立即开始';
+
+  /* ── Full HTML output ── */
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${esc(type.name)} · ${esc(brand.title)}</title>
 <style>
-:root{--p:${primary};--ink:${ink};--canvas:${canvas};--soft:${soft};--font:${font},-apple-system,"PingFang SC",sans-serif}
-*{box-sizing:border-box}body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);line-height:1.6}
-.wrap{max-width:1080px;margin:0 auto}
-header.hero{background:linear-gradient(135deg,${c[0]},${c[1]||c[0]});color:${lightOnP?'#111':'#fff'};padding:84px 24px}
-header.hero h1{font-size:40px;margin:0 0 12px;letter-spacing:.5px}
-header.hero p{font-size:17px;max-width:620px;opacity:.92;margin:0 0 22px}
-.btn{display:inline-block;background:${lightOnP?'#111':'#fff'};color:${lightOnP?'#fff':primary};padding:12px 24px;border-radius:10px;font-weight:700;text-decoration:none}
-footer{padding:30px 24px;background:var(--soft);color:#6b7080;font-size:13px;text-align:center}
-</style></head>
+  :root{
+    --p:${P};--ink:${INK};--can:${CAN};--sft:${SFT};
+    --font:${fontStack};--rad:${radius};
+    --on-p:${txtOnP};--sub-p:${subOnP};
+    --p2:${accent2};
+    --rw:1120px;--gap:16px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:var(--can);line-height:1.65;-webkit-font-smoothing:antialiased}
+  .g-wrap{max-width:var(--rw);margin:0 auto;padding:0 24px}
+
+  /* ── Nav ── */
+  .g-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid rgba(0,0,0,.06)}
+  .g-nav-in{max-width:var(--rw);margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+  .g-logo{font-weight:800;font-size:18px;color:var(--p);letter-spacing:.3px}
+  .g-nav-links{display:flex;gap:28px;font-size:14px;font-weight:600}
+  .g-nav-links a{color:var(--ink);text-decoration:none;opacity:.7;transition:opacity .2s}
+  .g-nav-links a:hover{opacity:1;text-decoration:none}
+
+  /* ── Hero ── */
+  .g-hero{background:linear-gradient(135deg,${P},${sw[1]||P});color:var(--on-p);padding:100px 24px 80px;text-align:center;position:relative;overflow:hidden}
+  .g-hero::before{content:'';position:absolute;top:-40%;left:-20%;width:70%;height:140%;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
+  .g-hero h1{font-size:clamp(32px,5vw,52px);margin:0 0 18px;line-height:1.15;font-weight:900;letter-spacing:-.3px}
+  .g-hero p{font-size:clamp(15px,2vw,19px);max-width:640px;margin:0 auto 32px;opacity:.92;line-height:1.6}
+  .g-cta{display:inline-flex;align-items:center;gap:8px;background:var(--on-p);color:${isLight?P:'#fff'};padding:14px 32px;border-radius:10px;font-weight:800;font-size:15px;text-decoration:none;transition:transform .2s,box-shadow .2s}
+  .g-cta:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.18);text-decoration:none}
+
+  /* ── Sections ── */
+  .g-sec{padding:72px 24px}
+  .g-sec.g-alt{background:var(--sft)}
+  .g-sec h2{font-size:clamp(24px,3.5vw,34px);margin:0 0 12px;font-weight:900;letter-spacing:-.2px}
+  .g-sec>p{font-size:16px;color:#6b7080;max-width:600px;margin:0 0 36px;line-height:1.6}
+
+  /* Features grid */
+  .g-feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+  .g-feat{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:var(--rad);padding:24px;display:flex;gap:14px;align-items:flex-start;transition:transform .2s,border-color .2s;animation:gFadeIn .5s ease both;animation-delay:var(--delay)}
+  .g-feat:hover{transform:translateY(-3px);border-color:var(--p)}
+  .g-ficon{flex:0 0 42px;height:42px;border-radius:10px;background:linear-gradient(135deg,${P}22,${P}33);display:grid;place-items:center;font-size:18px;color:var(--p)}
+  .g-feat strong{display:block;font-size:15px;margin-bottom:4px}
+  .g-feat span{font-size:13px;color:#6b7080;line-height:1.5}
+
+  /* Stats */
+  .g-stats{display:flex;gap:32px;flex-wrap:wrap;justify-content:center;padding:8px 0}
+  .g-stat{text-align:center}
+  .g-stat b{display:block;font-size:clamp(28px,4vw,42px);font-weight:900;color:var(--p)}
+  .g-stat span{font-size:13px;color:#6b7080;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+  /* Process / Steps */
+  .g-steps{display:flex;flex-direction:column;gap:20px;max-width:700px;margin:0 auto}
+  .g-step{display:flex;gap:16px;align-items:flex-start}
+  .g-snum{flex:0 0 40px;height:40px;border-radius:50%;background:var(--p);color:var(--on-p);display:grid;place-items:center;font-weight:900;font-size:16px}
+  .g-step b{display:block;font-size:16px;margin-bottom:4px}
+  .g-step p{margin:0;font-size:14px;color:#6b7080;line-height:1.55}
+
+  /* Data model */
+  .g-dm-table{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+  .g-dm-row{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:9px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+  .g-dm-row code{font-family:${mono};font-weight:700;color:var(--p);font-size:13px}
+  .g-dm-row span{color:#6b7080;font-size:12px}
+
+  /* CTA Banner */
+  .g-cta-banner{text-align:center;background:linear-gradient(135deg,${P},${sw[1]||P});color:var(--on-p);padding:72px 24px}
+  .g-cta-banner h2{font-size:clamp(26px,4vw,38px);margin:0 0 14px}
+  .g-cta-banner p{font-size:17px;opacity:.88;margin:0 0 28px;max-width:520px;margin-left:auto;margin-right:auto}
+  .g-cta-banner .g-cta{background:var(--on-p);color:${isLight?P:'#fff'}}
+
+  /* Footer */
+  .g-footer{border-top:1px solid rgba(0,0,0,.06);padding:36px 24px;text-align:center;font-size:13px;color:#9ca3af}
+  .g-footer a{color:var(--p);text-decoration:none;font-weight:600}
+
+  /* Animations */
+  @keyframes gFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  /* Responsive */
+  @media(max-width:640px){
+    .g-nav-links{display:none}
+    .g-hero{padding:60px 20px 48px}
+    .g-sec{padding:48px 16px}
+    .g-stats{gap:20px}
+    .g-feats{grid-template-columns:1fr}
+  }
+</style>
+</head>
 <body>
-<header class="hero"><div class="wrap">
-  <h1>${esc(type.name)}</h1>
-  <p>由「光体 · AI 网站开发设计平台」基于 ${esc(brand.title)} 设计规范（主色 ${primary}，字体 ${esc(font)}）生成。视觉风格与品牌基调保持一致。</p>
-  <a class="btn" href="#">开始体验</a>
+
+<!-- Nav -->
+<nav class="g-nav"><div class="g-nav-in">
+  <div class="g-logo">${esc(brand.title)}</div>
+  <div class="g-nav-links">${structs.slice(0,5).map(s=>`<a href="#${esc(s)}">${esc(s)}</a>`).join('')}</div>
+</div></nav>
+
+<!-- Hero -->
+<header class="g-hero"><div class="g-wrap">
+  <h1>${esc(heroH1)}</h1>
+  <p>${esc(heroSub)}</p>
+  <a href="#cta" class="g-cta">${esc(ctaText)} →</a>
 </div></header>
-${sections}
-<footer>© ${new Date().getFullYear()} ${esc(type.name)} · 设计语言源自 ${esc(brand.title)} · 由光体平台生成</footer>
-</body></html>`;
+
+<!-- Features -->
+<section class="g-sec"><div class="g-wrap">
+  <h2>核心能力</h2>
+  <p>基于 ${esc(brand.title)} 设计语言构建，每个模块都经过视觉一致性与交互体验的双重打磨。</p>
+  <div class="g-feats">${featCards}</div>
+</div></section>
+
+<!-- Stats -->
+<section class="g-sec g-alt"><div class="g-wrap">
+  <div class="g-stats">${statsHtml}</div>
+</div></section>
+
+<!-- Process -->
+<section class="g-sec"><div class="g-wrap">
+  <h2>构建流程</h2>
+  <p>从品牌规范到页面落地，每一步都有据可依。</p>
+  <div class="g-steps">${stepsHtml}</div>
+</div></section>
+
+${dmTable}
+
+<!-- CTA -->
+<section class="g-cta-banner" id="cta"><div class="g-wrap">
+  <h2>准备好开始了吗？</h2>
+  <p>使用光体平台，基于 ${esc(brand.title)} 的设计规范，快速生成高品质网站。</p>
+  <a href="#" class="g-cta" onclick="event.preventDefault();">${esc(ctaText)} →</a>
+</div></section>
+
+<!-- Footer -->
+<footer class="g-footer"><div class="g-wrap">
+  © ${new Date().getFullYear()} ${esc(type.name)} · 设计语言源自 <a href="#">${esc(brand.title)}</a> · 由 <strong>光体平台</strong> 生成
+</div></footer>
+
+</body>
+</html>`;
 }
 function buildBackendDoc(){
   const sel=BACKEND.filter(m=>state.backend.includes(m.id));
@@ -502,7 +668,14 @@ function generate(){
   const t=TYPES.find(x=>x.id===state.type);
   if(!b||!t){alert('请先在引导流程中完成「品牌」与「网站类型」的选择。');el('summary').scrollIntoView();return;}
   const prog=el('progress');prog.style.display='block';el('outputs').style.display='none';
-  const logs=['① 调用设计技能，加载品牌视觉规范…','② 注入设计 token（配色/字体/圆角）…','③ Code 质量校验：响应式 / 语义化 / 可访问性…','④ 后端模块优化：接口与数据表编排…','⑤ 产出网站 HTML 与后端配置文档…'];
+  const logs=[
+    '① 加载品牌视觉规范（配色 / 字体 / 基调）…',
+    '② 注入设计 Token，对齐品牌设计系统…',
+    '③ 按类型生成真实板块（模块 / 结构 / 数据模型）…',
+    '④ 质量门禁：响应式 / 语义化 / 无占位 / 品牌一致性…',
+    '⑤ 后端接口与数据表编排…',
+    '⑥ 生成项目快照（可同步到 WorkBuddy 任务）…'
+  ];
   const plog=el('plog');plog.innerHTML='';
   let i=0;
   el('pfill').style.width='0%';
@@ -511,16 +684,34 @@ function generate(){
       const d=document.createElement('div');d.textContent=logs[i];plog.appendChild(d);
       requestAnimationFrame(()=>d.classList.add('show'));
       el('pfill').style.width=((i+1)/logs.length*100)+'%';
-      i++;setTimeout(tick,520);
+      i++;setTimeout(tick,480);
     }else{
       const site=buildSite(b,t);
       const doc=buildBackendDoc();
+      /* ── Project Snapshot for WorkBuddy sync ── */
+      const selBack=BACKEND.filter(m=>state.backend.includes(m.id));
+      const snapshot={
+        version:'1.0',generatedAt:new Date().toISOString(),
+        project:{name:t.name,brand:b.title,category:t.category},
+        brand:{id:b.id,title:b.title,primary:(b.swatches&&b.swatches[0])||b.primary||'',swatches:(b.swatches||[]).slice(0,5),fonts:b.fonts||[],tone:b.tone||'',industry:b.industry||''},
+        type:{id:t.id,name:t.name,category:t.category,prompt:(t.prompt||'').slice(0,500),structure:t.structure||[],modules:(t.modules||[]).slice(0,10),dataModel:(t.dataModel||[]).slice(0,10)},
+        backend:selBack.map(m=>({id:m.id,name:m.name,apis:m.apis.length,tables:m.tables.length})),
+        notes:el('devNotes')?el('devNotes').value:'',
+        docFile:state.docFileName||null,
+        outputFiles:['guangti-site.html','backend-config.md','project-snapshot.json']
+      };
+      const snapStr=JSON.stringify(snapshot,null,2);
+      /* render outputs */
       el('sitePreview').srcdoc=site;
       el('backendDoc').textContent=doc;
+      /* show snapshot card */
+      const snapCard=el('snapCard');
+      if(snapCard){snapCard.style.display='block';el('snapJson').textContent=snapStr;}
       el('outputs').style.display='grid';
-      // downloads
+      /* downloads */
       el('dlSite').href='data:text/html;charset=utf-8,'+encodeURIComponent(site);
       el('dlDoc').href='data:text/markdown;charset=utf-8,'+encodeURIComponent(doc);
+      el('dlSnap').href='data:application/json;charset=utf-8,'+encodeURIComponent(snapStr);
       el('summary').scrollIntoView({behavior:'smooth'});
     }
   };

@@ -11,3 +11,6 @@ Thumbs.db
 # local secrets (never commit)
 .env
 *.token
+
+# edgeone deploy cache
+.edgeone/
