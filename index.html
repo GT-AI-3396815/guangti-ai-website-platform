@@ -7983,7 +7983,7 @@ function buildSite(brand,type){
   const stepsHtml=structs.slice(0,5).map((s,i)=>`
     <div class="g-step"><div class="g-snum">${i+1}</div><div><b>${esc(s)}</b><p>按 ${esc(brand.title)} 设计规范构建此板块的布局、交互与视觉细节。</p></div></div>`).join('');
   /* data model table if exists */
-  const dmTable=dmFields.length?`<section class="g-sec g-alt"><div class="g-wrap">
+  const dmTable=dmFields.length?`<section class="g-sec g-alt" id="data"><div class="g-wrap">
     <h2>数据模型</h2><p>基于业务需求定义的数据结构，支撑 ${esc(type.name)} 的完整信息流转。</p>
     <div class="g-dm-table">${dmFields.map(f=>`<div class="g-dm-row"><code>${esc(f)}</code><span>字段</span></div>`).join('')}</div></div></section>`:'';
   /* CTA text by category */
@@ -8086,7 +8086,12 @@ function buildSite(brand,type){
 <!-- Nav -->
 <nav class="g-nav"><div class="g-nav-in">
   <div class="g-logo">${esc(brand.title)}</div>
-  <div class="g-nav-links">${structs.slice(0,5).map(s=>`<a href="#${esc(s)}">${esc(s)}</a>`).join('')}</div>
+  <div class="g-nav-links">
+    <a href="#features">核心能力</a>
+    <a href="#process">构建流程</a>
+    ${dmFields.length?'<a href="#data">数据模型</a>':''}
+    <a href="#cta">立即开始</a>
+  </div>
 </div></nav>
 
 <!-- Hero -->
@@ -8097,19 +8102,19 @@ function buildSite(brand,type){
 </div></header>
 
 <!-- Features -->
-<section class="g-sec"><div class="g-wrap">
+<section class="g-sec" id="features"><div class="g-wrap">
   <h2>核心能力</h2>
   <p>基于 ${esc(brand.title)} 设计语言构建，每个模块都经过视觉一致性与交互体验的双重打磨。</p>
   <div class="g-feats">${featCards}</div>
 </div></section>
 
 <!-- Stats -->
-<section class="g-sec g-alt"><div class="g-wrap">
+<section class="g-sec g-alt" id="stats"><div class="g-wrap">
   <div class="g-stats">${statsHtml}</div>
 </div></section>
 
 <!-- Process -->
-<section class="g-sec"><div class="g-wrap">
+<section class="g-sec" id="process"><div class="g-wrap">
   <h2>构建流程</h2>
   <p>从品牌规范到页面落地，每一步都有据可依。</p>
   <div class="g-steps">${stepsHtml}</div>
