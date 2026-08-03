@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>光体 · AI 网站开发设计平台</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1b1d29; --muted:#6b7080;
+    --line:#e7e9ef; --line2:#eef0f5; --accent:#4f46e5; --accent-soft:#eef0ff;
+    --ok:#10b981; --warn:#f59e0b; --radius:14px; --shadow:0 1px 3px rgba(20,22,40,.06),0 8px 24px rgba(20,22,40,.05);
+    --font: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* Header */
+  header.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line)}
+  .top-in{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .brandmark{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px;letter-spacing:.5px}
+  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#22d3ee);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:900;box-shadow:var(--shadow)}
+  .nav{display:flex;gap:6px;flex-wrap:wrap}
+  .nav a{padding:7px 13px;border-radius:9px;color:var(--muted);font-size:14px;font-weight:600}
+  .nav a:hover{background:var(--line2);color:var(--ink);text-decoration:none}
+  .nav a.active{background:var(--accent);color:#fff}
+
+  .refbar{max-width:1200px;margin:0 auto;padding:8px 20px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line2);background:#fff}
+  .refbar .lab{font-size:12px;color:var(--muted);align-self:center;margin-right:4px}
+  .refchip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:#fbfbfd}
+  .refchip:hover{border-color:var(--accent);text-decoration:none}
+
+  main{max-width:1200px;margin:0 auto;padding:26px 20px 80px}
+  section{margin-bottom:46px;scroll-margin-top:84px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .sec-head h2{font-size:22px;margin:0;font-weight:800}
+  .sec-head .sub{color:var(--muted);font-size:14px}
+  .count-pill{margin-left:auto;font-size:13px;color:var(--muted);background:var(--line2);padding:3px 10px;border-radius:999px}
+
+  /* Toolbars */
+  .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 13px}
+  .search input{border:0;outline:0;flex:1;font-size:14px;background:transparent;color:var(--ink)}
+  .filters{display:flex;flex-direction:column;gap:8px}
+  .frow{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .frow .flab{font-size:12px;color:var(--muted);min-width:42px}
+  .chip{font-size:12.5px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer;user-select:none;transition:.15s}
+  .chip:hover{border-color:var(--accent)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  select.sel{font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+
+  /* Brand grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:16px}
+  .bcard{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden;cursor:pointer;transition:.18s;box-shadow:var(--shadow)}
+  .bcard:hover{transform:translateY(-3px);border-color:#cfd3e6}
+  .bcard.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .bpreview{height:104px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;position:relative}
+  .bpreview .bname{font-weight:800;font-size:17px;letter-spacing:.4px;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+  .bpreview .bpill{align-self:flex-start;font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.92);color:#111}
+  .bmeta{padding:12px 14px}
+  .bmeta .tt{font-weight:700;font-size:14px;margin-bottom:8px}
+  .swatches{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+  .sw{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.08);position:relative;cursor:default}
+  .sw:hover::after{content:attr(data-hex);position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:10px;background:#111;color:#fff;padding:2px 5px;border-radius:4px;white-space:nowrap;z-index:5}
+  .bmeta .font{font-size:11.5px;color:var(--muted);margin-bottom:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:11px;color:var(--muted);background:var(--line2);padding:3px 8px;border-radius:6px}
+  .tag.tone{background:#eef0ff;color:#4f46e5}
+
+  /* Types list */
+  .tlist{display:flex;flex-direction:column;gap:10px}
+  .titem{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+  .titem.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .theader{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer}
+  .tno{font-weight:800;color:var(--accent);min-width:26px}
+  .tname{font-weight:700;font-size:15px;flex:1}
+  .tcat{font-size:12px;color:var(--muted);background:var(--line2);padding:3px 9px;border-radius:6px}
+  .tuse{font-size:12.5px;font-weight:700;color:var(--accent);border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:#fff}
+  .tbody{padding:0 16px 16px;display:none;border-top:1px solid var(--line2)}
+  .titem.open .tbody{display:block}
+  .tblock{margin-top:12px}
+  .tblock h4{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .kv{font-size:13.5px;background:#fbfbfd;border:1px solid var(--line2);border-radius:9px;padding:10px 12px;white-space:pre-wrap;color:#2a2d3a}
+  ul.mini{margin:0;padding-left:18px;font-size:13.5px}
+  ul.mini li{margin:3px 0}
+  .dm{font-size:13px;background:#0f172a;color:#cbd5e1;border-radius:9px;padding:10px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-x:auto}
+  .dm b{color:#7dd3fc}
+
+  /* Backend */
+  .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:18px}
+  .bmod{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;cursor:pointer;transition:.15s;position:relative}
+  .bmod:hover{border-color:#cfd3e6}
+  .bmod.on{border-color:var(--accent);background:var(--accent-soft)}
+  .bmod .ic{font-size:20px}
+  .bmod .nm{font-weight:700;font-size:15px;margin:6px 0 4px}
+  .bmod .ds{font-size:12.5px;color:var(--muted)}
+  .bmod .chk{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;color:#fff;font-size:13px}
+  .bmod.on .chk{background:var(--accent);border-color:var(--accent)}
+  .bdetail{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+  .bmod-card{margin-bottom:18px;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+  .bmod-card h3{margin:0;padding:12px 14px;background:#fafbfd;font-size:15px;display:flex;gap:8px;align-items:center}
+  .bmod-card .inner{padding:12px 14px}
+  table.api{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:8px}
+  table.api th,table.api td{border:1px solid var(--line2);padding:6px 8px;text-align:left}
+  table.api th{background:#f6f7f9;color:var(--muted)}
+  .mth{font-family:ui-monospace,monospace;font-weight:700;color:#b45309}
+  .tbl{font-family:ui-monospace,monospace;font-size:12px;background:#0f172a;color:#cbd5e1;padding:8px 10px;border-radius:8px;overflow-x:auto;margin-top:4px}
+
+  /* Wizard */
+  .stepper{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:16px}
+  .step{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:9px 14px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+  .step .dot{width:22px;height:22px;border-radius:50%;background:var(--line2);display:grid;place-items:center;font-size:12px;color:#fff}
+  .step.active{border-color:var(--accent);color:var(--accent)}
+  .step.active .dot{background:var(--accent)}
+  .step.done .dot{background:var(--ok)}
+  .step.done{color:var(--ink)}
+  .stepbody{border:1px solid var(--line);border-radius:12px;background:#fff;padding:18px;min-height:120px}
+  .stepbody h3{margin:0 0 10px;font-size:16px}
+  .stepnav{display:flex;justify-content:space-between;margin-top:14px;gap:10px}
+  .btn{font-size:14px;font-weight:700;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;transition:.15s}
+  .btn:hover{border-color:#cfd3e6}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#4338ca}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .selbox{border:1px dashed var(--line);border-radius:10px;padding:16px;text-align:center;color:var(--muted);font-size:14px}
+  .selbox.ok{border-style:solid;border-color:var(--ok);color:var(--ink);text-align:left}
+  textarea.notes{width:100%;min-height:90px;margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13.5px;resize:vertical}
+  .tokgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+  .tok{border:1px solid var(--line2);border-radius:9px;padding:9px;display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .tok .sw2{width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.08);flex:0 0 auto}
+  .filein{margin-top:10px;font-size:13px;color:var(--muted)}
+
+  /* Summary */
+  .sumcard{border:1px solid var(--line);border-radius:12px;background:#fff;padding:18px;margin-bottom:16px}
+  .sumrow{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:14px}
+  .sumrow:last-child{border-bottom:0}
+  .sumrow .k{color:var(--muted);min-width:92px;font-weight:600}
+  .sumrow .v{font-weight:600;flex:1}
+  .progress{display:none;margin:14px 0}
+  .pbar{height:10px;background:var(--line2);border-radius:999px;overflow:hidden}
+  .pfill{height:100%;width:0;background:linear-gradient(90deg,#6366f1,#22d3ee);transition:width .4s}
+  .plog{font-size:13px;color:var(--muted);margin-top:10px;font-family:ui-monospace,monospace}
+  .plog div{opacity:0;transform:translateY(4px);transition:.3s}
+  .plog div.show{opacity:1;transform:none}
+  .outputs{display:none;margin-top:16px;display:grid;gap:14px}
+  .outcard{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px}
+  .outcard h4{margin:0 0 8px;font-size:15px}
+  .dl{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:8px 14px;border-radius:9px;background:var(--accent);color:#fff;margin-right:8px;margin-top:6px}
+  .dl:hover{text-decoration:none;background:#4338ca}
+  iframe.preview{width:100%;height:420px;border:1px solid var(--line);border-radius:10px;background:#fff}
+
+  footer{border-top:1px solid var(--line);padding:22px 20px;text-align:center;color:var(--muted);font-size:13px}
+  .hidden{display:none!important}
+  @media(max-width:640px){.sec-head h2{font-size:19px}.stepper{font-size:12px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台</div>
+    <nav class="nav" id="nav">
+      <a href="#brand" class="active">品牌库</a>
+      <a href="#types">类型库</a>
+      <a href="#backend">后端选配</a>
+      <a href="#wizard">引导流程</a>
+      <a href="#summary">配置摘要</a>
+    </nav>
+  </div>
+  <div class="refbar">
+    <span class="lab">提示词参考：</span>
+    <a class="refchip" target="_blank" rel="noopener" href="https://motionsites.ai/">🌐 网站提示词 · motionsites.ai</a>
+    <a class="refchip" target="_blank" rel="noopener" href="https://prompthero.com">🎨 设计提示词 · prompthero.com</a>
+    <a class="refchip" target="_blank" rel="noopener" href="https://opennana.com/awesome-prompt-gallery">🖼️ 图片提示词 · opennana.com</a>
+  </div>
+</header>
+
+<main>
+  <!-- 品牌库 -->
+  <section id="brand">
+    <div class="sec-head"><h2>品牌风格库</h2><span class="sub">74 个真实品牌 · 配色（含色值）· 字体 · 视觉基调</span><span class="count-pill" id="brandCount"></span></div>
+    <div class="toolbar">
+      <div class="search">🔍 <input id="brandSearch" placeholder="搜索品牌名 / 关键词…" /></div>
+    </div>
+    <div class="filters" id="brandFilters"></div>
+    <div class="grid" id="brandGrid"></div>
+  </section>
+
+  <!-- 类型库 -->
+  <section id="types">
+    <div class="sec-head"><h2>网站类型库</h2><span class="sub">100 种类型 · 提示词模板 / 页面结构 / 核心模块 / 数据模型</span><span class="count-pill" id="typeCount"></span></div>
+    <div class="toolbar">
+      <div class="search">🔍 <input id="typeSearch" placeholder="搜索类型名 / 模块 / 关键词…" /></div>
+      <select class="sel" id="typeCat"><option value="">全部大类</option></select>
+    </div>
+    <div class="tlist" id="typeList"></div>
+  </section>
+
+  <!-- 后端 -->
+  <section id="backend">
+    <div class="sec-head"><h2>后端能力选配</h2><span class="sub">勾选所需模块，自动输出接口清单与数据表结构</span><span class="count-pill" id="backendCount"></span></div>
+    <div class="bgrid" id="backendGrid"></div>
+    <div class="bdetail" id="backendDetail"><div class="selbox">勾选上方模块以查看接口清单与数据表结构。</div></div>
+  </section>
+
+  <!-- 引导流程 -->
+  <section id="wizard">
+    <div class="sec-head"><h2>分步引导流程</h2><span class="sub">品牌 → 类型 → 风格规范 → 后端模块 → 文档补充（任一步可回退修改）</span></div>
+    <div class="stepper" id="stepper"></div>
+    <div class="stepbody" id="stepBody"></div>
+    <div class="stepnav">
+      <button class="btn" id="prevBtn" onclick="wizPrev()">← 上一步</button>
+      <button class="btn primary" id="nextBtn" onclick="wizNext()">下一步 →</button>
+    </div>
+  </section>
+
+  <!-- 摘要 -->
+  <section id="summary">
+    <div class="sec-head"><h2>配置摘要面板</h2><span class="sub">汇总全部选择，一键生成</span></div>
+    <div class="sumcard" id="summaryCard"></div>
+    <div class="progress" id="progress">
+      <div class="pbar"><div class="pfill" id="pfill"></div></div>
+      <div class="plog" id="plog"></div>
+    </div>
+    <button class="btn primary" id="genBtn" onclick="generate()">⚡ 一键生成网站与后端文档</button>
+    <div class="outputs" id="outputs">
+      <div class="outcard">
+        <h4>📄 生成的网站预览（基于所选品牌规范与类型结构）</h4>
+        <iframe class="preview" id="sitePreview"></iframe>
+        <a class="dl" id="dlSite" download="guangti-site.html">⬇ 下载网站 HTML</a>
+      </div>
+      <div class="outcard">
+        <h4>🛠 后端配置说明文档（接口 + 数据表）</h4>
+        <div class="kv" id="backendDoc" style="white-space:pre-wrap"></div>
+        <a class="dl" id="dlDoc" download="backend-config.md">⬇ 下载后端配置 .md</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>光体 · AI 网站开发设计平台</footer>
+
+<script>
+const BRANDS = __BRANDS__;
+const TYPES = __TYPES__;
+const BACKEND = __BACKEND__;
+const state = { brand:null, type:null, notes:"", backend:[], docs:"" };
+const STEPS = ["品牌","网站类型","风格规范","后端模块","文档补充"];
+
+/* ---------- helpers ---------- */
+function el(id){return document.getElementById(id);}
+function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function hexLum(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);return (0.299*r+0.587*g+0.114*b)/255;}
+function onLight(hex){return hexLum(hex)>0.6;}
+
+/* ---------- brand library ---------- */
+let bf = {q:"", industry:[], color:[], tone:[]};
+function uniq(arr){return [...new Set(arr)];}
+function renderBrandFilters(){
+  const ind=uniq(BRANDS.map(b=>b.industry)).sort();
+  const col=uniq(BRANDS.map(b=>b.colorSystem)).sort();
+  const ton=uniq(BRANDS.map(b=>b.tone)).sort();
+  const mk=(label,vals,key)=>{
+    let h=`<div class="frow"><span class="flab">${label}</span>`;
+    vals.forEach(v=>{const on=bf[key].includes(v)?'on':'';h+=`<span class="chip ${on}" onclick="toggleF('${key}','${esc(v)}')">${esc(v)}</span>`;});
+    return h+`</div>`;
+  };
+  el('brandFilters').innerHTML = mk('行业',ind,'industry')+mk('色系',col,'color')+mk('调性',ton,'tone');
+}
+function toggleF(key,v){const i=bf[key].indexOf(v);if(i>=0)bf[key].splice(i,1);else bf[key].push(v);renderBrandFilters();renderBrands();}
+function filteredBrands(){
+  return BRANDS.filter(b=>{
+    if(bf.q){const q=bf.q.toLowerCase();if(!(b.name+b.title+b.description+b.fonts.join(' ')).toLowerCase().includes(q))return false;}
+    if(bf.industry.length&&!bf.industry.includes(b.industry))return false;
+    if(bf.color.length&&!bf.color.includes(b.colorSystem))return false;
+    if(bf.tone.length&&!bf.tone.includes(b.tone))return false;
+    return true;
+  });
+}
+function renderBrands(){
+  const list=filteredBrands();
+  el('brandCount').textContent = `${list.length} / ${BRANDS.length} 个品牌`;
+  el('brandGrid').innerHTML = list.map(b=>{
+    const sw0=(b.swatches&&b.swatches.length)?b.swatches:[(b.primary||'#667eea')];
+    const sw=sw0.slice(0,6).map(c=>`<span class="sw" data-hex="${c}" style="background:${c}"></span>`).join('');
+    const headBg = `linear-gradient(135deg,${sw0[0]},${sw0[1]||sw0[0]})`;
+    const fnt=(b.fonts&&b.fonts[0])||'系统默认';
+    const sel = state.brand===b.id?'sel':'';
+    return `<div class="bcard ${sel}" onclick="pickBrand('${b.id}')">
+      <div class="bpreview" style="background:${headBg};color:${onLight(sw0[0])?'#111':'#fff'}">
+        <div class="bname">${esc(b.title)}</div>
+        <div class="bpill">${esc(b.name)}</div>
+      </div>
+      <div class="bmeta">
+        <div class="tt">${esc(b.title)}</div>
+        <div class="swatches">${sw}</div>
+        <div class="font">字体：${esc(fnt)}${b.fonts[1]?' / '+esc(b.fonts[1]):''}</div>
+        <div class="tags"><span class="tag">${esc(b.industry)}</span><span class="tag tone">${esc(b.tone)}</span><span class="tag">${esc(b.colorSystem)}</span></div>
+      </div></div>`;
+  }).join('');
+}
+function pickBrand(id){state.brand=id;renderBrands();if(currentStep===0)wizGoto(1);}
+
+/* ---------- type library ---------- */
+let tf={q:"",cat:"",collapsed:new Set()};
+function renderTypeCats(){
+  const cats=uniq(TYPES.map(t=>t.category)).sort();
+  el('typeCat').innerHTML='<option value="">全部大类</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+function filteredTypes(){
+  return TYPES.filter(t=>{
+    if(tf.cat&&t.category!==tf.cat)return false;
+    if(tf.q){const q=tf.q.toLowerCase();if(!(t.name+t.category+t.prompt+t.modules.join(' ')+t.structure.join(' ')).toLowerCase().includes(q))return false;}
+    return true;
+  });
+}
+function renderTypes(){
+  const list=filteredTypes();
+  el('typeCount').textContent=`${list.length} / ${TYPES.length} 种`;
+  el('typeList').innerHTML=list.map(t=>{
+    const open=tf.collapsed.has(t.id)?'':'open';
+    const sel=state.type===t.id?'sel':'';
+    const struct=t.structure.map(s=>esc(s)).join('\n• ');
+    const mods=t.modules.map(m=>esc(m)).join('\n• ');
+    const dm=t.dataModel.map(d=>`<div class="dm"><b>${esc(d.table)}</b>(${esc(d.fields)})</div>`).join('');
+    return `<div class="titem ${open} ${sel}" data-id="${t.id}">
+      <div class="theader" onclick="toggleType(${t.id})">
+        <span class="tno">${t.id}</span><span class="tname">${esc(t.name)}</span><span class="tcat">${esc(t.category)}</span>
+        <button class="tuse" onclick="event.stopPropagation();useType(${t.id})">${state.type===t.id?'✓ 已选用':'选用此类型'}</button>
+      </div>
+      <div class="tbody">
+        <div class="tblock"><h4>生成提示词模板</h4><div class="kv">${esc(t.prompt)}</div></div>
+        <div class="tblock"><h4>页面结构</h4><ul class="mini">${t.structure.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>
+        <div class="tblock"><h4>核心模块</h4><ul class="mini">${t.modules.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>
+        <div class="tblock"><h4>数据模型要点</h4>${dm}</div>
+      </div></div>`;
+  }).join('');
+}
+function toggleType(id){if(tf.collapsed.has(id))tf.collapsed.delete(id);else tf.collapsed.add(id);renderTypes();}
+function useType(id){const t=TYPES.find(x=>x.id===id);state.type=id;renderTypes();if(currentStep===1)wizGoto(2);}
+
+/* ---------- backend ---------- */
+function renderBackend(){
+  el('backendCount').textContent=`${BACKEND.length} 个可勾选模块`;
+  el('backendGrid').innerHTML=BACKEND.map(m=>{
+    const on=state.backend.includes(m.id);
+    return `<div class="bmod ${on}" onclick="toggleMod('${m.id}')">
+      <div class="chk">${on?'✓':''}</div>
+      <div class="ic">${m.icon}</div><div class="nm">${esc(m.name)}</div><div class="ds">${esc(m.desc)}</div></div>`;
+  }).join('');
+}
+function toggleMod(id){const i=state.backend.indexOf(id);if(i>=0)state.backend.splice(i,1);else state.backend.push(id);renderBackend();renderBackendDetail();}
+function renderBackendDetail(){
+  const sel=BACKEND.filter(m=>state.backend.includes(m.id));
+  if(!sel.length){el('backendDetail').innerHTML='<div class="selbox">勾选上方模块以查看接口清单与数据表结构。</div>';return;}
+  el('backendDetail').innerHTML=sel.map(m=>{
+    const apis=`<table class="api"><tr><th>方法</th><th>路径</th><th>说明</th></tr>${m.apis.map(a=>`<tr><td class="mth">${a.method}</td><td>${esc(a.path)}</td><td>${esc(a.desc)}</td></tr>`).join('')}</table>`;
+    const tabs=m.tables.map(t=>`<div class="tbl">${esc(t.name)} ( ${esc(t.fields)} )</div>`).join('');
+    return `<div class="bmod-card"><h3>${m.icon} ${esc(m.name)}</h3><div class="inner"><h4 style="margin:0 0 6px;font-size:12px;color:var(--muted)">接口清单（${m.apis.length}）</h4>${apis}<h4 style="margin:10px 0 6px;font-size:12px;color:var(--muted)">数据表结构（${m.tables.length}）</h4>${tabs}</div></div>`;
+  }).join('');
+}
+
+/* ---------- wizard ---------- */
+let currentStep=0;
+function renderStepper(){
+  el('stepper').innerHTML=STEPS.map((s,i)=>{
+    const cls=i===currentStep?'active':(i<currentStep?'done':'');
+    const dot=i<currentStep?'✓':(i+1);
+    return `<div class="step ${cls}" onclick="wizGoto(${i})"><span class="dot">${dot}</span>${s}</div>`;
+  }).join('');
+}
+function renderStepBody(){
+  const b=BRANDS.find(x=>x.id===state.brand);
+  const t=TYPES.find(x=>x.id===state.type);
+  let h='';
+  if(currentStep===0){
+    h=`<h3>① 选择品牌风格</h3>`;
+    h+= b?`<div class="selbox ok">已选：<b>${esc(b.title)}</b> （${esc(b.industry)} · ${esc(b.tone)} · 主色 ${b.primary}）<div style="margin-top:8px"><a href="#brand" onclick="document.querySelector('#brand').scrollIntoView()">在品牌库中更换 →</a></div></div>`
+         :`<div class="selbox">尚未选择。请在「品牌库」中点击任意品牌卡片完成选择。</div>`;
+  }else if(currentStep===1){
+    h=`<h3>② 选择网站类型</h3>`;
+    h+= t?`<div class="selbox ok">已选：<b>${t.id}. ${esc(t.name)}</b> （${esc(t.category)}）<div style="margin-top:6px;font-size:13px;color:var(--muted)">${esc(t.prompt)}</div><div style="margin-top:8px"><a href="#types" onclick="document.querySelector('#types').scrollIntoView()">在类型库中更换 →</a></div></div>`
+         :`<div class="selbox">尚未选择。请在「类型库」中点击「选用此类型」。</div>`;
+  }else if(currentStep===2){
+    h=`<h3>③ 风格规范（自动提取所选品牌设计 token）</h3>`;
+    if(b){
+      const swb=(b.swatches&&b.swatches.length)?b.swatches:[(b.primary||'#667eea')];
+      const toks=swb.slice(0,8).map(c=>`<div class="tok"><span class="sw2" style="background:${c}"></span>${c}</div>`).join('');
+      h+=`<div class="selbox ok" style="text-align:left">
+        <div><b>品牌：</b>${esc(b.title)} ｜ <b>视觉基调：</b>${esc(b.tone)} ｜ <b>色系：</b>${esc(b.colorSystem)}</div>
+        <div style="margin-top:6px"><b>字体：</b>${(b.fonts||[]).join('、')||'系统默认'}</div>
+        <div style="margin-top:8px;font-size:13px;color:var(--muted)">${esc(b.description)}</div>
+        <div class="tokgrid">${toks}</div></div>`;
+    }else{
+      h+=`<div class="selbox">请先在第①步选择品牌，以自动注入配色与字体规范。</div>`;
+    }
+    h+=`<label style="font-size:13px;color:var(--muted);display:block;margin-top:12px">补充风格要求（可选，将合并进设计规范）：</label>`;
+    h+=`<textarea class="notes" id="notesInput" placeholder="例如：主色用品牌 indigo，圆角要小，留白多一点，按钮做成胶囊形…">${esc(state.notes)}</textarea>`;
+  }else if(currentStep===3){
+    h=`<h3>④ 后端模块选配</h3>`;
+    if(state.backend.length){
+      const names=BACKEND.filter(m=>state.backend.includes(m.id)).map(m=>m.name).join('、');
+      h+=`<div class="selbox ok">已勾选 <b>${state.backend.length}</b> 个模块：${esc(names)}<div style="margin-top:8px"><a href="#backend" onclick="document.querySelector('#backend').scrollIntoView()">在后端选配区调整 →</a></div></div>`;
+    }else{
+      h+=`<div class="selbox">尚未勾选。可跳过（纯前端站点），或在「后端选配」区勾选注册登录、支付、订单等模块。</div>`;
+    }
+  }else if(currentStep===4){
+    h=`<h3>⑤ 开发文档补充</h3>`;
+    h+=`<div class="selbox" style="text-align:left;border-style:solid">
+      <div style="margin-bottom:8px;font-weight:600">补充项目背景、特殊需求或参考文档（可选）：</div>
+      <textarea class="notes" id="docsInput" placeholder="例如：需要对接微信登录、数据库用 PostgreSQL、部署到 EdgeOne、参考竞品 xxx…">${esc(state.docs)}</textarea>
+      <div class="filein">📎 上传文档（支持 .txt/.md/.json 直接读入内容，或附加 .pdf/.doc/.docx 随附交付）：<input type="file" id="docFile" accept=".txt,.md,.markdown,.json,.text,.pdf,.doc,.docx" onchange="readDoc(event)" /></div>
+      <div id="docReadout" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+    </div>`;
+  }
+  el('stepBody').innerHTML=h;
+  el('prevBtn').disabled = currentStep===0;
+  el('nextBtn').style.display = currentStep===STEPS.length-1?'none':'inline-block';
+}
+function readDoc(e){
+  const f=e.target.files[0]; if(!f) return;
+  const name=f.name.toLowerCase();
+  const isText=/\.(txt|md|markdown|json|text)$/.test(name);
+  if(isText){
+    const r=new FileReader();
+    r.onload=()=>{
+      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+r.result;
+      el('docReadout').textContent='已读取：'+f.name+'（'+r.result.length+' 字符）';
+      if(el('docsInput')) el('docsInput').value=state.docs;
+    };
+    r.readAsText(f);
+  }else{
+    state.docs=(state.docs?state.docs+"\n":"")+"【已附加文件："+f.name+"】（PDF/Word 二进制，交付时随附，由后端解析内容）";
+    el('docReadout').textContent='已附加：'+f.name+'（'+Math.round(f.size/1024)+' KB）';
+    if(el('docsInput')) el('docsInput').value=state.docs;
+  }
+}
+function wizGoto(i){currentStep=i;if(i===2){/* notes persist via input on blur */}renderStepper();renderStepBody();el('wizard').scrollIntoView({behavior:'smooth'});}
+function wizNext(){if(currentStep<STEPS.length-1){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4&&el('docsInput'))state.docs=el('docsInput').value;wizGoto(currentStep+1);}}
+function wizPrev(){if(currentStep>0){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4&&el('docsInput'))state.docs=el('docsInput').value;wizGoto(currentStep-1);}}
+
+/* ---------- summary ---------- */
+function renderSummary(){
+  const b=BRANDS.find(x=>x.id===state.brand);
+  const t=TYPES.find(x=>x.id===state.type);
+  const mods=BACKEND.filter(m=>state.backend.includes(m.id)).map(m=>m.name).join('、')||'（无，纯前端）';
+  el('summaryCard').innerHTML=`
+    <div class="sumrow"><span class="k">品牌风格</span><span class="v">${b?esc(b.title)+'（'+esc(b.tone)+' · 主色 '+b.primary+'）':'未选择'}</span></div>
+    <div class="sumrow"><span class="k">网站类型</span><span class="v">${t?(t.id+'. '+esc(t.name)+' / '+esc(t.category)):'未选择'}</span></div>
+    <div class="sumrow"><span class="k">风格补充</span><span class="v">${state.notes?esc(state.notes):'（无）'}</span></div>
+    <div class="sumrow"><span class="k">后端模块</span><span class="v">${esc(mods)}</span></div>
+    <div class="sumrow"><span class="k">文档补充</span><span class="v">${state.docs?esc(state.docs.slice(0,200))+(state.docs.length>200?'…':''):'（无）'}</span></div>`;
+}
+
+/* ---------- generate ---------- */
+function buildSite(brand,type){
+  const c=(brand.swatches&&brand.swatches.length)?brand.swatches:[(brand.primary||'#667eea')];
+  const primary=c[0];const ink=c[1]||'#1b1d29';const canvas=c[2]||'#ffffff';const soft=c[3]||'#f6f7f9';
+  const font=(brand.fonts&&brand.fonts[0])||'system-ui,sans-serif';
+  const lightOnP=onLight(primary);
+  const sections=type.structure.map((s,i)=>{
+    const al=i%2?`background:${soft};`:'';
+    return `<section style="padding:54px 24px;${al}"><div class="wrap"><h2 style="font-size:24px;margin:0 0 10px">${esc(s)}</h2><p style="color:#6b7080;max-width:640px">基于 ${esc(brand.title)} 设计规范生成的「${esc(type.name)}」板块。此处放置该模块的真实内容与组件。</p></div></section>`;
+  }).join('');
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(type.name)} · ${esc(brand.title)}</title>
+<style>
+:root{--p:${primary};--ink:${ink};--canvas:${canvas};--soft:${soft};--font:${font},-apple-system,"PingFang SC",sans-serif}
+*{box-sizing:border-box}body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto}
+header.hero{background:linear-gradient(135deg,${c[0]},${c[1]||c[0]});color:${lightOnP?'#111':'#fff'};padding:84px 24px}
+header.hero h1{font-size:40px;margin:0 0 12px;letter-spacing:.5px}
+header.hero p{font-size:17px;max-width:620px;opacity:.92;margin:0 0 22px}
+.btn{display:inline-block;background:${lightOnP?'#111':'#fff'};color:${lightOnP?'#fff':primary};padding:12px 24px;border-radius:10px;font-weight:700;text-decoration:none}
+footer{padding:30px 24px;background:var(--soft);color:#6b7080;font-size:13px;text-align:center}
+</style></head>
+<body>
+<header class="hero"><div class="wrap">
+  <h1>${esc(type.name)}</h1>
+  <p>由「光体 · AI 网站开发设计平台」基于 ${esc(brand.title)} 设计规范（主色 ${primary}，字体 ${esc(font)}）生成。视觉风格与品牌基调保持一致。</p>
+  <a class="btn" href="#">开始体验</a>
+</div></header>
+${sections}
+<footer>© ${new Date().getFullYear()} ${esc(type.name)} · 设计语言源自 ${esc(brand.title)} · 由光体平台生成</footer>
+</body></html>`;
+}
+function buildBackendDoc(){
+  const sel=BACKEND.filter(m=>state.backend.includes(m.id));
+  if(!sel.length)return '# 后端配置说明\n\n未选择后端模块，本项目为纯前端静态站点，无需服务端接口与数据库。\n';
+  let md='# 后端配置说明文档\n\n> 由「光体 · AI 网站开发设计平台」根据所选模块自动生成。\n\n';
+  sel.forEach(m=>{
+    md+=`## ${m.icon} ${m.name}\n\n${m.desc}\n\n### 接口清单\n\n`;
+    m.apis.forEach(a=>{md+=`- \`${a.method} ${a.path}\` — ${a.desc}\n`;});
+    md+='\n### 数据表结构\n\n';
+    m.tables.forEach(t=>{md+=`- **${t.name}** ( ${t.fields} )\n`;});
+    md+='\n';
+  });
+  return md;
+}
+function generate(){
+  const b=BRANDS.find(x=>x.id===state.brand);
+  const t=TYPES.find(x=>x.id===state.type);
+  if(!b||!t){alert('请先在引导流程中完成「品牌」与「网站类型」的选择。');el('summary').scrollIntoView();return;}
+  const prog=el('progress');prog.style.display='block';el('outputs').style.display='none';
+  const logs=['① 调用设计技能，加载品牌视觉规范…','② 注入设计 token（配色/字体/圆角）…','③ Code 质量校验：响应式 / 语义化 / 可访问性…','④ 后端模块优化：接口与数据表编排…','⑤ 产出网站 HTML 与后端配置文档…'];
+  const plog=el('plog');plog.innerHTML='';
+  let i=0;
+  el('pfill').style.width='0%';
+  const tick=()=>{
+    if(i<logs.length){
+      const d=document.createElement('div');d.textContent=logs[i];plog.appendChild(d);
+      requestAnimationFrame(()=>d.classList.add('show'));
+      el('pfill').style.width=((i+1)/logs.length*100)+'%';
+      i++;setTimeout(tick,520);
+    }else{
+      const site=buildSite(b,t);
+      const doc=buildBackendDoc();
+      el('sitePreview').srcdoc=site;
+      el('backendDoc').textContent=doc;
+      el('outputs').style.display='grid';
+      // downloads
+      el('dlSite').href='data:text/html;charset=utf-8,'+encodeURIComponent(site);
+      el('dlDoc').href='data:text/markdown;charset=utf-8,'+encodeURIComponent(doc);
+      el('summary').scrollIntoView({behavior:'smooth'});
+    }
+  };
+  tick();
+}
+
+/* ---------- events & init ---------- */
+el('brandSearch').addEventListener('input',e=>{bf.q=e.target.value;renderBrands();});
+el('typeSearch').addEventListener('input',e=>{tf.q=e.target.value;renderTypes();});
+el('typeCat').addEventListener('change',e=>{tf.cat=e.target.value;renderTypes();});
+// nav active state
+const navLinks=[...document.querySelectorAll('#nav a')];
+window.addEventListener('scroll',()=>{
+  let cur='brand';
+  ['brand','types','backend','wizard','summary'].forEach(id=>{const s=el(id);if(s&&s.getBoundingClientRect().top<120)cur=id;});
+  navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+});
+
+renderBrandFilters();renderBrands();
+renderTypeCats();renderTypes();
+renderBackend();renderBackendDetail();
+renderStepper();renderStepBody();
+state._sumTimer=setInterval(renderSummary,400);
+renderSummary();
+</script>
+</body>
+</html>

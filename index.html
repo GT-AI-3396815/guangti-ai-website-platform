@@ -1,0 +1,8032 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>光体 · AI 网站开发设计平台</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1b1d29; --muted:#6b7080;
+    --line:#e7e9ef; --line2:#eef0f5; --accent:#4f46e5; --accent-soft:#eef0ff;
+    --ok:#10b981; --warn:#f59e0b; --radius:14px; --shadow:0 1px 3px rgba(20,22,40,.06),0 8px 24px rgba(20,22,40,.05);
+    --font: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* Header */
+  header.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line)}
+  .top-in{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .brandmark{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px;letter-spacing:.5px}
+  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#22d3ee);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:900;box-shadow:var(--shadow)}
+  .nav{display:flex;gap:6px;flex-wrap:wrap}
+  .nav a{padding:7px 13px;border-radius:9px;color:var(--muted);font-size:14px;font-weight:600}
+  .nav a:hover{background:var(--line2);color:var(--ink);text-decoration:none}
+  .nav a.active{background:var(--accent);color:#fff}
+
+  .refbar{max-width:1200px;margin:0 auto;padding:8px 20px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line2);background:#fff}
+  .refbar .lab{font-size:12px;color:var(--muted);align-self:center;margin-right:4px}
+  .refchip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:#fbfbfd}
+  .refchip:hover{border-color:var(--accent);text-decoration:none}
+
+  main{max-width:1200px;margin:0 auto;padding:26px 20px 80px}
+  section{margin-bottom:46px;scroll-margin-top:84px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .sec-head h2{font-size:22px;margin:0;font-weight:800}
+  .sec-head .sub{color:var(--muted);font-size:14px}
+  .count-pill{margin-left:auto;font-size:13px;color:var(--muted);background:var(--line2);padding:3px 10px;border-radius:999px}
+
+  /* Toolbars */
+  .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 13px}
+  .search input{border:0;outline:0;flex:1;font-size:14px;background:transparent;color:var(--ink)}
+  .filters{display:flex;flex-direction:column;gap:8px}
+  .frow{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .frow .flab{font-size:12px;color:var(--muted);min-width:42px}
+  .chip{font-size:12.5px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);cursor:pointer;user-select:none;transition:.15s}
+  .chip:hover{border-color:var(--accent)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  select.sel{font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+
+  /* Brand grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:16px}
+  .bcard{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden;cursor:pointer;transition:.18s;box-shadow:var(--shadow)}
+  .bcard:hover{transform:translateY(-3px);border-color:#cfd3e6}
+  .bcard.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .bpreview{height:104px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;position:relative}
+  .bpreview .bname{font-weight:800;font-size:17px;letter-spacing:.4px;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+  .bpreview .bpill{align-self:flex-start;font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.92);color:#111}
+  .bmeta{padding:12px 14px}
+  .bmeta .tt{font-weight:700;font-size:14px;margin-bottom:8px}
+  .swatches{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+  .sw{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.08);position:relative;cursor:default}
+  .sw:hover::after{content:attr(data-hex);position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:10px;background:#111;color:#fff;padding:2px 5px;border-radius:4px;white-space:nowrap;z-index:5}
+  .bmeta .font{font-size:11.5px;color:var(--muted);margin-bottom:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:11px;color:var(--muted);background:var(--line2);padding:3px 8px;border-radius:6px}
+  .tag.tone{background:#eef0ff;color:#4f46e5}
+
+  /* Types list */
+  .tlist{display:flex;flex-direction:column;gap:10px}
+  .titem{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+  .titem.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .theader{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer}
+  .tno{font-weight:800;color:var(--accent);min-width:26px}
+  .tname{font-weight:700;font-size:15px;flex:1}
+  .tcat{font-size:12px;color:var(--muted);background:var(--line2);padding:3px 9px;border-radius:6px}
+  .tuse{font-size:12.5px;font-weight:700;color:var(--accent);border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:#fff}
+  .tbody{padding:0 16px 16px;display:none;border-top:1px solid var(--line2)}
+  .titem.open .tbody{display:block}
+  .tblock{margin-top:12px}
+  .tblock h4{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .kv{font-size:13.5px;background:#fbfbfd;border:1px solid var(--line2);border-radius:9px;padding:10px 12px;white-space:pre-wrap;color:#2a2d3a}
+  ul.mini{margin:0;padding-left:18px;font-size:13.5px}
+  ul.mini li{margin:3px 0}
+  .dm{font-size:13px;background:#0f172a;color:#cbd5e1;border-radius:9px;padding:10px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-x:auto}
+  .dm b{color:#7dd3fc}
+
+  /* Backend */
+  .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:18px}
+  .bmod{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px;cursor:pointer;transition:.15s;position:relative}
+  .bmod:hover{border-color:#cfd3e6}
+  .bmod.on{border-color:var(--accent);background:var(--accent-soft)}
+  .bmod .ic{font-size:20px}
+  .bmod .nm{font-weight:700;font-size:15px;margin:6px 0 4px}
+  .bmod .ds{font-size:12.5px;color:var(--muted)}
+  .bmod .chk{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;color:#fff;font-size:13px}
+  .bmod.on .chk{background:var(--accent);border-color:var(--accent)}
+  .bdetail{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+  .bmod-card{margin-bottom:18px;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+  .bmod-card h3{margin:0;padding:12px 14px;background:#fafbfd;font-size:15px;display:flex;gap:8px;align-items:center}
+  .bmod-card .inner{padding:12px 14px}
+  table.api{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:8px}
+  table.api th,table.api td{border:1px solid var(--line2);padding:6px 8px;text-align:left}
+  table.api th{background:#f6f7f9;color:var(--muted)}
+  .mth{font-family:ui-monospace,monospace;font-weight:700;color:#b45309}
+  .tbl{font-family:ui-monospace,monospace;font-size:12px;background:#0f172a;color:#cbd5e1;padding:8px 10px;border-radius:8px;overflow-x:auto;margin-top:4px}
+
+  /* Wizard */
+  .stepper{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:16px}
+  .step{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:9px 14px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+  .step .dot{width:22px;height:22px;border-radius:50%;background:var(--line2);display:grid;place-items:center;font-size:12px;color:#fff}
+  .step.active{border-color:var(--accent);color:var(--accent)}
+  .step.active .dot{background:var(--accent)}
+  .step.done .dot{background:var(--ok)}
+  .step.done{color:var(--ink)}
+  .stepbody{border:1px solid var(--line);border-radius:12px;background:#fff;padding:18px;min-height:120px}
+  .stepbody h3{margin:0 0 10px;font-size:16px}
+  .stepnav{display:flex;justify-content:space-between;margin-top:14px;gap:10px}
+  .btn{font-size:14px;font-weight:700;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;transition:.15s}
+  .btn:hover{border-color:#cfd3e6}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#4338ca}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .selbox{border:1px dashed var(--line);border-radius:10px;padding:16px;text-align:center;color:var(--muted);font-size:14px}
+  .selbox.ok{border-style:solid;border-color:var(--ok);color:var(--ink);text-align:left}
+  textarea.notes{width:100%;min-height:90px;margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13.5px;resize:vertical}
+  .tokgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+  .tok{border:1px solid var(--line2);border-radius:9px;padding:9px;display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .tok .sw2{width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.08);flex:0 0 auto}
+  .filein{margin-top:10px;font-size:13px;color:var(--muted)}
+
+  /* Summary */
+  .sumcard{border:1px solid var(--line);border-radius:12px;background:#fff;padding:18px;margin-bottom:16px}
+  .sumrow{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:14px}
+  .sumrow:last-child{border-bottom:0}
+  .sumrow .k{color:var(--muted);min-width:92px;font-weight:600}
+  .sumrow .v{font-weight:600;flex:1}
+  .progress{display:none;margin:14px 0}
+  .pbar{height:10px;background:var(--line2);border-radius:999px;overflow:hidden}
+  .pfill{height:100%;width:0;background:linear-gradient(90deg,#6366f1,#22d3ee);transition:width .4s}
+  .plog{font-size:13px;color:var(--muted);margin-top:10px;font-family:ui-monospace,monospace}
+  .plog div{opacity:0;transform:translateY(4px);transition:.3s}
+  .plog div.show{opacity:1;transform:none}
+  .outputs{display:none;margin-top:16px;display:grid;gap:14px}
+  .outcard{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px}
+  .outcard h4{margin:0 0 8px;font-size:15px}
+  .dl{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:8px 14px;border-radius:9px;background:var(--accent);color:#fff;margin-right:8px;margin-top:6px}
+  .dl:hover{text-decoration:none;background:#4338ca}
+  iframe.preview{width:100%;height:420px;border:1px solid var(--line);border-radius:10px;background:#fff}
+
+  footer{border-top:1px solid var(--line);padding:22px 20px;text-align:center;color:var(--muted);font-size:13px}
+  .hidden{display:none!important}
+  @media(max-width:640px){.sec-head h2{font-size:19px}.stepper{font-size:12px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台</div>
+    <nav class="nav" id="nav">
+      <a href="#brand" class="active">品牌库</a>
+      <a href="#types">类型库</a>
+      <a href="#backend">后端选配</a>
+      <a href="#wizard">引导流程</a>
+      <a href="#summary">配置摘要</a>
+    </nav>
+  </div>
+  <div class="refbar">
+    <span class="lab">提示词参考：</span>
+    <a class="refchip" target="_blank" rel="noopener" href="https://motionsites.ai/">🌐 网站提示词 · motionsites.ai</a>
+    <a class="refchip" target="_blank" rel="noopener" href="https://prompthero.com">🎨 设计提示词 · prompthero.com</a>
+    <a class="refchip" target="_blank" rel="noopener" href="https://opennana.com/awesome-prompt-gallery">🖼️ 图片提示词 · opennana.com</a>
+  </div>
+</header>
+
+<main>
+  <!-- 品牌库 -->
+  <section id="brand">
+    <div class="sec-head"><h2>品牌风格库</h2><span class="sub">74 个真实品牌 · 配色（含色值）· 字体 · 视觉基调</span><span class="count-pill" id="brandCount"></span></div>
+    <div class="toolbar">
+      <div class="search">🔍 <input id="brandSearch" placeholder="搜索品牌名 / 关键词…" /></div>
+    </div>
+    <div class="filters" id="brandFilters"></div>
+    <div class="grid" id="brandGrid"></div>
+  </section>
+
+  <!-- 类型库 -->
+  <section id="types">
+    <div class="sec-head"><h2>网站类型库</h2><span class="sub">100 种类型 · 提示词模板 / 页面结构 / 核心模块 / 数据模型</span><span class="count-pill" id="typeCount"></span></div>
+    <div class="toolbar">
+      <div class="search">🔍 <input id="typeSearch" placeholder="搜索类型名 / 模块 / 关键词…" /></div>
+      <select class="sel" id="typeCat"><option value="">全部大类</option></select>
+    </div>
+    <div class="tlist" id="typeList"></div>
+  </section>
+
+  <!-- 后端 -->
+  <section id="backend">
+    <div class="sec-head"><h2>后端能力选配</h2><span class="sub">勾选所需模块，自动输出接口清单与数据表结构</span><span class="count-pill" id="backendCount"></span></div>
+    <div class="bgrid" id="backendGrid"></div>
+    <div class="bdetail" id="backendDetail"><div class="selbox">勾选上方模块以查看接口清单与数据表结构。</div></div>
+  </section>
+
+  <!-- 引导流程 -->
+  <section id="wizard">
+    <div class="sec-head"><h2>分步引导流程</h2><span class="sub">品牌 → 类型 → 风格规范 → 后端模块 → 文档补充（任一步可回退修改）</span></div>
+    <div class="stepper" id="stepper"></div>
+    <div class="stepbody" id="stepBody"></div>
+    <div class="stepnav">
+      <button class="btn" id="prevBtn" onclick="wizPrev()">← 上一步</button>
+      <button class="btn primary" id="nextBtn" onclick="wizNext()">下一步 →</button>
+    </div>
+  </section>
+
+  <!-- 摘要 -->
+  <section id="summary">
+    <div class="sec-head"><h2>配置摘要面板</h2><span class="sub">汇总全部选择，一键生成</span></div>
+    <div class="sumcard" id="summaryCard"></div>
+    <div class="progress" id="progress">
+      <div class="pbar"><div class="pfill" id="pfill"></div></div>
+      <div class="plog" id="plog"></div>
+    </div>
+    <button class="btn primary" id="genBtn" onclick="generate()">⚡ 一键生成网站与后端文档</button>
+    <div class="outputs" id="outputs">
+      <div class="outcard">
+        <h4>📄 生成的网站预览（基于所选品牌规范与类型结构）</h4>
+        <iframe class="preview" id="sitePreview"></iframe>
+        <a class="dl" id="dlSite" download="guangti-site.html">⬇ 下载网站 HTML</a>
+      </div>
+      <div class="outcard">
+        <h4>🛠 后端配置说明文档（接口 + 数据表）</h4>
+        <div class="kv" id="backendDoc" style="white-space:pre-wrap"></div>
+        <a class="dl" id="dlDoc" download="backend-config.md">⬇ 下载后端配置 .md</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>光体 · AI 网站开发设计平台</footer>
+
+<script>
+const BRANDS = [
+ {
+  "id": "airbnb",
+  "title": "Airbnb",
+  "name": "airbnb",
+  "industry": "生活/消费",
+  "tone": "温暖亲和",
+  "colorSystem": "红",
+  "primary": "#ff385c",
+  "colors": {
+   "primary": "#ff385c",
+   "primary-active": "#e00b41",
+   "primary-disabled": "#ffd1da",
+   "primary-error-text": "#c13515",
+   "primary-error-text-hover": "#b32505",
+   "luxe": "#460479",
+   "plus": "#92174d",
+   "ink": "#222222",
+   "body": "#3f3f3f",
+   "muted": "#6a6a6a",
+   "muted-soft": "#929292",
+   "hairline": "#dddddd",
+   "hairline-soft": "#ebebeb",
+   "border-strong": "#c1c1c1",
+   "canvas": "#ffffff",
+   "surface-soft": "#f7f7f7",
+   "surface-card": "#ffffff",
+   "surface-strong": "#f2f2f2",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "legal-link": "#428bff",
+   "star-rating": "#222222",
+   "scrim": "#000000"
+  },
+  "swatches": [
+   "#ff385c",
+   "#e00b41",
+   "#ffd1da",
+   "#c13515",
+   "#b32505",
+   "#460479",
+   "#92174d",
+   "#222222"
+  ],
+  "fonts": [
+   "Airbnb Cereal VF",
+   "amenity-row",
+   "button-pill-rausch",
+   "button-primary"
+  ],
+  "description": "A warm, generous consumer marketplace anchored on a clean white canvas and Airbnb Rausch (#ff385c), the single brand voltage that carries every primary CTA, search-button orb, and rating dot. Type runs Airbnb Cereal VF at modest weights — display sits at 22–28px in weight 500/600 rather than the hea"
+ },
+ {
+  "id": "airtable",
+  "title": "Airtable",
+  "name": "airtable",
+  "industry": "企业服务/SaaS",
+  "tone": "清新自然",
+  "colorSystem": "暗黑/黑",
+  "primary": "#181d26",
+  "colors": {
+   "primary": "#181d26",
+   "primary-active": "#0d1218",
+   "ink": "#181d26",
+   "body": "#333840",
+   "muted": "#41454d",
+   "hairline": "#dddddd",
+   "border-strong": "#9297a0",
+   "canvas": "#ffffff",
+   "surface-soft": "#f8fafc",
+   "surface-strong": "#e0e2e6",
+   "surface-dark": "#181d26",
+   "surface-dark-elevated": "#1d1f25",
+   "signature-coral": "#aa2d00",
+   "signature-forest": "#0a2e0e",
+   "signature-cream": "#f5e9d4",
+   "signature-peach": "#fcab79",
+   "signature-mint": "#a8d8c4",
+   "signature-yellow": "#f4d35e",
+   "signature-mustard": "#d9a441",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "link": "#1b61c9",
+   "link-active": "#1a3866",
+   "info": "#254fad",
+   "info-border": "#458fff",
+   "success": "#006400",
+   "success-border": "#39bf45",
+   "pricing-ink": "#1d1f25"
+  },
+  "swatches": [
+   "#181d26",
+   "#0d1218",
+   "#333840",
+   "#41454d",
+   "#dddddd",
+   "#9297a0",
+   "#ffffff",
+   "#f8fafc"
+  ],
+  "fonts": [
+   "Haas",
+   "Haas Groot Disp",
+   "Inter Display",
+   "article-card"
+  ],
+  "description": "A sober, editorial workflow-software interface anchored on white canvas and dark-ink type, where brand voltage comes from full-bleed signature cards in coral, dark green, peach, and dark navy that punctuate long-scroll explainer pages. Primary actions use a near-black pill CTA; secondary actions sit"
+ },
+ {
+  "id": "apple",
+  "title": "Apple",
+  "name": "apple",
+  "industry": "科技/互联网",
+  "tone": "极简",
+  "colorSystem": "蓝",
+  "primary": "#0066cc",
+  "colors": {
+   "primary": "#0066cc",
+   "primary-focus": "#0071e3",
+   "primary-on-dark": "#2997ff",
+   "ink": "#1d1d1f",
+   "body": "#1d1d1f",
+   "body-on-dark": "#ffffff",
+   "body-muted": "#cccccc",
+   "ink-muted-80": "#333333",
+   "ink-muted-48": "#7a7a7a",
+   "divider-soft": "#f0f0f0",
+   "hairline": "#e0e0e0",
+   "canvas": "#ffffff",
+   "canvas-parchment": "#f5f5f7",
+   "surface-pearl": "#fafafc",
+   "surface-tile-1": "#272729",
+   "surface-tile-2": "#2a2a2c",
+   "surface-tile-3": "#252527",
+   "surface-black": "#000000",
+   "surface-chip-translucent": "#d2d2d7",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff"
+  },
+  "swatches": [
+   "#0066cc",
+   "#0071e3",
+   "#2997ff",
+   "#1d1d1f",
+   "#ffffff",
+   "#cccccc",
+   "#333333",
+   "#7a7a7a"
+  ],
+  "fonts": [
+   "SF Pro Display",
+   "SF Pro Text",
+   "button-dark-utility",
+   "button-icon-circular"
+  ],
+  "description": "A photography-first interface that turns marketing into a museum gallery. Edge-to-edge product tiles alternate light and dark canvases, framed by SF Pro Display headlines with negative letter-spacing and a single Action Blue (#0066cc) interactive color. UI chrome recedes so the product can speak — n"
+ },
+ {
+  "id": "binance",
+  "title": "Binance",
+  "name": "binance",
+  "industry": "区块链/加密",
+  "tone": "活力鲜艳",
+  "colorSystem": "黄/绿",
+  "primary": "#fcd535",
+  "colors": {
+   "primary": "#fcd535",
+   "primary-active": "#f0b90b",
+   "primary-disabled": "#3a3a1f",
+   "ink": "#181a20",
+   "body": "#eaecef",
+   "body-on-light": "#181a20",
+   "muted": "#707a8a",
+   "muted-strong": "#929aa5",
+   "hairline-on-light": "#eaecef",
+   "hairline-on-dark": "#2b3139",
+   "border-strong": "#cdd1d6",
+   "canvas-light": "#ffffff",
+   "canvas-dark": "#0b0e11",
+   "surface-card-dark": "#1e2329",
+   "surface-elevated-dark": "#2b3139",
+   "surface-soft-light": "#fafafa",
+   "surface-strong-light": "#f5f5f5",
+   "on-primary": "#181a20",
+   "on-dark": "#ffffff",
+   "trading-up": "#0ecb81",
+   "trading-down": "#f6465d",
+   "accent-turquoise": "#2dbdb6",
+   "info": "#3b82f6",
+   "info-ring": "#3b82f6"
+  },
+  "swatches": [
+   "#fcd535",
+   "#f0b90b",
+   "#3a3a1f",
+   "#181a20",
+   "#eaecef",
+   "#707a8a",
+   "#929aa5",
+   "#2b3139"
+  ],
+  "fonts": [
+   "BinanceNova",
+   "BinancePlex",
+   "The",
+   "arena-hero-gradient"
+  ],
+  "description": "A confident financial-platform interface anchored on a deep near-black canvas, where Binance's iconic yellow (#FCD535) carries every primary CTA, brand accent, and value-claim moment. Type runs Binance's custom BinanceNova / BinancePlex stack at modest weights — the system trusts size and yellow vol"
+ },
+ {
+  "id": "bmw",
+  "title": "BMW",
+  "name": "bmw",
+  "industry": "汽车/出行",
+  "tone": "奢华高端",
+  "colorSystem": "蓝",
+  "primary": "#1c69d4",
+  "colors": {
+   "primary": "#1c69d4",
+   "primary-active": "#0653b6",
+   "primary-disabled": "#d6d6d6",
+   "ink": "#262626",
+   "body": "#3c3c3c",
+   "body-strong": "#1a1a1a",
+   "muted": "#6b6b6b",
+   "muted-soft": "#9a9a9a",
+   "hairline": "#e6e6e6",
+   "hairline-strong": "#cccccc",
+   "canvas": "#ffffff",
+   "surface-soft": "#f7f7f7",
+   "surface-card": "#fafafa",
+   "surface-strong": "#ebebeb",
+   "surface-dark": "#1a2129",
+   "surface-dark-elevated": "#262e38",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "on-dark-soft": "#bbbbbb",
+   "m-blue-light": "#0066b1",
+   "m-blue-dark": "#1c69d4",
+   "m-red": "#e22718",
+   "success": "#22c55e",
+   "warning": "#f59e0b",
+   "error": "#dc2626"
+  },
+  "swatches": [
+   "#1c69d4",
+   "#0653b6",
+   "#d6d6d6",
+   "#262626",
+   "#3c3c3c",
+   "#1a1a1a",
+   "#6b6b6b",
+   "#9a9a9a"
+  ],
+  "fonts": [
+   "BMW Type Next Latin",
+   "Open",
+   "button-primary",
+   "button-primary-active"
+  ],
+  "description": "BMW's corporate site — distinct from BMW M's motorsport-bombastic variant, this is a measured and settled corporate-automotive interface. On a light (cream-tinted white) canvas, BMW corporate blue (#1c69d4) carries every primary CTA; dark navy hero bands frame model photography. BMW Type Next Latin "
+ },
+ {
+  "id": "bmw-m",
+  "title": "BMW M",
+  "name": "bmw-m",
+  "industry": "汽车/出行",
+  "tone": "暗黑酷感",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "primary": "#ffffff",
+   "ink": "#ffffff",
+   "body": "#bbbbbb",
+   "body-strong": "#e6e6e6",
+   "muted": "#7e7e7e",
+   "hairline": "#3c3c3c",
+   "hairline-strong": "#262626",
+   "canvas": "#000000",
+   "surface-card": "#1a1a1a",
+   "surface-elevated": "#262626",
+   "surface-soft": "#0d0d0d",
+   "on-primary": "#000000",
+   "on-dark": "#ffffff",
+   "m-blue-light": "#0066b1",
+   "m-blue-dark": "#1c69d4",
+   "m-red": "#e22718",
+   "bmw-blue": "#1c69d4",
+   "electric-blue": "#0653b6",
+   "carbon-gray": "#2b2b2b",
+   "warning": "#f4b400",
+   "success": "#0fa336"
+  },
+  "swatches": [
+   "#ffffff",
+   "#bbbbbb",
+   "#e6e6e6",
+   "#7e7e7e",
+   "#3c3c3c",
+   "#262626",
+   "#000000",
+   "#1a1a1a"
+  ],
+  "fonts": [
+   "BMWTypeNextLatin",
+   "BMWTypeNextLatin Light",
+   "The",
+   "button-icon"
+  ],
+  "description": "A motorsport-engineering interface anchored on a near-black canvas with white BMW Type Next Latin display headlines in confident UPPERCASE. The brand carries no decorative voltage — its energy comes from full-bleed automotive photography (cars on tracks, driver-cockpit shots, carbon-fiber detail) an"
+ },
+ {
+  "id": "bugatti",
+  "title": "Bugatti",
+  "name": "bugatti",
+  "industry": "汽车/出行",
+  "tone": "奢华高端",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "primary": "#ffffff",
+   "ink": "#ffffff",
+   "body": "#cccccc",
+   "body-strong": "#e6e6e6",
+   "muted": "#999999",
+   "muted-soft": "#666666",
+   "hairline": "#262626",
+   "hairline-strong": "#3a3a3a",
+   "canvas": "#000000",
+   "surface-soft": "#0d0d0d",
+   "surface-card": "#141414",
+   "surface-elevated": "#1f1f1f",
+   "on-primary": "#000000",
+   "on-dark": "#ffffff",
+   "on-photo": "#ffffff",
+   "link": "#c3d9f3",
+   "warning": "#d4a017",
+   "success": "#5fa657"
+  },
+  "swatches": [
+   "#ffffff",
+   "#cccccc",
+   "#e6e6e6",
+   "#999999",
+   "#666666",
+   "#262626",
+   "#3a3a3a",
+   "#000000"
+  ],
+  "fonts": [
+   "Bugatti",
+   "Bugatti Display",
+   "Bugatti Monospace",
+   "Bugatti Text Regular"
+  ],
+  "description": "An austere luxury-automotive interface that uses near-pure black canvas, white uppercase letterspaced display, and full-bleed automotive photography as the only voltage. The system runs three custom Bugatti typefaces — Bugatti Display, Bugatti Text Regular, and Bugatti Monospace — and combines them "
+ },
+ {
+  "id": "cal",
+  "title": "Cal.com",
+  "name": "cal",
+  "industry": "企业服务/SaaS",
+  "tone": "清新自然",
+  "colorSystem": "暗黑/黑",
+  "primary": "#111111",
+  "colors": {
+   "primary": "#111111",
+   "primary-active": "#242424",
+   "primary-disabled": "#e5e7eb",
+   "ink": "#111111",
+   "body": "#374151",
+   "muted": "#6b7280",
+   "muted-soft": "#898989",
+   "hairline": "#e5e7eb",
+   "hairline-soft": "#f3f4f6",
+   "canvas": "#ffffff",
+   "surface-soft": "#f8f9fa",
+   "surface-card": "#f5f5f5",
+   "surface-strong": "#e5e7eb",
+   "surface-dark": "#101010",
+   "surface-dark-elevated": "#1a1a1a",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "on-dark-soft": "#a1a1aa",
+   "brand-accent": "#3b82f6",
+   "success": "#10b981",
+   "warning": "#f59e0b",
+   "error": "#ef4444",
+   "badge-orange": "#fb923c",
+   "badge-pink": "#ec4899",
+   "badge-violet": "#8b5cf6",
+   "badge-emerald": "#34d399"
+  },
+  "swatches": [
+   "#111111",
+   "#242424",
+   "#e5e7eb",
+   "#374151",
+   "#6b7280",
+   "#898989",
+   "#f3f4f6",
+   "#ffffff"
+  ],
+  "fonts": [
+   "Cal Sans",
+   "Inter",
+   "JetBrains Mono",
+   "avatar-circle"
+  ],
+  "description": "A clean, calendar-software-first interface anchored on white canvas with black primary CTAs and custom Cal Sans display typography. The system reads as friendly modern SaaS — generous whitespace, soft-rounded cards (~12px), product UI fragments shown directly inside cards, and a dark navy footer tha"
+ },
+ {
+  "id": "claude",
+  "title": "Claude",
+  "name": "claude",
+  "industry": "AI/大模型",
+  "tone": "温暖亲和",
+  "colorSystem": "橙/黄",
+  "primary": "#cc785c",
+  "colors": {
+   "primary": "#cc785c",
+   "primary-active": "#a9583e",
+   "primary-disabled": "#e6dfd8",
+   "ink": "#141413",
+   "body": "#3d3d3a",
+   "body-strong": "#252523",
+   "muted": "#6c6a64",
+   "muted-soft": "#8e8b82",
+   "hairline": "#e6dfd8",
+   "hairline-soft": "#ebe6df",
+   "canvas": "#faf9f5",
+   "surface-soft": "#f5f0e8",
+   "surface-card": "#efe9de",
+   "surface-cream-strong": "#e8e0d2",
+   "surface-dark": "#181715",
+   "surface-dark-elevated": "#252320",
+   "surface-dark-soft": "#1f1e1b",
+   "on-primary": "#ffffff",
+   "on-dark": "#faf9f5",
+   "on-dark-soft": "#a09d96",
+   "accent-teal": "#5db8a6",
+   "accent-amber": "#e8a55a",
+   "success": "#5db872",
+   "warning": "#d4a017",
+   "error": "#c64545"
+  },
+  "swatches": [
+   "#cc785c",
+   "#a9583e",
+   "#e6dfd8",
+   "#141413",
+   "#3d3d3a",
+   "#252523",
+   "#6c6a64",
+   "#8e8b82"
+  ],
+  "fonts": [
+   "Copernicus",
+   "JetBrains Mono",
+   "StyreneB",
+   "and"
+  ],
+  "description": "A warm-canvas editorial interface for Anthropic's Claude product. The system anchors on a tinted cream canvas with serif display headlines, warm coral CTAs, and dark navy product surfaces (code editor mockups, model showcase cards). Brand voltage comes from the cream/coral pairing — deliberately war"
+ },
+ {
+  "id": "clay",
+  "title": "Clay",
+  "name": "clay",
+  "industry": "设计/创意",
+  "tone": "活力鲜艳",
+  "colorSystem": "暗黑/黑",
+  "primary": "#0a0a0a",
+  "colors": {
+   "primary": "#0a0a0a",
+   "primary-active": "#1f1f1f",
+   "primary-disabled": "#e5e5e5",
+   "ink": "#0a0a0a",
+   "body": "#3a3a3a",
+   "body-strong": "#1a1a1a",
+   "muted": "#6a6a6a",
+   "muted-soft": "#9a9a9a",
+   "hairline": "#e5e5e5",
+   "hairline-soft": "#f0f0f0",
+   "canvas": "#fffaf0",
+   "surface-soft": "#faf5e8",
+   "surface-card": "#f5f0e0",
+   "surface-strong": "#ebe6d6",
+   "surface-dark": "#0a1a1a",
+   "surface-dark-elevated": "#1a2a2a",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "on-dark-soft": "#a0a0a0",
+   "brand-pink": "#ff4d8b",
+   "brand-teal": "#1a3a3a",
+   "brand-lavender": "#b8a4ed",
+   "brand-peach": "#ffb084",
+   "brand-ochre": "#e8b94a",
+   "brand-mint": "#a4d4c5",
+   "brand-coral": "#ff6b5a",
+   "success": "#22c55e",
+   "warning": "#f59e0b",
+   "error": "#ef4444"
+  },
+  "swatches": [
+   "#0a0a0a",
+   "#1f1f1f",
+   "#e5e5e5",
+   "#3a3a3a",
+   "#1a1a1a",
+   "#6a6a6a",
+   "#9a9a9a",
+   "#f0f0f0"
+  ],
+  "fonts": [
+   "Inter",
+   "Plain Black",
+   "adds",
+   "badge-pill"
+  ],
+  "description": "A vibrant claymation-meets-data interface for Clay.com (GTM data-orchestration platform). Anchors on white canvas with dark-navy primary CTAs, custom rounded display type, and saturated single-color feature cards — hot pink, deep teal, lavender, peach, ochre — that punctuate long-scroll explainer pa"
+ },
+ {
+  "id": "clickhouse",
+  "title": "ClickHouse",
+  "name": "clickhouse",
+  "industry": "数据库/基础设施",
+  "tone": "专业克制",
+  "colorSystem": "黄/绿",
+  "primary": "#faff69",
+  "colors": {
+   "primary": "#faff69",
+   "primary-active": "#e6eb52",
+   "primary-disabled": "#3a3a1f",
+   "ink": "#ffffff",
+   "body": "#cccccc",
+   "body-strong": "#e6e6e6",
+   "muted": "#888888",
+   "muted-soft": "#5a5a5a",
+   "hairline": "#2a2a2a",
+   "hairline-strong": "#3a3a3a",
+   "canvas": "#0a0a0a",
+   "surface-soft": "#121212",
+   "surface-card": "#1a1a1a",
+   "surface-elevated": "#242424",
+   "surface-yellow-band": "#faff69",
+   "on-primary": "#0a0a0a",
+   "on-dark": "#ffffff",
+   "on-yellow": "#0a0a0a",
+   "accent-emerald": "#22c55e",
+   "accent-rose": "#ef4444",
+   "accent-blue": "#3b82f6",
+   "success": "#22c55e",
+   "warning": "#f59e0b",
+   "error": "#ef4444"
+  },
+  "swatches": [
+   "#faff69",
+   "#e6eb52",
+   "#3a3a1f",
+   "#ffffff",
+   "#cccccc",
+   "#e6e6e6",
+   "#888888",
+   "#5a5a5a"
+  ],
+  "fonts": [
+   "Inter",
+   "JetBrains Mono",
+   "badge-pill",
+   "badge-yellow"
+  ],
+  "description": "A high-performance database interface anchored on near-pure black canvas with electric yellow as the brand voltage. White typography in confident sans, yellow CTAs, and yellow-text stat numbers carry the brand voice across every page. Code blocks and product UI fragments embed directly in dark cards"
+ },
+ {
+  "id": "cohere",
+  "title": "Cohere",
+  "name": "cohere",
+  "industry": "AI/大模型",
+  "tone": "专业克制",
+  "colorSystem": "暗黑/黑",
+  "primary": "#17171c",
+  "colors": {
+   "primary": "#17171c",
+   "cohere-black": "#000000",
+   "ink": "#212121",
+   "deep-green": "#003c33",
+   "dark-navy": "#071829",
+   "canvas": "#ffffff",
+   "soft-stone": "#eeece7",
+   "pale-green": "#edfce9",
+   "pale-blue": "#f1f5ff",
+   "hairline": "#d9d9dd",
+   "border-light": "#e5e7eb",
+   "card-border": "#f2f2f2",
+   "muted": "#93939f",
+   "slate": "#75758a",
+   "body-muted": "#616161",
+   "action-blue": "#1863dc",
+   "focus-blue": "#4c6ee6",
+   "coral": "#ff7759",
+   "coral-soft": "#ffad9b",
+   "form-focus": "#9b60aa",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "error": "#b30000",
+   "Cohere Black": "#000000",
+   "Near-Black Primary": "#17171c",
+   "Deep Enterprise Green": "#003c33",
+   "Dark Navy": "#071829",
+   "Action Blue": "#1863dc",
+   "Coral": "#ff7759",
+   "Soft Coral": "#ffad9b",
+   "Canvas White": "#ffffff",
+   "Soft Stone": "#eeece7",
+   "Pale Green Wash": "#edfce9",
+   "Pale Blue Wash": "#f1f5ff",
+   "Card Border": "#f2f2f2",
+   "Ink": "#212121",
+   "Muted Slate": "#93939f",
+   "Slate": "#75758a",
+   "Hairline": "#d9d9dd",
+   "Border Light": "#e5e7eb",
+   "Focus Blue": "#4c6ee6",
+   "Form Focus Violet": "#9b60aa",
+   "Error Red": "#b30000"
+  },
+  "swatches": [
+   "#17171c",
+   "#000000",
+   "#212121",
+   "#003c33",
+   "#071829",
+   "#ffffff",
+   "#eeece7",
+   "#edfce9"
+  ],
+  "fonts": [
+   "CohereMono",
+   "CohereText",
+   "Space Grotesk",
+   "Unica77 Cohere Web"
+  ],
+  "description": "Cohere's 2026 web system is a controlled enterprise AI interface built from stark white editorial space, deep green-black product bands, soft mineral surfaces, rounded media cards, and a distinctive type split between monospaced-feeling display headlines and precise Unica77 UI text."
+ },
+ {
+  "id": "coinbase",
+  "title": "Coinbase",
+  "name": "coinbase",
+  "industry": "区块链/加密",
+  "tone": "专业克制",
+  "colorSystem": "蓝",
+  "primary": "#0052ff",
+  "colors": {
+   "primary": "#0052ff",
+   "primary-active": "#003ecc",
+   "primary-disabled": "#a8b8cc",
+   "ink": "#0a0b0d",
+   "body": "#5b616e",
+   "body-strong": "#0a0b0d",
+   "muted": "#7c828a",
+   "muted-soft": "#a8acb3",
+   "hairline": "#dee1e6",
+   "hairline-soft": "#eef0f3",
+   "canvas": "#ffffff",
+   "surface-soft": "#f7f7f7",
+   "surface-card": "#ffffff",
+   "surface-strong": "#eef0f3",
+   "surface-dark": "#0a0b0d",
+   "surface-dark-elevated": "#16181c",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "on-dark-soft": "#a8acb3",
+   "semantic-up": "#05b169",
+   "semantic-down": "#cf202f",
+   "accent-yellow": "#f4b000"
+  },
+  "swatches": [
+   "#0052ff",
+   "#003ecc",
+   "#a8b8cc",
+   "#0a0b0d",
+   "#5b616e",
+   "#7c828a",
+   "#a8acb3",
+   "#dee1e6"
+  ],
+  "fonts": [
+   "Coinbase Display",
+   "Coinbase Mono",
+   "Coinbase Sans",
+   "asset-icon-circular"
+  ],
+  "description": "An institutional-grade crypto exchange whose marketing surfaces read like a quietly-confident financial-services brand. The base canvas is pure white; Coinbase Blue (`#0052ff`) is the single brand voltage, used scarcely on primary CTAs, signature glyphs, and inline accent moments. Type runs Coinbase"
+ },
+ {
+  "id": "composio",
+  "title": "Composio",
+  "name": "composio",
+  "industry": "开发工具/云",
+  "tone": "科技感",
+  "colorSystem": "蓝",
+  "primary": "#0007cd",
+  "colors": {
+   "primary": "#0007cd",
+   "primary-active": "#0005a3",
+   "primary-glow": "#1a26ff",
+   "ink": "#ffffff",
+   "body": "#a8a8a8",
+   "body-strong": "#ffffff",
+   "muted": "#888888",
+   "muted-soft": "#666666",
+   "hairline": "#222222",
+   "hairline-soft": "#1a1a1a",
+   "hairline-strong": "#333333",
+   "canvas": "#0f0f0f",
+   "canvas-deep": "#000000",
+   "surface-card": "#181818",
+   "surface-card-elevated": "#222222",
+   "surface-strong": "#2a2a2a",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "accent-cyan": "#00d4ff",
+   "accent-violet": "#7b3aed",
+   "semantic-error": "#ff4d4d",
+   "semantic-success": "#33d17a"
+  },
+  "swatches": [
+   "#0007cd",
+   "#0005a3",
+   "#1a26ff",
+   "#ffffff",
+   "#a8a8a8",
+   "#888888",
+   "#666666",
+   "#222222"
+  ],
+  "fonts": [
+   "JetBrains Mono",
+   "Open",
+   "abcDiatype",
+   "badge-pill"
+  ],
+  "description": "A developer-tools brand for AI-agent tool integration whose marketing surfaces lean into a dark, technical aesthetic with a single deep-electric-blue voltage (`#0007cd`). The page floor is near-black (`#0f0f0f`); cards float above on subtle gray-tinted surfaces. abcDiatype carries display and body i"
+ },
+ {
+  "id": "cursor",
+  "title": "Cursor",
+  "name": "cursor",
+  "industry": "开发工具/云",
+  "tone": "暗黑酷感",
+  "colorSystem": "橙/黄",
+  "primary": "#f54e00",
+  "colors": {
+   "primary": "#f54e00",
+   "primary-active": "#d04200",
+   "ink": "#26251e",
+   "body": "#5a5852",
+   "body-strong": "#26251e",
+   "muted": "#807d72",
+   "muted-soft": "#a09c92",
+   "hairline": "#e6e5e0",
+   "hairline-soft": "#efeee8",
+   "hairline-strong": "#cfcdc4",
+   "canvas": "#f7f7f4",
+   "canvas-soft": "#fafaf7",
+   "surface-card": "#ffffff",
+   "surface-strong": "#e6e5e0",
+   "on-primary": "#ffffff",
+   "timeline-thinking": "#dfa88f",
+   "timeline-grep": "#9fc9a2",
+   "timeline-read": "#9fbbe0",
+   "timeline-edit": "#c0a8dd",
+   "timeline-done": "#c08532",
+   "semantic-error": "#cf2d56",
+   "semantic-success": "#1f8a65"
+  },
+  "swatches": [
+   "#f54e00",
+   "#d04200",
+   "#26251e",
+   "#5a5852",
+   "#807d72",
+   "#a09c92",
+   "#e6e5e0",
+   "#efeee8"
+  ],
+  "fonts": [
+   "CursorGothic",
+   "Inter",
+   "JetBrains Mono",
+   "badge-pill"
+  ],
+  "description": "An AI-first code editor whose marketing site reads like a quietly-confident developer-tools brand with a warm-cream editorial canvas (`#f7f7f4`) instead of the typical dark IDE atmosphere. Near-black warm ink (`#26251e`) carries body and display alike — display sits at weight 400 with negative lette"
+ },
+ {
+  "id": "dell-1996",
+  "title": "Dell 1996 Inspired",
+  "name": "dell-1996",
+  "industry": "科技/互联网",
+  "tone": "专业克制",
+  "colorSystem": "红",
+  "primary": "#e91d2a",
+  "colors": {
+   "primary": "#e91d2a",
+   "on-primary": "#ffffff",
+   "canvas": "#ffffff",
+   "surface": "#ffffff",
+   "ink": "#000000",
+   "frame-ink": "#000000",
+   "yellow-sticker": "#fcc20f",
+   "purple-stripe": "#6a26a4",
+   "link": "#0000ee"
+  },
+  "swatches": [
+   "#e91d2a",
+   "#ffffff",
+   "#000000",
+   "#fcc20f",
+   "#6a26a4",
+   "#0000ee",
+   "#000",
+   "#8e8a25"
+  ],
+  "fonts": [
+   "Arial Black",
+   "Helvetica",
+   "Times New Roman",
+   "activeIndicator"
+  ],
+  "description": "An inspired interpretation of Dell.com's 1996 design language — a catalog-era enterprise web design built around a literal black page frame, vivid flat color-block \"ribbon cards\" tinted in sage, salmon, periwinkle, sky, peach and lime, chunky Helvetica-Black display titles, Times Roman body copy, an"
+ },
+ {
+  "id": "elevenlabs",
+  "title": "ElevenLabs",
+  "name": "elevenlabs",
+  "industry": "AI/大模型",
+  "tone": "极简",
+  "colorSystem": "暗黑/黑",
+  "primary": "#292524",
+  "colors": {
+   "primary": "#292524",
+   "primary-active": "#0c0a09",
+   "ink": "#0c0a09",
+   "body": "#4e4e4e",
+   "body-strong": "#292524",
+   "muted": "#777169",
+   "muted-soft": "#a8a29e",
+   "hairline": "#e7e5e4",
+   "hairline-soft": "#f0efed",
+   "hairline-strong": "#d6d3d1",
+   "canvas": "#f5f5f5",
+   "canvas-soft": "#fafafa",
+   "canvas-deep": "#0c0a09",
+   "surface-card": "#ffffff",
+   "surface-strong": "#f0efed",
+   "surface-dark": "#0c0a09",
+   "surface-dark-elevated": "#1c1917",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "on-dark-soft": "#a8a29e",
+   "gradient-mint": "#a7e5d3",
+   "gradient-peach": "#f4c5a8",
+   "gradient-lavender": "#c8b8e0",
+   "gradient-sky": "#a8c8e8",
+   "gradient-rose": "#e8b8c4",
+   "semantic-error": "#dc2626",
+   "semantic-success": "#16a34a"
+  },
+  "swatches": [
+   "#292524",
+   "#0c0a09",
+   "#4e4e4e",
+   "#777169",
+   "#a8a29e",
+   "#e7e5e4",
+   "#f0efed",
+   "#d6d3d1"
+  ],
+  "fonts": [
+   "Garamond",
+   "Inter",
+   "Times New Roman",
+   "Waldenburg"
+  ],
+  "description": "A voice-AI brand whose marketing surfaces read like a quietly editorial print magazine. The base canvas is off-white (`#f5f5f5`) holding warm near-black ink (`#292524`); the brand voltage is photographic, not chromatic — soft pastel atmospheric gradient orbs (mint → peach → lavender → sky) drift thr"
+ },
+ {
+  "id": "expo",
+  "title": "Expo",
+  "name": "expo",
+  "industry": "开发工具/云",
+  "tone": "活力鲜艳",
+  "colorSystem": "暗黑/黑",
+  "primary": "#000000",
+  "colors": {
+   "primary": "#000000",
+   "primary-active": "#1a1a1a",
+   "text-link": "#0d74ce",
+   "text-link-secondary": "#476cff",
+   "ink": "#171717",
+   "body": "#60646c",
+   "body-strong": "#171717",
+   "muted": "#999999",
+   "muted-soft": "#cccccc",
+   "hairline": "#f0f0f3",
+   "hairline-soft": "#f5f5f7",
+   "hairline-strong": "#dcdee0",
+   "canvas": "#ffffff",
+   "canvas-soft": "#fafafa",
+   "surface-card": "#ffffff",
+   "surface-strong": "#f0f0f3",
+   "surface-dark": "#171717",
+   "surface-dark-elevated": "#1a1a1a",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "on-dark-soft": "#b0b4ba",
+   "gradient-sky-light": "#cfe7ff",
+   "gradient-sky-mid": "#a8c8e8",
+   "accent-warning": "#ab6400",
+   "accent-preview": "#8145b5",
+   "accent-link-bright": "#47c2ff",
+   "semantic-error": "#eb8e90",
+   "semantic-success": "#16a34a"
+  },
+  "swatches": [
+   "#000000",
+   "#1a1a1a",
+   "#0d74ce",
+   "#476cff",
+   "#171717",
+   "#60646c",
+   "#999999",
+   "#cccccc"
+  ],
+  "fonts": [
+   "Inter",
+   "JetBrains Mono",
+   "badge-pill",
+   "button-primary"
+  ],
+  "description": "A React Native developer-platform whose marketing site reads like a quietly-confident infrastructure brand. The base canvas is pure white with a soft sky-blue gradient atmospheric wash behind the hero; near-black ink (`#171717`) carries body and display alike. The single brand voltage is **pure blac"
+ },
+ {
+  "id": "ferrari",
+  "title": "Ferrari",
+  "name": "ferrari",
+  "industry": "汽车/出行",
+  "tone": "奢华高端",
+  "colorSystem": "红",
+  "primary": "#da291c",
+  "colors": {
+   "primary": "#da291c",
+   "primary-active": "#b01e0a",
+   "primary-hover": "#9d2211",
+   "ink": "#ffffff",
+   "body": "#969696",
+   "body-strong": "#ffffff",
+   "body-on-light": "#181818",
+   "muted": "#666666",
+   "muted-soft": "#8f8f8f",
+   "hairline": "#303030",
+   "hairline-on-light": "#d2d2d2",
+   "hairline-soft": "#ebebeb",
+   "canvas": "#181818",
+   "canvas-elevated": "#303030",
+   "canvas-light": "#ffffff",
+   "surface-card": "#303030",
+   "surface-soft-light": "#f7f7f7",
+   "surface-strong-light": "#ebebeb",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "on-light": "#181818",
+   "accent-yellow-hypersail": "#fff200",
+   "accent-yellow": "#f6e500",
+   "semantic-info": "#4c98b9",
+   "semantic-success": "#03904a",
+   "semantic-warning": "#f13a2c"
+  },
+  "swatches": [
+   "#da291c",
+   "#b01e0a",
+   "#9d2211",
+   "#ffffff",
+   "#969696",
+   "#181818",
+   "#666666",
+   "#8f8f8f"
+  ],
+  "fonts": [
+   "FerrariSans",
+   "Inter",
+   "badge-pill",
+   "button-outline-on-dark"
+  ],
+  "description": "A luxury-automotive brand whose marketing surfaces read as cinematic editorial. The base canvas is **near-black** (`#181818`) holding pure white display type; white-canvas bands appear only inside specific editorial contexts (preowned listings, pricing tables). The single brand voltage is **Rosso Co"
+ },
+ {
+  "id": "figma",
+  "title": "Figma",
+  "name": "figma",
+  "industry": "设计/创意",
+  "tone": "活力鲜艳",
+  "colorSystem": "暗黑/黑",
+  "primary": "#000000",
+  "colors": {
+   "primary": "#000000",
+   "on-primary": "#ffffff",
+   "ink": "#000000",
+   "canvas": "#ffffff",
+   "inverse-canvas": "#000000",
+   "inverse-ink": "#ffffff",
+   "on-inverse-soft": "#ffffff",
+   "hairline": "#e6e6e6",
+   "hairline-soft": "#f1f1f1",
+   "surface-soft": "#f7f7f5",
+   "block-lime": "#dceeb1",
+   "block-lilac": "#c5b0f4",
+   "block-cream": "#f4ecd6",
+   "block-pink": "#efd4d4",
+   "block-mint": "#c8e6cd",
+   "block-coral": "#f3c9b6",
+   "block-navy": "#1f1d3d",
+   "accent-magenta": "#ff3d8b",
+   "semantic-success": "#1ea64a",
+   "overlay-scrim": "#000000"
+  },
+  "swatches": [
+   "#000000",
+   "#ffffff",
+   "#e6e6e6",
+   "#f1f1f1",
+   "#f7f7f5",
+   "#dceeb1",
+   "#c5b0f4",
+   "#f4ecd6"
+  ],
+  "fonts": [
+   "Contact sales",
+   "Get started for free",
+   "button-icon-circular",
+   "button-icon-circular-inverse"
+  ],
+  "description": "A confident black-and-white editorial frame interrupted by oversized, hand-cut pastel color blocks. The marketing canvas is rigorously monochrome — figmaSans variable type, pure white surfaces, pure black ink, pill-shaped CTAs — while each story section drops the page into a saturated lime, lavender"
+ },
+ {
+  "id": "framer",
+  "title": "Framer",
+  "name": "framer",
+  "industry": "设计/创意",
+  "tone": "清新自然",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "primary": "#ffffff",
+   "on-primary": "#000000",
+   "accent-blue": "#0099ff",
+   "ink": "#ffffff",
+   "ink-muted": "#999999",
+   "canvas": "#090909",
+   "surface-1": "#141414",
+   "surface-2": "#1c1c1c",
+   "hairline": "#262626",
+   "hairline-soft": "#1a1a1a",
+   "inverse-canvas": "#ffffff",
+   "inverse-ink": "#000000",
+   "gradient-magenta": "#d44df0",
+   "gradient-violet": "#6a4cf5",
+   "gradient-orange": "#ff7a3d",
+   "gradient-coral": "#ff5577",
+   "semantic-success": "#22c55e"
+  },
+  "swatches": [
+   "#ffffff",
+   "#000000",
+   "#0099ff",
+   "#999999",
+   "#090909",
+   "#141414",
+   "#1c1c1c",
+   "#262626"
+  ],
+  "fonts": [
+   "GT Walsheim Framer Medium",
+   "GT Walsheim Medium",
+   "GT Walsheim Medium Placeholder",
+   "Geometric"
+  ],
+  "description": "A confident dark-canvas builder marketing site that treats the page like a working artboard — pure black surfaces, white display type set in GT Walsheim Medium with aggressive negative tracking, and a single confident blue (#0099ff) reserved for hyperlinks and selection states. The page rhythm is br"
+ },
+ {
+  "id": "hashicorp",
+  "title": "HashiCorp",
+  "name": "hashicorp",
+  "industry": "开发工具/云",
+  "tone": "专业克制",
+  "colorSystem": "暗黑/黑",
+  "primary": "#000000",
+  "colors": {
+   "primary": "#000000",
+   "on-primary": "#ffffff",
+   "accent-blue": "#2b89ff",
+   "ink": "#ffffff",
+   "ink-muted": "#b2b6bd",
+   "ink-subtle": "#656a76",
+   "canvas": "#000000",
+   "surface-1": "#15181e",
+   "surface-2": "#1f232b",
+   "surface-3": "#3b3d45",
+   "hairline": "#3b3d45",
+   "hairline-soft": "#252830",
+   "inverse-canvas": "#ffffff",
+   "inverse-ink": "#000000",
+   "product-terraform": "#7b42bc",
+   "product-terraform-bright": "#911ced",
+   "product-vault": "#ffcf25",
+   "product-consul": "#e62b1e",
+   "product-waypoint": "#14c6cb",
+   "product-waypoint-deep": "#12b6bb",
+   "product-vagrant": "#1868f2",
+   "product-nomad": "#00ca8e",
+   "product-boundary": "#f24c53",
+   "amber-100": "#fbeabf",
+   "amber-200": "#bb5a00",
+   "blue-7": "#101a59",
+   "semantic-success": "#00ca8e",
+   "semantic-warning": "#ffcf25",
+   "semantic-error": "#e62b1e",
+   "semantic-visited": "#a737ff"
+  },
+  "swatches": [
+   "#000000",
+   "#ffffff",
+   "#2b89ff",
+   "#b2b6bd",
+   "#656a76",
+   "#15181e",
+   "#1f232b",
+   "#3b3d45"
+  ],
+  "fonts": [
+   "Geometric",
+   "button-primary",
+   "button-primary-pressed",
+   "button-product-consul"
+  ],
+  "description": "An enterprise-infrastructure marketing canvas built around a near-black ground (#000000) and a system of per-product accent colors — Terraform purple, Vault yellow, Consul pink, Waypoint cyan, Vagrant blue — that act as identity tokens rather than decorative palette. Display type is hashicorpSans se"
+ },
+ {
+  "id": "hp",
+  "title": "HP",
+  "name": "hp",
+  "industry": "科技/互联网",
+  "tone": "专业克制",
+  "colorSystem": "蓝",
+  "primary": "#024ad8",
+  "colors": {
+   "primary": "#024ad8",
+   "primary-bright": "#296ef9",
+   "primary-deep": "#0e3191",
+   "primary-soft": "#c9e0fc",
+   "on-primary": "#ffffff",
+   "ink": "#1a1a1a",
+   "ink-deep": "#000000",
+   "ink-soft": "#292929",
+   "on-ink": "#ffffff",
+   "canvas": "#ffffff",
+   "paper": "#ffffff",
+   "cloud": "#f7f7f7",
+   "fog": "#e8e8e8",
+   "steel": "#c2c2c2",
+   "graphite": "#636363",
+   "charcoal": "#3d3d3d",
+   "hairline": "#e8e8e8",
+   "hairline-strong": "#c2c2c2",
+   "link": "#024ad8",
+   "link-pressed": "#0e3191",
+   "bloom-coral": "#ff5050",
+   "bloom-rose": "#f9d4d2",
+   "bloom-deep": "#b3262b",
+   "bloom-wine": "#5a1313",
+   "storm-mist": "#8ebdce",
+   "storm-sea": "#7fadbe",
+   "storm-deep": "#356373",
+   "error": "#b3262b"
+  },
+  "swatches": [
+   "#024ad8",
+   "#296ef9",
+   "#0e3191",
+   "#c9e0fc",
+   "#ffffff",
+   "#1a1a1a",
+   "#000000",
+   "#292929"
+  ],
+  "fonts": [
+   "Forma DJR Micro",
+   "badge-pill-ink",
+   "badge-pill-outline",
+   "badge-sale-coral"
+  ],
+  "description": "An inspired interpretation of HP's design language — a white-paper enterprise-consumer system anchored by HP Electric Blue (`#024ad8`) as the lone signal CTA, near-black ink (`#1a1a1a`) for headlines, geometric Forma-DJR sans throughout, and angular blue-chevron decorations that nod to the HP wordma"
+ },
+ {
+  "id": "ibm",
+  "title": "IBM",
+  "name": "ibm",
+  "industry": "企业服务/SaaS",
+  "tone": "专业克制",
+  "colorSystem": "蓝",
+  "primary": "#0f62fe",
+  "colors": {
+   "primary": "#0f62fe",
+   "on-primary": "#ffffff",
+   "ink": "#161616",
+   "ink-muted": "#525252",
+   "ink-subtle": "#8c8c8c",
+   "canvas": "#ffffff",
+   "surface-1": "#f4f4f4",
+   "surface-2": "#e0e0e0",
+   "inverse-canvas": "#161616",
+   "inverse-surface-1": "#262626",
+   "inverse-ink": "#ffffff",
+   "inverse-ink-muted": "#c6c6c6",
+   "hairline": "#e0e0e0",
+   "hairline-strong": "#161616",
+   "blue-60": "#0043ce",
+   "blue-80": "#002d9c",
+   "blue-hover": "#0050e6",
+   "semantic-success": "#24a148",
+   "semantic-warning": "#f1c21b",
+   "semantic-error": "#da1e28",
+   "semantic-info": "#0f62fe"
+  },
+  "swatches": [
+   "#0f62fe",
+   "#ffffff",
+   "#161616",
+   "#525252",
+   "#8c8c8c",
+   "#f4f4f4",
+   "#e0e0e0",
+   "#262626"
+  ],
+  "fonts": [
+   "IBM Plex Sans",
+   "button-danger",
+   "button-ghost",
+   "button-primary"
+  ],
+  "description": "An enterprise-marketing canvas faithful to Carbon Design System: white surfaces, charcoal type, IBM Blue (#0f62fe) as the single confident accent, and a deliberately flat-square aesthetic where corners stay at 0–4px. Type runs IBM Plex Sans at light weight 300 for display sizes (a brand signature) a"
+ },
+ {
+  "id": "intercom",
+  "title": "Intercom",
+  "name": "intercom",
+  "industry": "企业服务/SaaS",
+  "tone": "温暖亲和",
+  "colorSystem": "蓝",
+  "primary": "#0007cb",
+  "colors": {
+   "primary": "#111111",
+   "on-primary": "#ffffff",
+   "ink": "#111111",
+   "ink-muted": "#626260",
+   "ink-subtle": "#7b7b78",
+   "ink-tertiary": "#9c9fa5",
+   "canvas": "#f5f1ec",
+   "surface-1": "#ffffff",
+   "surface-2": "#ebe7e1",
+   "inverse-canvas": "#000000",
+   "inverse-surface-1": "#313130",
+   "inverse-ink": "#ffffff",
+   "inverse-ink-muted": "#9c9fa5",
+   "hairline": "#d3cec6",
+   "hairline-soft": "#ebe7e1",
+   "fin-orange": "#ff5600",
+   "report-orange": "#fe4c02",
+   "report-blue": "#65b5ff",
+   "report-green": "#0bdf50",
+   "report-pink": "#ff2067",
+   "report-lime": "#b3e01c",
+   "report-cyan": "#03b2cb",
+   "brand-blue": "#0007cb",
+   "semantic-error": "#c41c1c",
+   "semantic-success": "#0bdf50"
+  },
+  "swatches": [
+   "#0007cb",
+   "#111111",
+   "#ffffff",
+   "#626260",
+   "#7b7b78",
+   "#9c9fa5",
+   "#f5f1ec",
+   "#ebe7e1"
+  ],
+  "fonts": [
+   "Saans",
+   "SaansMono",
+   "SaansMono Fallback",
+   "button-fin"
+  ],
+  "description": "An editorial customer-service marketing canvas built around a soft cream-white ground, charcoal type set in Saans (Intercom's proprietary geometric sans), and a single confident Fin Orange (#ff5600) reserved for the Fin AI brand. Cards live as floating white tiles with thin hairline borders and mini"
+ },
+ {
+  "id": "kraken",
+  "title": "kraken",
+  "name": "kraken",
+  "industry": "区块链/加密",
+  "tone": "专业克制",
+  "colorSystem": "蓝",
+  "primary": "#5741d8",
+  "colors": {
+   "Kraken Purple": "#7132f5",
+   "Purple Dark": "#5741d8",
+   "Purple Deep": "#5b1ecf",
+   "Near Black": "#101114",
+   "Cool Gray": "#686b82",
+   "Silver Blue": "#9497a9",
+   "White": "#ffffff",
+   "Border Gray": "#dedee5",
+   "Green": "#149e61",
+   "Green Dark": "#026b3f"
+  },
+  "swatches": [
+   "#5741d8",
+   "#7132f5",
+   "#5b1ecf",
+   "#101114",
+   "#686b82",
+   "#9497a9",
+   "#ffffff",
+   "#dedee5"
+  ],
+  "fonts": [
+   "Helvetica Neue",
+   "IBM Plex Sans",
+   "Kraken-Brand",
+   "Kraken-Product"
+  ],
+  "description": "以 kraken 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "lamborghini",
+  "title": "lamborghini",
+  "name": "lamborghini",
+  "industry": "汽车/出行",
+  "tone": "奢华高端",
+  "colorSystem": "黄/绿",
+  "primary": "#ffc000",
+  "colors": {
+   "Lamborghini Gold": "#ffc000",
+   "Pure White": "#ffffff",
+   "Dark Gold": "#917300",
+   "Gold Text": "#ffce3e",
+   "Cyan Pulse": "#29abe2",
+   "Link Blue": "#3860be",
+   "Absolute Black": "#000000",
+   "Charcoal": "#202020",
+   "Dark Iron": "#181818",
+   "Near White": "#f8f8f8",
+   "Mist": "#e6e6e6",
+   "Smoke": "#f5f5f5",
+   "Graphite": "#494949",
+   "Ash": "#7d7d7d",
+   "Steel": "#969696",
+   "Slate": "#666666",
+   "Iron": "#555555",
+   "Shadow": "#313131",
+   "Teal Action": "#1eaedb"
+  },
+  "swatches": [
+   "#ffc000",
+   "#ffffff",
+   "#917300",
+   "#ffce3e",
+   "#29abe2",
+   "#3860be",
+   "#000000",
+   "#202020"
+  ],
+  "fonts": [
+   "Character",
+   "LamboType",
+   "Open Sans",
+   "btn-accent btn-large"
+  ],
+  "description": "以 lamborghini 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "linear.app",
+  "title": "Linear",
+  "name": "linear.app",
+  "industry": "开发工具/云",
+  "tone": "暗黑酷感",
+  "colorSystem": "蓝",
+  "primary": "#5e6ad2",
+  "colors": {
+   "primary": "#5e6ad2",
+   "on-primary": "#ffffff",
+   "primary-hover": "#828fff",
+   "primary-focus": "#5e69d1",
+   "ink": "#f7f8f8",
+   "ink-muted": "#d0d6e0",
+   "ink-subtle": "#8a8f98",
+   "ink-tertiary": "#62666d",
+   "canvas": "#010102",
+   "surface-1": "#0f1011",
+   "surface-2": "#141516",
+   "surface-3": "#18191a",
+   "surface-4": "#191a1b",
+   "hairline": "#23252a",
+   "hairline-strong": "#34343a",
+   "hairline-tertiary": "#3e3e44",
+   "inverse-canvas": "#ffffff",
+   "inverse-surface-1": "#f5f6f6",
+   "inverse-surface-2": "#f6f7f7",
+   "inverse-ink": "#000000",
+   "brand-secure": "#7a7fad",
+   "semantic-success": "#27a644",
+   "semantic-overlay": "#000000"
+  },
+  "swatches": [
+   "#5e6ad2",
+   "#ffffff",
+   "#828fff",
+   "#5e69d1",
+   "#f7f8f8",
+   "#d0d6e0",
+   "#8a8f98",
+   "#62666d"
+  ],
+  "fonts": [
+   "Linear Display",
+   "Linear Mono",
+   "Linear Text",
+   "SF Pro Display"
+  ],
+  "description": "A near-black product-focused marketing canvas built around #010102 (the deepest dark surface of any tool in this collection), light gray text (#f7f8f8), and the signature Linear lavender-blue (#5e6ad2) used as the single chromatic accent. The system reads as software-craft documentation: dense, tech"
+ },
+ {
+  "id": "lovable",
+  "title": "lovable",
+  "name": "lovable",
+  "industry": "AI/大模型",
+  "tone": "活力鲜艳",
+  "colorSystem": "暗黑/黑",
+  "primary": "#1c1c1c",
+  "colors": {
+   "Cream": "#f7f4ed",
+   "Charcoal": "#1c1c1c",
+   "Off-White": "#fcfbf8",
+   "Muted Gray": "#5f5f5d",
+   "Light Cream": "#eceae4",
+   "Cream Surface": "#f7f4ed",
+   "Ring Blue": "#3b82f6"
+  },
+  "swatches": [
+   "#1c1c1c",
+   "#f7f4ed",
+   "#fcfbf8",
+   "#5f5f5d",
+   "#eceae4",
+   "#3b82f6",
+   "#ffffff"
+  ],
+  "fonts": [
+   "Camera Plain Variable",
+   "carries",
+   "for subtle",
+   "the"
+  ],
+  "description": "以 lovable 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "mastercard",
+  "title": "mastercard",
+  "name": "mastercard",
+  "industry": "金融/支付",
+  "tone": "活力鲜艳",
+  "colorSystem": "暗黑/黑",
+  "primary": "#141413",
+  "colors": {
+   "Mastercard Red": "#eb001b",
+   "Mastercard Yellow": "#f79e1b",
+   "Ink Black": "#141413",
+   "Signal Orange": "#cf4500",
+   "Light Signal Orange": "#f37338",
+   "Clay Brown": "#9a3a0a",
+   "Canvas Cream": "#f3f0ee",
+   "Lifted Cream": "#fcfbfa",
+   "White": "#ffffff",
+   "Soft Bone": "#f4f4f4",
+   "Charcoal": "#262627",
+   "Slate Gray": "#696969",
+   "Granite": "#555555",
+   "Graphite": "#565656",
+   "Dust Taupe": "#d1cdc7",
+   "Link Blue": "#3860be"
+  },
+  "swatches": [
+   "#141413",
+   "#eb001b",
+   "#f79e1b",
+   "#cf4500",
+   "#f37338",
+   "#9a3a0a",
+   "#f3f0ee",
+   "#fcfbfa"
+  ],
+  "fonts": [
+   "MarkForMC",
+   "MarkOffcForMC",
+   "Sofia",
+   "SofiaSans"
+  ],
+  "description": "以 mastercard 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "meta",
+  "title": "Meta",
+  "name": "meta",
+  "industry": "科技/互联网",
+  "tone": "专业克制",
+  "colorSystem": "蓝",
+  "primary": "#0064e0",
+  "colors": {
+   "primary": "#0064e0",
+   "primary-deep": "#0457cb",
+   "primary-soft": "#0091ff",
+   "on-primary": "#ffffff",
+   "ink-button": "#000000",
+   "on-ink-button": "#ffffff",
+   "fb-blue": "#1876f2",
+   "meta-link": "#385898",
+   "oculus-purple": "#a121ce",
+   "success": "#31a24c",
+   "success-bg": "#24e400",
+   "attention": "#f2a918",
+   "warning": "#f7b928",
+   "warning-bg": "#ffe200",
+   "critical": "#e41e3f",
+   "critical-strong": "#f0284a",
+   "canvas": "#ffffff",
+   "surface-soft": "#f1f4f7",
+   "ink-deep": "#0a1317",
+   "ink": "#1c1e21",
+   "charcoal": "#444950",
+   "slate": "#4b4c4f",
+   "steel": "#5d6c7b",
+   "stone": "#8595a4",
+   "hairline": "#ced0d4",
+   "hairline-soft": "#dee3e9",
+   "disabled-text": "#bcc0c4"
+  },
+  "swatches": [
+   "#0064e0",
+   "#0457cb",
+   "#0091ff",
+   "#ffffff",
+   "#000000",
+   "#1876f2",
+   "#385898",
+   "#a121ce"
+  ],
+  "fonts": [
+   "Optimistic VF",
+   "badge-attention",
+   "badge-critical",
+   "badge-promo-yellow"
+  ],
+  "description": "Meta's design system spans hardware commerce (Quest VR, Ray-Ban Meta AI glasses) and brand surfaces with a confident product-merchandising voice. The system pairs a stark white canvas with full-bleed photographic product cards, a confident Optimistic VF wordmark/headline face, dual-CTA hero patterns"
+ },
+ {
+  "id": "minimax",
+  "title": "MiniMax",
+  "name": "minimax",
+  "industry": "AI/大模型",
+  "tone": "科技感",
+  "colorSystem": "暗黑/黑",
+  "primary": "#0a0a0a",
+  "colors": {
+   "primary": "#0a0a0a",
+   "on-primary": "#ffffff",
+   "primary-soft": "#181e25",
+   "brand-coral": "#ff5530",
+   "brand-magenta": "#ea5ec1",
+   "brand-blue": "#1456f0",
+   "brand-blue-mid": "#3b82f6",
+   "brand-blue-deep": "#1d4ed8",
+   "brand-blue-700": "#17437d",
+   "brand-cyan": "#3daeff",
+   "brand-blue-200": "#bfdbfe",
+   "brand-purple": "#a855f7",
+   "canvas": "#ffffff",
+   "surface": "#f7f8fa",
+   "surface-soft": "#f2f3f5",
+   "hairline": "#e5e7eb",
+   "hairline-soft": "#eaecf0",
+   "ink": "#0a0a0a",
+   "ink-strong": "#000000",
+   "charcoal": "#222222",
+   "slate": "#45515e",
+   "steel": "#5f5f5f",
+   "stone": "#8e8e93",
+   "muted": "#a8aab2",
+   "success-bg": "#e8ffea",
+   "success-text": "#1ba673",
+   "on-dark": "#ffffff",
+   "footer-bg": "#0a0a0a"
+  },
+  "swatches": [
+   "#0a0a0a",
+   "#ffffff",
+   "#181e25",
+   "#ff5530",
+   "#ea5ec1",
+   "#1456f0",
+   "#3b82f6",
+   "#1d4ed8"
+  ],
+  "fonts": [
+   "DM Sans",
+   "Sans",
+   "ai-product-matrix",
+   "ai-product-tile"
+  ],
+  "description": "MiniMax presents itself as a premium AI infrastructure brand through a striking duality — bold black-pill CTAs and stark white canvas for marketing, paired with vibrant gradient product cards (orange-red, magenta-pink, purple, blue) that turn each model release into a distinctive visual identity. Th"
+ },
+ {
+  "id": "mintlify",
+  "title": "Mintlify",
+  "name": "mintlify",
+  "industry": "开发工具/云",
+  "tone": "清新自然",
+  "colorSystem": "暗黑/黑",
+  "primary": "#0a0a0a",
+  "colors": {
+   "primary": "#0a0a0a",
+   "on-primary": "#ffffff",
+   "brand-green": "#00d4a4",
+   "brand-green-deep": "#00b48a",
+   "brand-green-soft": "#7cebcb",
+   "brand-tag": "#3772cf",
+   "brand-warn": "#c37d0d",
+   "brand-annotate": "#1ba673",
+   "brand-error": "#d45656",
+   "brand-cursor": "#888888",
+   "hero-sky-from": "#87a8c8",
+   "hero-sky-to": "#f5e9d8",
+   "hero-dark-from": "#1a3d4a",
+   "hero-dark-to": "#2d5a4f",
+   "testimonial-orange": "#f55a3c",
+   "testimonial-orange-deep": "#cc3a1f",
+   "canvas": "#ffffff",
+   "canvas-dark": "#0a0a0a",
+   "surface": "#f7f7f7",
+   "surface-soft": "#fafafa",
+   "surface-code": "#1c1c1e",
+   "hairline": "#e5e5e5",
+   "hairline-soft": "#ededed",
+   "hairline-dark": "#1f1f1f",
+   "ink": "#0a0a0a",
+   "charcoal": "#1c1c1e",
+   "slate": "#3a3a3c",
+   "steel": "#5a5a5c",
+   "stone": "#888888",
+   "muted": "#a8a8aa",
+   "on-dark": "#ffffff",
+   "on-dark-muted": "#b3b3b3"
+  },
+  "swatches": [
+   "#0a0a0a",
+   "#ffffff",
+   "#00d4a4",
+   "#00b48a",
+   "#7cebcb",
+   "#3772cf",
+   "#c37d0d",
+   "#1ba673"
+  ],
+  "fonts": [
+   "Geist Mono",
+   "Inter",
+   "assignment",
+   "badge-discount"
+  ],
+  "description": "Mintlify presents documentation infrastructure with a dual-mode aesthetic — atmospheric sky-gradient marketing heroes (cloud illustration backdrops, soft cream-to-blue washes) paired with dense developer-grade documentation surfaces. The system uses Inter for UI prose, Geist Mono for code, and a sig"
+ },
+ {
+  "id": "miro",
+  "title": "Miro",
+  "name": "miro",
+  "industry": "设计/创意",
+  "tone": "活力鲜艳",
+  "colorSystem": "暗黑/黑",
+  "primary": "#1c1c1e",
+  "colors": {
+   "primary": "#1c1c1e",
+   "on-primary": "#ffffff",
+   "brand-yellow": "#ffd02f",
+   "brand-yellow-deep": "#fcb900",
+   "yellow-light": "#fff4c4",
+   "yellow-dark": "#746019",
+   "brand-blue": "#4262ff",
+   "blue-450": "#5b76fe",
+   "blue-pressed": "#2a41b6",
+   "brand-coral": "#ff9999",
+   "coral-light": "#ffc6c6",
+   "coral-dark": "#600000",
+   "brand-rose": "#ffd8f4",
+   "rose-light": "#fde0f0",
+   "brand-pink": "#fde0f0",
+   "brand-teal": "#0fbcb0",
+   "teal-light": "#c3faf5",
+   "moss-dark": "#187574",
+   "brand-orange-light": "#ffe6cd",
+   "brand-red": "#fbd4d4",
+   "brand-red-dark": "#e3c5c5",
+   "success-accent": "#00b473",
+   "canvas": "#ffffff",
+   "surface": "#f7f8fa",
+   "surface-soft": "#fafbfc",
+   "surface-yellow": "#fff8e0",
+   "surface-pricing-featured": "#f5f3ff",
+   "hairline": "#e0e2e8",
+   "hairline-soft": "#eef0f3",
+   "hairline-strong": "#c7cad5",
+   "ink-deep": "#050038",
+   "ink": "#1c1c1e",
+   "charcoal": "#2c2c34",
+   "slate": "#555a6a",
+   "steel": "#6b6f7e",
+   "stone": "#8e91a0",
+   "muted": "#a5a8b5",
+   "on-dark": "#ffffff",
+   "on-dark-muted": "#a5a8b5",
+   "footer-bg": "#1c1c1e"
+  },
+  "swatches": [
+   "#1c1c1e",
+   "#ffffff",
+   "#ffd02f",
+   "#fcb900",
+   "#fff4c4",
+   "#746019",
+   "#4262ff",
+   "#5b76fe"
+  ],
+  "fonts": [
+   "Roobert PRO",
+   "Used",
+   "app-store-badge",
+   "badge-discount"
+  ],
+  "description": "Miro presents itself as the AI-powered visual workspace through a confident, almost playful brand voice — anchored by its signature canary yellow ({colors.brand-yellow}) wordmark over white canvas, broken open by colorful pastel feature tints (rose, teal, coral, orange, mint) that echo the actual st"
+ },
+ {
+  "id": "mistral.ai",
+  "title": "Mistral AI",
+  "name": "mistral.ai",
+  "industry": "AI/大模型",
+  "tone": "专业克制",
+  "colorSystem": "橙/黄",
+  "primary": "#fa520f",
+  "colors": {
+   "primary": "#fa520f",
+   "primary-deep": "#cc3a05",
+   "on-primary": "#ffffff",
+   "sunshine-300": "#ffd06a",
+   "sunshine-500": "#ffb83e",
+   "sunshine-700": "#ffa110",
+   "sunshine-800": "#ff8105",
+   "sunshine-900": "#ff8a00",
+   "yellow-saturated": "#ffd900",
+   "cream": "#fff8e0",
+   "cream-light": "#fffaeb",
+   "cream-deeper": "#fff0c2",
+   "beige-deep": "#e6d5a8",
+   "block-5": "#ffe295",
+   "block-6": "#ffd900",
+   "block-7": "#ff8105",
+   "ink": "#1f1f1f",
+   "ink-tint": "#3d3d3d",
+   "charcoal": "#2c2c2c",
+   "slate": "#4a4a4a",
+   "steel": "#6a6a6a",
+   "stone": "#8a8a8a",
+   "muted": "#a8a8a8",
+   "hairline": "#e5e5e5",
+   "hairline-soft": "#ededed",
+   "hairline-strong": "#c7c7c7",
+   "canvas": "#ffffff",
+   "surface": "#fafafa",
+   "surface-cream": "#fff8e0",
+   "surface-cream-soft": "#fffaeb",
+   "surface-code": "#1c1c1e",
+   "on-dark": "#ffffff",
+   "on-dark-muted": "#a8a8a8",
+   "on-cream": "#1f1f1f",
+   "footer-cream": "#fff8e0",
+   "link": "#fa520f"
+  },
+  "swatches": [
+   "#fa520f",
+   "#cc3a05",
+   "#ffffff",
+   "#ffd06a",
+   "#ffb83e",
+   "#ffa110",
+   "#ff8105",
+   "#ff8a00"
+  ],
+  "fonts": [
+   "Inter",
+   "JetBrains Mono",
+   "PP Editorial Old",
+   "app-store-badge"
+  ],
+  "description": "Mistral AI brands itself with a singular signature — atmospheric sunset gradients (mustard, orange, deep red) layered over photography of mountains, plus a horizontal \"sunset stripe\" bar that closes every page. The system pairs warm cream-yellow surfaces ({colors.cream}) with a saturated orange prim"
+ },
+ {
+  "id": "mongodb",
+  "title": "MongoDB",
+  "name": "mongodb",
+  "industry": "数据库/基础设施",
+  "tone": "活力鲜艳",
+  "colorSystem": "绿",
+  "primary": "#00ed64",
+  "colors": {
+   "primary": "#00ed64",
+   "primary-deep": "#00b545",
+   "primary-pressed": "#008c34",
+   "on-primary": "#001e2b",
+   "brand-green": "#00ed64",
+   "brand-green-dark": "#00684a",
+   "brand-green-mid": "#00a35c",
+   "brand-green-soft": "#c3f0d2",
+   "brand-teal-deep": "#001e2b",
+   "brand-teal": "#003d4f",
+   "brand-teal-mid": "#00684a",
+   "accent-purple": "#7b3ff2",
+   "accent-orange": "#fa6e39",
+   "accent-pink": "#f06bb8",
+   "accent-blue": "#3d4f9f",
+   "semantic-warning-bg": "#fff8e0",
+   "semantic-warning-text": "#946f3f",
+   "canvas": "#ffffff",
+   "canvas-dark": "#001e2b",
+   "surface": "#f9fbfa",
+   "surface-soft": "#f4f7f6",
+   "surface-feature": "#e3fcef",
+   "hairline": "#e1e5e8",
+   "hairline-soft": "#eceff1",
+   "hairline-strong": "#c1ccd6",
+   "hairline-dark": "#1c2d38",
+   "ink": "#001e2b",
+   "charcoal": "#1c2d38",
+   "slate": "#3d4f5b",
+   "steel": "#5c6c7a",
+   "stone": "#7c8c9a",
+   "muted": "#a8b3bc",
+   "on-dark": "#ffffff",
+   "on-dark-muted": "#a8b3bc"
+  },
+  "swatches": [
+   "#00ed64",
+   "#00b545",
+   "#008c34",
+   "#001e2b",
+   "#00684a",
+   "#00a35c",
+   "#c3f0d2",
+   "#003d4f"
+  ],
+  "fonts": [
+   "Euclid Circular A",
+   "Source Code Pro",
+   "badge-green",
+   "badge-green-soft"
+  ],
+  "description": "MongoDB carries a strong dual-mode visual identity — dark deep-teal hero bands with bright MongoDB green ({colors.brand-green}) CTAs paired with stark white documentation surfaces. The signature green pill button is unmistakable across product, pricing, learning, and AI use-case surfaces. The system"
+ },
+ {
+  "id": "nike",
+  "title": "Nike",
+  "name": "nike",
+  "industry": "生活/消费",
+  "tone": "暗黑酷感",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "primary": "#111111",
+   "on-primary": "#ffffff",
+   "canvas": "#ffffff",
+   "soft-cloud": "#f5f5f5",
+   "ink": "#111111",
+   "charcoal": "#39393b",
+   "ash": "#4b4b4d",
+   "mute": "#707072",
+   "stone": "#9e9ea0",
+   "hairline": "#cacacb",
+   "hairline-soft": "#e5e5e5",
+   "sale": "#d30005",
+   "sale-deep": "#780700",
+   "success": "#007d48",
+   "success-bright": "#1eaa52",
+   "info": "#1151ff",
+   "info-deep": "#0034e3",
+   "accent-pink": "#ed1aa0",
+   "accent-pink-soft": "#ffb0dd",
+   "accent-purple-soft": "#beaffd",
+   "accent-purple-pale": "#d6d1ff",
+   "accent-teal": "#0a7281",
+   "accent-pink-deep": "#4c012d"
+  },
+  "swatches": [
+   "#ffffff",
+   "#111111",
+   "#f5f5f5",
+   "#39393b",
+   "#4b4b4d",
+   "#707072",
+   "#9e9ea0",
+   "#cacacb"
+  ],
+  "fonts": [
+   "Helvetica Neue",
+   "Helvetica Now Display Medium",
+   "Helvetica Now Text",
+   "Helvetica Now Text Medium"
+  ],
+  "description": "| A photography-first commerce system built on extreme typographic contrast — towering uppercase Futura display lockups burned into editorial campaign imagery, sitting above a dense, neutral, near-monochrome retail chrome of pill-shaped black CTAs, gray search and tag pills, and tight 8px-grid produ"
+ },
+ {
+  "id": "nintendo-2001",
+  "title": "Nintendo.com (2001) Analysis",
+  "name": "nintendo-2001",
+  "industry": "游戏/娱乐",
+  "tone": "活力鲜艳",
+  "colorSystem": "红",
+  "primary": "#e60012",
+  "colors": {
+   "primary": "#e60012"
+  },
+  "swatches": [
+   "#e60012",
+   "#f68d1f",
+   "#ecab37",
+   "#e48600",
+   "#7a8aba",
+   "#8ba1d4",
+   "#9fbee7",
+   "#acace7"
+  ],
+  "fonts": [
+   "Arial",
+   "Arial Black",
+   "activeIndicator",
+   "backgroundColor"
+  ],
+  "description": "An analysis of Nintendo.com's 2001 design language — a brushed-periwinkle \"console chrome\" interface where every panel is a beveled metal plate, navigation glows amber over a halftone-dotted carbon bar, and bold outlined display type sits on circuit-board hero fields. A Y2K hardware aesthetic that t"
+ },
+ {
+  "id": "notion",
+  "title": "Notion",
+  "name": "notion",
+  "industry": "企业服务/SaaS",
+  "tone": "清新自然",
+  "colorSystem": "蓝",
+  "primary": "#5645d4",
+  "colors": {
+   "primary": "#5645d4",
+   "primary-pressed": "#4534b3",
+   "primary-deep": "#3a2a99",
+   "on-primary": "#ffffff",
+   "brand-navy": "#0a1530",
+   "brand-navy-deep": "#070f24",
+   "brand-navy-mid": "#1a2a52",
+   "link-blue": "#0075de",
+   "link-blue-pressed": "#005bab",
+   "brand-orange": "#dd5b00",
+   "brand-orange-deep": "#793400",
+   "brand-pink": "#ff64c8",
+   "brand-pink-deep": "#a02e6d",
+   "brand-purple": "#7b3ff2",
+   "brand-purple-300": "#d6b6f6",
+   "brand-purple-800": "#391c57",
+   "brand-teal": "#2a9d99",
+   "brand-green": "#1aae39",
+   "brand-yellow": "#f5d75e",
+   "brand-brown": "#523410",
+   "card-tint-peach": "#ffe8d4",
+   "card-tint-rose": "#fde0ec",
+   "card-tint-mint": "#d9f3e1",
+   "card-tint-lavender": "#e6e0f5",
+   "card-tint-sky": "#dcecfa",
+   "card-tint-yellow": "#fef7d6",
+   "card-tint-yellow-bold": "#f9e79f",
+   "card-tint-cream": "#f8f5e8",
+   "card-tint-gray": "#f0eeec",
+   "canvas": "#ffffff",
+   "surface": "#f6f5f4",
+   "surface-soft": "#fafaf9",
+   "hairline": "#e5e3df",
+   "hairline-soft": "#ede9e4",
+   "hairline-strong": "#c8c4be",
+   "ink-deep": "#000000",
+   "ink": "#1a1a1a",
+   "charcoal": "#37352f",
+   "slate": "#5d5b54",
+   "steel": "#787671",
+   "stone": "#a4a097",
+   "muted": "#bbb8b1",
+   "on-dark": "#ffffff",
+   "on-dark-muted": "#a4a097",
+   "semantic-success": "#1aae39",
+   "semantic-warning": "#dd5b00",
+   "semantic-error": "#e03131"
+  },
+  "swatches": [
+   "#5645d4",
+   "#4534b3",
+   "#3a2a99",
+   "#ffffff",
+   "#0a1530",
+   "#070f24",
+   "#1a2a52",
+   "#0075de"
+  ],
+  "fonts": [
+   "Fallbacks",
+   "Inter",
+   "Notion Sans",
+   "badge-orange"
+  ],
+  "description": "Notion presents itself as the all-in-one workspace through a confident, illustration-rich brand voice — anchored by a deep navy hero band ({colors.brand-navy}) decorated with brand-colored sticky-note dots and mesh wire illustrations, a signature purple pill primary CTA ({colors.primary}), and a ric"
+ },
+ {
+  "id": "nvidia",
+  "title": "NVIDIA",
+  "name": "nvidia",
+  "industry": "科技/互联网",
+  "tone": "暗黑酷感",
+  "colorSystem": "绿",
+  "primary": "#76b900",
+  "colors": {
+   "primary": "#76b900",
+   "on-primary": "#000000",
+   "primary-dark": "#5a8d00",
+   "ink": "#000000",
+   "canvas": "#ffffff",
+   "surface-dark": "#000000",
+   "surface-soft": "#f7f7f7",
+   "surface-elevated": "#1a1a1a",
+   "hairline": "#cccccc",
+   "hairline-strong": "#5e5e5e",
+   "body": "#1a1a1a",
+   "mute": "#757575",
+   "stone": "#898989",
+   "ash": "#a7a7a7",
+   "on-dark": "#ffffff"
+  },
+  "swatches": [
+   "#76b900",
+   "#000000",
+   "#5a8d00",
+   "#ffffff",
+   "#f7f7f7",
+   "#1a1a1a",
+   "#cccccc",
+   "#5e5e5e"
+  ],
+  "fonts": [
+   "NVIDIA-EMEA",
+   "badge-tag",
+   "breadcrumb-bar",
+   "button-disabled"
+  ],
+  "description": "| An engineering-grade marketing system organized around two surface modes — a deep black canvas for hero and footer chapters and a flat paper-white canvas for body content — connected by a single, almost violently saturated NVIDIA Green accent that carries every CTA, every active tab, and the small"
+ },
+ {
+  "id": "ollama",
+  "title": "Ollama",
+  "name": "ollama",
+  "industry": "AI/大模型",
+  "tone": "极简",
+  "colorSystem": "暗黑/黑",
+  "primary": "#000000",
+  "colors": {
+   "primary": "#000000",
+   "on-primary": "#ffffff",
+   "ink": "#000000",
+   "ink-deep": "#090909",
+   "charcoal": "#525252",
+   "body": "#737373",
+   "mute": "#a3a3a3",
+   "canvas": "#ffffff",
+   "surface-soft": "#fafafa",
+   "surface-card": "#ffffff",
+   "hairline": "#e5e5e5",
+   "hairline-strong": "#d4d4d4",
+   "on-dark": "#ffffff"
+  },
+  "swatches": [
+   "#000000",
+   "#ffffff",
+   "#090909",
+   "#525252",
+   "#737373",
+   "#a3a3a3",
+   "#fafafa",
+   "#e5e5e5"
+  ],
+  "fonts": [
+   "SF Pro Rounded",
+   "button-disabled",
+   "button-pill-on-dark",
+   "button-primary"
+  ],
+  "description": "| An almost defiantly minimal documentation-first system that treats the home page like a Markdown README — paper-white canvas, 36px center-aligned heading, a single black pill CTA, an inline terminal install snippet, and a hand-drawn llama mascot as the only ornamental element. No gradient, no hero"
+ },
+ {
+  "id": "opencode.ai",
+  "title": "OpenCode",
+  "name": "opencode.ai",
+  "industry": "开发工具/云",
+  "tone": "暗黑酷感",
+  "colorSystem": "暗黑/黑",
+  "primary": "#201d1d",
+  "colors": {
+   "primary": "#201d1d",
+   "on-primary": "#fdfcfc",
+   "ink": "#201d1d",
+   "ink-deep": "#0f0000",
+   "charcoal": "#302c2c",
+   "body": "#424245",
+   "mute": "#646262",
+   "stone": "#6e6e73",
+   "ash": "#9a9898",
+   "canvas": "#fdfcfc",
+   "surface-soft": "#f8f7f7",
+   "surface-card": "#f1eeee",
+   "surface-dark": "#201d1d",
+   "surface-dark-elevated": "#302c2c"
+  },
+  "swatches": [
+   "#201d1d",
+   "#fdfcfc",
+   "#0f0000",
+   "#302c2c",
+   "#424245",
+   "#646262",
+   "#6e6e73",
+   "#9a9898"
+  ],
+  "fonts": [
+   "Berkeley Mono",
+   "Fig 1. 150K GitHub Stars",
+   "Fig 2. 850 Contributors",
+   "Fig 3. 6.5M Monthly Devs"
+  ],
+  "description": "| A terminal-native marketing system rendered entirely in Berkeley Mono — every word on the page, from the hero headline down to the footer fine print, is monospaced. The page itself reads like a manpage or a static-site README: warm cream canvas (`#fdfcfc`), nearly-black ink (`#201d1d`), 4px-radius"
+ },
+ {
+  "id": "pinterest",
+  "title": "Pinterest",
+  "name": "pinterest",
+  "industry": "设计/创意",
+  "tone": "活力鲜艳",
+  "colorSystem": "红",
+  "primary": "#e60023",
+  "colors": {
+   "primary": "#e60023",
+   "on-primary": "#ffffff",
+   "primary-pressed": "#cc001f",
+   "ink": "#000000",
+   "ink-soft": "#211922",
+   "body": "#33332e",
+   "charcoal": "#262622",
+   "mute": "#62625b",
+   "ash": "#91918c",
+   "stone": "#c8c8c1",
+   "hairline": "#dadad3",
+   "hairline-soft": "#e5e5e0",
+   "on-secondary": "#000000",
+   "secondary-bg": "#e5e5e0",
+   "secondary-pressed": "#c8c8c1",
+   "canvas": "#ffffff",
+   "surface-soft": "#fbfbf9",
+   "surface-card": "#f6f6f3",
+   "surface-elevated": "#ffffff",
+   "on-dark": "#ffffff"
+  },
+  "swatches": [
+   "#e60023",
+   "#ffffff",
+   "#cc001f",
+   "#000000",
+   "#211922",
+   "#33332e",
+   "#262622",
+   "#62625b"
+  ],
+  "fonts": [
+   "Helvetica Neue",
+   "Pin Sans",
+   "Segoe UI",
+   "button-disabled"
+  ],
+  "description": "| A photography-first discovery system organized around the Pinterest Red CTA, the masonry pin grid, and a soft warm-cream chrome that gets out of the imagery's way. The home page is a content-discovery tool wearing the chrome of a magazine publisher: 70px display headlines, friendly Pin Sans typogr"
+ },
+ {
+  "id": "playstation",
+  "title": "PlayStation",
+  "name": "playstation",
+  "industry": "游戏/娱乐",
+  "tone": "暗黑酷感",
+  "colorSystem": "蓝",
+  "primary": "#0070d1",
+  "colors": {
+   "primary": "#0070d1",
+   "primary-pressed": "#0064b7",
+   "primary-active": "#004d8d",
+   "on-primary": "#ffffff",
+   "link-light": "#0064b7",
+   "link-dark": "#53b1ff",
+   "commerce": "#d53b00",
+   "commerce-pressed": "#aa2f00",
+   "commerce-link-base": "#d63d00",
+   "on-commerce": "#ffffff",
+   "ink": "#000000",
+   "ink-deep": "#121314",
+   "ink-elevated": "#181818",
+   "charcoal": "#1f2024"
+  },
+  "swatches": [
+   "#0070d1",
+   "#0064b7",
+   "#004d8d",
+   "#ffffff",
+   "#53b1ff",
+   "#d53b00",
+   "#aa2f00",
+   "#d63d00"
+  ],
+  "fonts": [
+   "PlayStation SST",
+   "badge-info",
+   "button-commerce",
+   "button-commerce-pressed"
+  ],
+  "description": "| A three-surface marketing system organized around alternating black, white, and PlayStation Blue chapters that scroll past the viewer like a console launch trailer. Each section has a single editorial purpose — hero photography, console product render, PS Plus tier callout, news strip — and each o"
+ },
+ {
+  "id": "posthog",
+  "title": "PostHog",
+  "name": "posthog",
+  "industry": "开发工具/云",
+  "tone": "活力鲜艳",
+  "colorSystem": "橙/黄",
+  "primary": "#f7a501",
+  "colors": {
+   "primary": "#f7a501",
+   "primary-pressed": "#dd9001",
+   "primary-active": "#b17816",
+   "on-primary": "#23251d",
+   "ink": "#23251d",
+   "body": "#4d4f46",
+   "charcoal": "#33342d",
+   "mute": "#6c6e63",
+   "ash": "#9b9c92",
+   "stone": "#b6b7af",
+   "hairline": "#bfc1b7",
+   "hairline-soft": "#dcdfd2",
+   "on-dark": "#ffffff",
+   "canvas": "#eeefe9",
+   "surface-soft": "#e5e7e0",
+   "surface-card": "#ffffff",
+   "surface-doc": "#fcfcfa",
+   "surface-dark": "#23251d",
+   "link-blue": "#1d4ed8",
+   "link-teal": "#1078a3",
+   "accent-blue": "#2c84e0",
+   "accent-blue-soft": "#dceaf6",
+   "accent-red": "#cd4239",
+   "accent-red-soft": "#f7d6d3",
+   "accent-green": "#2c8c66",
+   "accent-green-soft": "#d9eddf",
+   "accent-purple": "#7c44a6",
+   "accent-purple-soft": "#e7d8ee"
+  },
+  "swatches": [
+   "#f7a501",
+   "#dd9001",
+   "#b17816",
+   "#23251d",
+   "#4d4f46",
+   "#33342d",
+   "#6c6e63",
+   "#9b9c92"
+  ],
+  "fonts": [
+   "IBM Plex Sans",
+   "IBM Plex Sans Variable",
+   "Source Code Pro",
+   "badge-promo"
+  ],
+  "description": "| A playful developer-tools system rendered on a warm cream canvas with hand-drawn hedgehog mascots dotted across every page like marginalia in a sketchbook. The chrome reads like a friendly engineering blog: olive-gray ink (#4d4f46) for body, deep olive-charcoal (#23251d) for headlines, IBM Plex Sa"
+ },
+ {
+  "id": "raycast",
+  "title": "Raycast",
+  "name": "raycast",
+  "industry": "开发工具/云",
+  "tone": "暗黑酷感",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "primary": "#ffffff",
+   "primary-pressed": "#e8e8e8",
+   "on-primary": "#000000",
+   "ink": "#f4f4f6",
+   "body": "#cdcdcd",
+   "charcoal": "#d3d3d4",
+   "mute": "#9c9c9d",
+   "ash": "#6a6b6c",
+   "stone": "#434345",
+   "on-dark": "#ffffff"
+  },
+  "swatches": [
+   "#ffffff",
+   "#e8e8e8",
+   "#000000",
+   "#f4f4f6",
+   "#cdcdcd",
+   "#d3d3d4",
+   "#9c9c9d",
+   "#6a6b6c"
+  ],
+  "fonts": [
+   "Inter",
+   "Inter Fallback",
+   "app-icon-tile",
+   "app-icon-tile-large"
+  ],
+  "description": "| Raycast's marketing system reads like an extended product screenshot. The chrome IS the in-product chrome at marketing scale: pure-near-black canvas, hairline 1px borders, command-palette-style cards, Inter typography with the ss03 stylistic set enabled site-wide, white CTA pill, and a small set o"
+ },
+ {
+  "id": "renault",
+  "title": "Renault",
+  "name": "renault",
+  "industry": "汽车/出行",
+  "tone": "专业克制",
+  "colorSystem": "黄/绿",
+  "primary": "#ffed00",
+  "colors": {
+   "primary": "#ffed00",
+   "primary-deep": "#e6d200",
+   "on-primary": "#000000",
+   "ink": "#000000",
+   "body": "#222222",
+   "charcoal": "#333333",
+   "mute": "#666666",
+   "ash": "#8a8a8a",
+   "stone": "#c4c4c4",
+   "on-dark": "#ffffff"
+  },
+  "swatches": [
+   "#ffed00",
+   "#e6d200",
+   "#000000",
+   "#222222",
+   "#333333",
+   "#666666",
+   "#8a8a8a",
+   "#c4c4c4"
+  ],
+  "fonts": [
+   "NouvelR",
+   "badge-new",
+   "button-icon-square",
+   "button-outline-dark"
+  ],
+  "description": "| Renault's web presence pairs the freshly-modernised Renault diamond (the 2021 flat-line rhombus mark) with a stark black-and-white canvas, a signature Sunlight Yellow accent, and the proprietary NouvelR display typeface. The system reads as confident, photography-first automotive — large hero cars"
+ },
+ {
+  "id": "replicate",
+  "title": "Replicate",
+  "name": "replicate",
+  "industry": "AI/大模型",
+  "tone": "极简",
+  "colorSystem": "红",
+  "primary": "#ea2804",
+  "colors": {
+   "primary": "#ea2804",
+   "primary-deep": "#c01f00",
+   "on-primary": "#ffffff",
+   "ink": "#202020",
+   "body": "#3a3a3a",
+   "charcoal": "#575757",
+   "mute": "#646464",
+   "ash": "#8d8d8d",
+   "stone": "#bbbbbb",
+   "on-dark": "#fcfcfc"
+  },
+  "swatches": [
+   "#ea2804",
+   "#c01f00",
+   "#ffffff",
+   "#202020",
+   "#3a3a3a",
+   "#575757",
+   "#646464",
+   "#8d8d8d"
+  ],
+  "fonts": [
+   "badge-status",
+   "badge-tag",
+   "basier-square",
+   "button-dark"
+  ],
+  "description": "| Replicate's marketing surfaces pair the warm-cream developer-tools aesthetic of an indie ML playground with a confident hot-orange brand accent and a signature display typeface (rb-freigeist-neue) sized aggressively large at 72px+. The system reads as \"AI lab notebook crossed with print magazine\":"
+ },
+ {
+  "id": "resend",
+  "title": "Resend",
+  "name": "resend",
+  "industry": "开发工具/云",
+  "tone": "极简",
+  "colorSystem": "中性/白",
+  "primary": "#fcfdff",
+  "colors": {
+   "primary": "#fcfdff",
+   "primary-on": "#000000",
+   "ink": "#fcfdff"
+  },
+  "swatches": [
+   "#fcfdff",
+   "#000000",
+   "#f1f7fe",
+   "#0a0a0c",
+   "#101012",
+   "#06060a",
+   "#a1a4a5",
+   "#888e90"
+  ],
+  "fonts": [
+   "ABC Favorit",
+   "Domaine Display",
+   "Geist Mono",
+   "Helvetica"
+  ],
+  "description": "| Resend's marketing surfaces sit on a near-pure black canvas with off-white text and a single signature color — the deep editorial-serif Domaine Display headline mark — that gives an otherwise utilitarian developer-tool brand its print-magazine confidence. The system pairs Domaine Display (oversize"
+ },
+ {
+  "id": "revolut",
+  "title": "Revolut",
+  "name": "revolut",
+  "industry": "金融/支付",
+  "tone": "暗黑酷感",
+  "colorSystem": "蓝",
+  "primary": "#494fdf",
+  "colors": {
+   "primary": "#494fdf",
+   "primary-bright": "#4f55f1",
+   "primary-deep": "#3a40c4",
+   "on-primary": "#ffffff",
+   "ink": "#191c1f",
+   "body": "#1f2226",
+   "charcoal": "#3a3d40",
+   "mute": "#505a63",
+   "ash": "#5c5e60",
+   "stone": "#8d969e",
+   "faint": "#c9c9cd",
+   "on-dark": "#ffffff"
+  },
+  "swatches": [
+   "#494fdf",
+   "#4f55f1",
+   "#3a40c4",
+   "#ffffff",
+   "#191c1f",
+   "#1f2226",
+   "#3a3d40",
+   "#505a63"
+  ],
+  "fonts": [
+   "Aeonik Pro",
+   "Inter",
+   "badge-feature",
+   "badge-tag"
+  ],
+  "description": "| Revolut's marketing surfaces pair a stark black canvas with the brand's cobalt-violet (`#494fdf`) and a wide accent palette of deep, fully-saturated product colours — teal, light-blue, deep pink, light-green, warning orange. The system reads as fintech-meets-product-brochure: oversized 80px–136px "
+ },
+ {
+  "id": "runwayml",
+  "title": "runwayml",
+  "name": "runwayml",
+  "industry": "AI/大模型",
+  "tone": "暗黑酷感",
+  "colorSystem": "中性/灰",
+  "primary": "#404040",
+  "colors": {
+   "Runway Black": "#000000",
+   "Deep Black": "#030303",
+   "Dark Surface": "#1a1a1a",
+   "Pure White": "#ffffff",
+   "Near White": "#fefefe",
+   "Cool Cloud": "#e9ecf2",
+   "Border Dark": "#27272a",
+   "Charcoal": "#404040",
+   "Near Charcoal": "#3f3f3f",
+   "Cool Slate": "#767d88",
+   "Mid Slate": "#7d848e",
+   "Muted Gray": "#a7a7a7",
+   "Cool Silver": "#c9ccd1",
+   "Light Silver": "#d0d4d4",
+   "Tailwind Gray": "#6b7280",
+   "Dark Link": "#0c0c0c",
+   "Footer Gray": "#999999"
+  },
+  "swatches": [
+   "#404040",
+   "#000000",
+   "#030303",
+   "#1a1a1a",
+   "#ffffff",
+   "#fefefe",
+   "#e9ecf2",
+   "#27272a"
+  ],
+  "fonts": [
+   "abcNormal",
+   "abcNormal Fallback",
+   "commitment",
+   "complete"
+  ],
+  "description": "以 runwayml 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "sanity",
+  "title": "sanity",
+  "name": "sanity",
+  "industry": "开发工具/云",
+  "tone": "清新自然",
+  "colorSystem": "红",
+  "primary": "#f36458",
+  "colors": {
+   "Sanity Black": "#0b0b0b",
+   "Pure Black": "#000000",
+   "Sanity Red": "#f36458",
+   "Electric Blue": "#0052ef",
+   "Light Blue": "#55beff",
+   "Near Black": "#0b0b0b",
+   "Dark Gray": "#212121",
+   "Medium Dark": "#353535",
+   "Pure White": "#ffffff",
+   "Light Gray": "#ededed",
+   "White": "#ffffff",
+   "Silver": "#b9b9b9",
+   "Medium Gray": "#797979",
+   "Charcoal": "#212121",
+   "Near Black Text": "#0b0b0b",
+   "Error Red": "#dd0000",
+   "GPC Green": "#37cd84",
+   "Focus Ring Blue": "#0052ef",
+   "Dark Border": "#0b0b0b",
+   "Subtle Border": "#212121",
+   "Medium Border": "#353535",
+   "Light Border": "#ffffff"
+  },
+  "swatches": [
+   "#f36458",
+   "#0b0b0b",
+   "#000000",
+   "#0052ef",
+   "#55beff",
+   "#212121",
+   "#353535",
+   "#ffffff"
+  ],
+  "fonts": [
+   "For",
+   "for display sizes and",
+   "waldenburgNormal"
+  ],
+  "description": "以 sanity 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "sentry",
+  "title": "Sentri Inspired",
+  "name": "sentry",
+  "industry": "开发工具/云",
+  "tone": "暗黑酷感",
+  "colorSystem": "暗黑/黑",
+  "primary": "#150f23",
+  "colors": {
+   "primary": "#150f23",
+   "ink-deep": "#1f1633",
+   "on-primary": "#ffffff",
+   "accent-lime": "#c2ef4e",
+   "accent-pink": "#fa7faa",
+   "accent-violet": "#6a5fc1",
+   "accent-violet-deep": "#422082",
+   "accent-violet-mid": "#79628c",
+   "surface-canvas-dark": "#1f1633",
+   "surface-canvas-light": "#ffffff",
+   "surface-night": "#150f23",
+   "surface-press-light": "#f0f0f0",
+   "surface-press-stronger": "#efefef",
+   "hairline-violet": "#362d59",
+   "hairline-cool": "#cfcfdb",
+   "hairline-cloud": "#e5e7eb",
+   "ink": "#1f1633",
+   "ink-press": "#1a1a1a",
+   "on-dark-muted": "#bdb8c0",
+   "on-dark-faint": "#3f3849",
+   "ring-focus": "#9dc1f5"
+  },
+  "swatches": [
+   "#150f23",
+   "#1f1633",
+   "#ffffff",
+   "#c2ef4e",
+   "#fa7faa",
+   "#6a5fc1",
+   "#422082",
+   "#79628c"
+  ],
+  "fonts": [
+   "Get Demo",
+   "Get Started",
+   "Monaco",
+   "Rubik"
+  ],
+  "description": "An inspired interpretation of Sentri's design language — a developer-tools brand built on a deep purple-violet midnight canvas, electric lime accents, and a slightly subversive illustrated personality. The system pairs a custom display sans (chunky, playful, near-condensed) with the open Rubik famil"
+ },
+ {
+  "id": "shopify",
+  "title": "Shopifi Inspired",
+  "name": "shopify",
+  "industry": "电商/零售",
+  "tone": "活力鲜艳",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "primary": "#000000",
+   "ink": "#000000",
+   "on-primary": "#ffffff",
+   "on-dark": "#ffffff",
+   "canvas-night": "#000000",
+   "canvas-night-elevated": "#0a0a0a",
+   "canvas-light": "#ffffff",
+   "canvas-cream": "#fbfbf5",
+   "surface-elevated-dark": "#1e2c31",
+   "shade-30": "#d4d4d8",
+   "shade-40": "#a1a1aa",
+   "shade-50": "#71717a",
+   "shade-60": "#52525b",
+   "shade-70": "#3f3f46",
+   "hairline-light": "#e4e4e7",
+   "hairline-dark": "#1e2c31",
+   "aloe-10": "#c1fbd4",
+   "pistachio-10": "#d4f9e0",
+   "link-cool-1": "#9dabad",
+   "link-cool-2": "#9797a2",
+   "link-cool-3": "#bdbdca",
+   "link-mint": "#99b3ad"
+  },
+  "swatches": [
+   "#ffffff",
+   "#000000",
+   "#0a0a0a",
+   "#fbfbf5",
+   "#1e2c31",
+   "#d4d4d8",
+   "#a1a1aa",
+   "#71717a"
+  ],
+  "fonts": [
+   "Inter Variable",
+   "NeueHaasGrotesk Display",
+   "button-aloe-pill",
+   "button-outline-on-dark"
+  ],
+  "description": "An inspired interpretation of Shopifi's design language — a cinematic commerce platform that runs two parallel design tracks. The marketing-hero and product-narrative pages live on near-black canvases with full-bleed photography of merchants, giant Neue Haas Grotesk display type at thin weights, and"
+ },
+ {
+  "id": "slack",
+  "title": "Slacc Inspired",
+  "name": "slack",
+  "industry": "通讯/协作",
+  "tone": "活力鲜艳",
+  "colorSystem": "品红/粉",
+  "primary": "#4a154b",
+  "colors": {
+   "primary": "#4a154b",
+   "primary-deep": "#481a54",
+   "primary-press": "#611f69",
+   "primary-tint": "#592466",
+   "on-primary": "#ffffff",
+   "ink": "#1d1d1d",
+   "ink-mute": "#696969",
+   "link-blue": "#1264a3",
+   "link-hover": "#3860be",
+   "canvas": "#ffffff",
+   "canvas-cream": "#f4ede4",
+   "canvas-lavender": "#f9f0ff",
+   "surface-elev": "#ffffff",
+   "surface-aubergine": "#4a154b",
+   "hairline": "#e6e6e6",
+   "hairline-strong": "#000000",
+   "semantic-error": "#cc4117",
+   "semantic-success": "#007a5a",
+   "on-aubergine-mute": "#d9bdde"
+  },
+  "swatches": [
+   "#4a154b",
+   "#481a54",
+   "#611f69",
+   "#592466",
+   "#ffffff",
+   "#1d1d1d",
+   "#696969",
+   "#1264a3"
+  ],
+  "fonts": [
+   "Salesforce-Avant-Garde",
+   "Salesforce-Sans",
+   "button-outline-aubergine",
+   "button-outline-on-aubergine"
+  ],
+  "description": "An inspired interpretation of Slacc's design language — a workplace messaging brand built on a deep aubergine primary, with cream-lavender hero gradients, blue inline links, and pill CTAs. The system pairs a proprietary humanist sans for display with a separate utility sans for body, and stages prod"
+ },
+ {
+  "id": "spacex",
+  "title": "Spacex Inspired",
+  "name": "spacex",
+  "industry": "科技/互联网",
+  "tone": "暗黑酷感",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "primary": "#000000",
+   "ink": "#000000",
+   "on-primary": "#ffffff",
+   "on-primary-mute": "#f0f0fa",
+   "canvas-night": "#000000",
+   "canvas-night-soft": "#0a0a0a",
+   "canvas-light": "#ffffff",
+   "canvas-cool": "#f0f0fa",
+   "hairline-on-dark": "#3a3a3f",
+   "hairline-on-light": "#e0e0e8",
+   "link-on-dark": "#ffffff",
+   "link-blue-fallback": "#0000ee",
+   "ink-mute": "#5a5a5f"
+  },
+  "swatches": [
+   "#ffffff",
+   "#000000",
+   "#f0f0fa",
+   "#0a0a0a",
+   "#3a3a3f",
+   "#e0e0e8",
+   "#0000ee",
+   "#5a5a5f"
+  ],
+  "fonts": [
+   "D-DIN",
+   "D-DIN-Bold",
+   "button-filled-cool",
+   "button-ghost-on-dark"
+  ],
+  "description": "An inspired interpretation of Spasex's design language — a mission-oriented aerospace brand built on pure black canvas, full-bleed photographic and video heroes of rockets and Mars landscapes, and uppercase D-DIN display type set in tight vertical leading. UI chrome is intentionally minimal a single"
+ },
+ {
+  "id": "spotify",
+  "title": "spotify",
+  "name": "spotify",
+  "industry": "游戏/娱乐",
+  "tone": "暗黑酷感",
+  "colorSystem": "绿",
+  "primary": "#1ed760",
+  "colors": {
+   "Spotify Green": "#1ed760",
+   "Near Black": "#121212",
+   "Dark Surface": "#181818",
+   "Mid Dark": "#1f1f1f",
+   "White": "#ffffff",
+   "Silver": "#b3b3b3",
+   "Near White": "#cbcbcb",
+   "Light": "#fdfdfd",
+   "Negative Red": "#f3727f",
+   "Warning Orange": "#ffa42b",
+   "Announcement Blue": "#539df5",
+   "Dark Card": "#252525",
+   "Mid Card": "#272727",
+   "Border Gray": "#4d4d4d",
+   "Light Border": "#7c7c7c",
+   "Separator": "#b3b3b3",
+   "Light Surface": "#eeeeee",
+   "Spotify Green Border": "#1db954"
+  },
+  "swatches": [
+   "#1ed760",
+   "#121212",
+   "#181818",
+   "#1f1f1f",
+   "#ffffff",
+   "#b3b3b3",
+   "#cbcbcb",
+   "#fdfdfd"
+  ],
+  "fonts": [
+   "SpotifyMixUI",
+   "SpotifyMixUITitle"
+  ],
+  "description": "以 spotify 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "starbucks",
+  "title": "starbucks",
+  "name": "starbucks",
+  "industry": "生活/消费",
+  "tone": "温暖亲和",
+  "colorSystem": "绿",
+  "primary": "#00754a",
+  "colors": {
+   "Starbucks Green": "#006241",
+   "Green Accent": "#00754a",
+   "House Green": "#1e3932",
+   "Green Uplift": "#2b5148",
+   "Green Light": "#d4e9e2",
+   "Gold": "#cba258",
+   "Gold Light": "#dfc49d",
+   "Gold Lightest": "#faf6ee",
+   "White": "#ffffff",
+   "Neutral Cool": "#f9f9f9",
+   "Neutral Warm": "#f2f0eb",
+   "Ceramic": "#edebe9",
+   "Black": "#000000",
+   "Rewards Green": "#33433d",
+   "Red": "#c82014",
+   "Yellow": "#fbbc05"
+  },
+  "swatches": [
+   "#00754a",
+   "#006241",
+   "#1e3932",
+   "#2b5148",
+   "#d4e9e2",
+   "#cba258",
+   "#dfc49d",
+   "#faf6ee"
+  ],
+  "fonts": [
+   "SoDoSans",
+   "all 0.2s ease",
+   "custom",
+   "letterSpacingLoose"
+  ],
+  "description": "以 starbucks 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "stripe",
+  "title": "Stripi Inspired",
+  "name": "stripe",
+  "industry": "金融/支付",
+  "tone": "科技感",
+  "colorSystem": "蓝",
+  "primary": "#533afd",
+  "colors": {
+   "primary": "#533afd",
+   "primary-deep": "#4434d4",
+   "primary-press": "#2e2b8c",
+   "primary-soft": "#665efd",
+   "primary-bg-subdued-hover": "#b9b9f9",
+   "brand-dark-900": "#1c1e54",
+   "ink": "#0d253d",
+   "ink-secondary": "#273951",
+   "ink-mute": "#64748d",
+   "ink-mute-2": "#61718a",
+   "on-primary": "#ffffff",
+   "canvas": "#ffffff",
+   "canvas-soft": "#f6f9fc",
+   "canvas-cream": "#f5e9d4",
+   "hairline": "#e3e8ee",
+   "hairline-input": "#a8c3de",
+   "ruby": "#ea2261",
+   "magenta": "#f96bee",
+   "lemon": "#9b6829",
+   "shadow-blue": "#003770"
+  },
+  "swatches": [
+   "#533afd",
+   "#4434d4",
+   "#2e2b8c",
+   "#665efd",
+   "#b9b9f9",
+   "#1c1e54",
+   "#0d253d",
+   "#273951"
+  ],
+  "fonts": [
+   "box-shadow",
+   "button-on-dark",
+   "button-primary-pill",
+   "button-primary-pill-pressed"
+  ],
+  "description": "An inspired interpretation of Stripi's design language — a financial-infrastructure brand built on a deep navy ink, an electric indigo primary, and a recurring atmospheric gradient mesh that occupies the upper third of nearly every marketing page. The system pairs the proprietary Sohne family at thi"
+ },
+ {
+  "id": "supabase",
+  "title": "Supabaze Inspired",
+  "name": "supabase",
+  "industry": "开发工具/云",
+  "tone": "活力鲜艳",
+  "colorSystem": "绿",
+  "primary": "#3ecf8e",
+  "colors": {
+   "primary": "#3ecf8e",
+   "primary-deep": "#24b47e",
+   "primary-soft": "#4ade80",
+   "ink": "#171717",
+   "ink-secondary": "#212121",
+   "ink-mute": "#707070",
+   "ink-mute-2": "#9a9a9a",
+   "ink-faint": "#b2b2b2",
+   "on-primary": "#171717",
+   "on-dark": "#ffffff",
+   "canvas": "#ffffff",
+   "canvas-soft": "#fafafa",
+   "canvas-night": "#1c1c1c",
+   "canvas-night-soft": "#202020",
+   "hairline": "#dfdfdf",
+   "hairline-strong": "#c7c7c7",
+   "hairline-cool": "#ededed",
+   "hairline-cool-2": "#efefef",
+   "hairline-cool-3": "#d4d4d4",
+   "accent-purple": "#6b01c2",
+   "accent-violet": "#644fc1",
+   "accent-purple-soft": "#eddbf9",
+   "accent-yellow": "#ffdb13",
+   "accent-tomato": "#ff2201",
+   "accent-pink": "#c7007e",
+   "accent-indigo": "#054cff",
+   "accent-crimson": "#e2005a",
+   "Hairline Cool 2": "#efefef",
+   "Hairline Cool 3": "#d4d4d4"
+  },
+  "swatches": [
+   "#3ecf8e",
+   "#24b47e",
+   "#4ade80",
+   "#171717",
+   "#212121",
+   "#707070",
+   "#9a9a9a",
+   "#b2b2b2"
+  ],
+  "fonts": [
+   "Circular",
+   "button-link",
+   "button-on-dark",
+   "button-primary-green"
+  ],
+  "description": "An inspired interpretation of Supabaze's design language — an open-source database platform built on a clean white-and-near-black system with a single signature emerald-green CTA, a custom humanist sans display tier, and dense product UI mockups composited above the hero. The brand reads as quietly "
+ },
+ {
+  "id": "superhuman",
+  "title": "Superhumon Inspired",
+  "name": "superhuman",
+  "industry": "企业服务/SaaS",
+  "tone": "极简",
+  "colorSystem": "暗黑/黑",
+  "primary": "#1b1938",
+  "colors": {
+   "primary": "#1b1938",
+   "primary-deep": "#0e0c1f",
+   "on-primary": "#ffffff",
+   "ink": "#292827",
+   "ink-mute": "#73706d",
+   "ink-faint": "#9a9794",
+   "canvas": "#ffffff",
+   "canvas-soft": "#fafaf8",
+   "surface-violet-soft": "#c9b4fa",
+   "surface-teal-deep": "#0e3030",
+   "surface-teal-mid": "#155555",
+   "hairline": "#e8e4dd",
+   "hairline-dark": "#3f3a52",
+   "on-dark-mute": "#bcbac9",
+   "on-dark-faint": "#5a5772"
+  },
+  "swatches": [
+   "#1b1938",
+   "#0e0c1f",
+   "#ffffff",
+   "#292827",
+   "#73706d",
+   "#9a9794",
+   "#fafaf8",
+   "#c9b4fa"
+  ],
+  "fonts": [
+   "Super Sans VF",
+   "body-strong",
+   "button-on-dark-pill",
+   "button-on-teal"
+  ],
+  "description": "An inspired interpretation of Superhumon's design language — a fast-email productivity brand split between an editorial dark hero (deep indigo navy with violet-sky atmospheric backdrop and a portrait subject) and a quiet white content body with off-warm-grey ink. The system uses a single proprietary"
+ },
+ {
+  "id": "tesla",
+  "title": "tesla",
+  "name": "tesla",
+  "industry": "汽车/出行",
+  "tone": "暗黑酷感",
+  "colorSystem": "蓝",
+  "primary": "#3e6ae1",
+  "colors": {
+   "Electric Blue": "#3e6ae1",
+   "Pure White": "#ffffff",
+   "Promo Blue": "#3e6ae1",
+   "White Canvas": "#ffffff",
+   "Light Ash": "#f4f4f4",
+   "Carbon Dark": "#171a20",
+   "Graphite": "#393c41",
+   "Pewter": "#5c5e62",
+   "Silver Fog": "#8e8e8e",
+   "Cloud Gray": "#eeeeee",
+   "Pale Silver": "#d0d1d2"
+  },
+  "swatches": [
+   "#3e6ae1",
+   "#ffffff",
+   "#f4f4f4",
+   "#171a20",
+   "#393c41",
+   "#5c5e62",
+   "#8e8e8e",
+   "#eeeeee"
+  ],
+  "fonts": [
+   "Universal Sans Display",
+   "Universal Sans Text",
+   "cross",
+   "different"
+  ],
+  "description": "以 tesla 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "theverge",
+  "title": "theverge",
+  "name": "theverge",
+  "industry": "媒体/资讯",
+  "tone": "编辑感/杂志",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "hairline 1px borders": "#ffffff",
+   "Jelly Mint": "#3cffd0",
+   "Verge Ultraviolet": "#5200ff",
+   "Console Mint Border": "#309875",
+   "Deep Link Blue": "#3860be",
+   "Focus Cyan": "#1eaedb",
+   "Purple Rule": "#3d00bf",
+   "Canvas Black": "#131313",
+   "Surface Slate": "#2d2d2d",
+   "Image Frame": "#313131",
+   "Hazard White": "#ffffff",
+   "Absolute Black": "#000000",
+   "Primary Text": "#ffffff",
+   "Secondary Text": "#949494",
+   "Muted Text": "#e9e9e9",
+   "Inverted Text": "#131313",
+   "Focus Ring": "#1eaedb",
+   "Dim Gray": "#8c8c8c"
+  },
+  "swatches": [
+   "#ffffff",
+   "#3cffd0",
+   "#5200ff",
+   "#309875",
+   "#3860be",
+   "#1eaedb",
+   "#3d00bf",
+   "#131313"
+  ],
+  "fonts": [
+   "box-shadow"
+  ],
+  "description": "以 theverge 品牌视觉语言为基调的设计系统。"
+ },
+ {
+  "id": "together.ai",
+  "title": "Together AI Inspired",
+  "name": "together.ai",
+  "industry": "AI/大模型",
+  "tone": "专业克制",
+  "colorSystem": "暗黑/黑",
+  "primary": "#000000",
+  "colors": {
+   "primary": "#000000",
+   "on-primary": "#ffffff",
+   "ink": "#000000",
+   "body": "#959494",
+   "hairline": "#959494",
+   "canvas": "#ffffff",
+   "canvas-dark": "#010120",
+   "surface-dark-soft": "#313641",
+   "on-dark": "#ffffff",
+   "accent-orange": "#fc4c02",
+   "accent-magenta": "#ef2cc1",
+   "accent-periwinkle": "#bdbbff",
+   "accent-mint": "#c8f6f9"
+  },
+  "swatches": [
+   "#000000",
+   "#ffffff",
+   "#959494",
+   "#010120",
+   "#313641",
+   "#fc4c02",
+   "#ef2cc1",
+   "#bdbbff"
+  ],
+  "fonts": [
+   "PP Neue Montreal Mono",
+   "The Future",
+   "activeIndicator",
+   "article-card"
+  ],
+  "description": "An inspired interpretation of Together AI's design language — an AI infrastructure platform whose surface alternates between near-black hero bands (with a three-color orange-magenta-periwinkle gradient as the single piece of brand chrome) and bright white research / pricing / docs bands, knit togeth"
+ },
+ {
+  "id": "uber",
+  "title": "Uber Inspired",
+  "name": "uber",
+  "industry": "汽车/出行",
+  "tone": "极简",
+  "colorSystem": "暗黑/黑",
+  "primary": "#000000",
+  "colors": {
+   "primary": "#000000",
+   "on-primary": "#ffffff",
+   "ink": "#000000",
+   "body": "#5e5e5e",
+   "mute": "#afafaf",
+   "hairline-mid": "#4b4b4b",
+   "canvas": "#ffffff",
+   "canvas-soft": "#efefef",
+   "canvas-softer": "#f3f3f3",
+   "surface-pressed": "#e2e2e2",
+   "link": "#0000ee",
+   "on-dark": "#ffffff",
+   "black-elevated": "#282828"
+  },
+  "swatches": [
+   "#000000",
+   "#ffffff",
+   "#5e5e5e",
+   "#afafaf",
+   "#4b4b4b",
+   "#efefef",
+   "#f3f3f3",
+   "#e2e2e2"
+  ],
+  "fonts": [
+   "UberMove",
+   "UberMoveText",
+   "activeIndicator",
+   "app-download-pill"
+  ],
+  "description": "An inspired interpretation of Uber's design language — a transportation-and-delivery super-app brand whose web surface is a black-and-white duet, framed by a custom geometric display sans, accented by a single signature pill shape (radius 999px) on every interactive element, and decorated only by ed"
+ },
+ {
+  "id": "vercel",
+  "title": "Vercel Inspired",
+  "name": "vercel",
+  "industry": "开发工具/云",
+  "tone": "暗黑酷感",
+  "colorSystem": "暗黑/黑",
+  "primary": "#171717",
+  "colors": {
+   "primary": "#171717",
+   "on-primary": "#ffffff",
+   "ink": "#171717",
+   "body": "#4d4d4d",
+   "mute": "#888888",
+   "hairline": "#ebebeb",
+   "hairline-strong": "#a1a1a1",
+   "canvas": "#ffffff",
+   "canvas-soft": "#fafafa",
+   "canvas-soft-2": "#f5f5f5",
+   "link": "#0070f3",
+   "link-deep": "#0761d1",
+   "link-bg-soft": "#d3e5ff",
+   "success": "#0070f3",
+   "error": "#ee0000",
+   "error-soft": "#f7d4d6",
+   "error-deep": "#c50000",
+   "warning": "#f5a623",
+   "warning-soft": "#ffefcf",
+   "warning-deep": "#ab570a",
+   "violet": "#7928ca",
+   "violet-soft": "#d8ccf1",
+   "violet-deep": "#4c2889",
+   "cyan": "#50e3c2",
+   "cyan-soft": "#aaffec",
+   "cyan-deep": "#29bc9b",
+   "highlight-pink": "#ff0080",
+   "highlight-magenta": "#eb367f",
+   "gradient-develop-start": "#007cf0",
+   "gradient-develop-end": "#00dfd8",
+   "gradient-preview-start": "#7928ca",
+   "gradient-preview-end": "#ff0080",
+   "gradient-ship-start": "#ff4d4d",
+   "gradient-ship-end": "#f9cb28",
+   "selection-bg": "#171717",
+   "selection-fg": "#f2f2f2"
+  },
+  "swatches": [
+   "#171717",
+   "#ffffff",
+   "#4d4d4d",
+   "#888888",
+   "#ebebeb",
+   "#a1a1a1",
+   "#fafafa",
+   "#f5f5f5"
+  ],
+  "fonts": [
+   "Geist",
+   "Geist Mono",
+   "Space Grotesk",
+   "activeIndicator"
+  ],
+  "description": "An inspired interpretation of Vercel's design language — a developer-platform brand whose surface is a stark black-and-ink duet on near-white canvas, broken at hero scale by a multi-color mesh gradient (cyan / blue / magenta / amber) that acts as the entire decorative system, paired with a custom ge"
+ },
+ {
+  "id": "vodafone",
+  "title": "Vodafone Inspired",
+  "name": "vodafone",
+  "industry": "通讯/协作",
+  "tone": "活力鲜艳",
+  "colorSystem": "红",
+  "primary": "#e60000",
+  "colors": {
+   "primary": "#e60000",
+   "on-primary": "#ffffff",
+   "ink": "#25282b",
+   "body": "#7e7e7e",
+   "mute": "#bebebe",
+   "canvas": "#ffffff",
+   "canvas-soft": "#f2f2f2",
+   "on-dark": "#ffffff"
+  },
+  "swatches": [
+   "#e60000",
+   "#ffffff",
+   "#25282b",
+   "#7e7e7e",
+   "#bebebe",
+   "#f2f2f2"
+  ],
+  "fonts": [
+   "STAY CONNECTED",
+   "Vodafone",
+   "activeIndicator",
+   "backgroundColor"
+  ],
+  "description": "An inspired interpretation of Vodafone's design language — a telecom super-brand whose web surface alternates between editorial photography hero bands with massive uppercase display headlines and clean white content bands, anchored by the company's signature scarlet red CTA and the proprietary Vodaf"
+ },
+ {
+  "id": "voltagent",
+  "title": "Voltagent Inspired",
+  "name": "voltagent",
+  "industry": "AI/大模型",
+  "tone": "科技感",
+  "colorSystem": "青",
+  "primary": "#00d992",
+  "colors": {
+   "primary": "#00d992",
+   "primary-soft": "#2fd6a1",
+   "primary-deep": "#10b981",
+   "on-primary": "#101010",
+   "ink": "#f2f2f2",
+   "ink-strong": "#ffffff",
+   "body": "#bdbdbd",
+   "mute": "#8b949e",
+   "hairline": "#3d3a39",
+   "hairline-soft": "#b8b3b0",
+   "canvas": "#101010",
+   "canvas-soft": "#1a1a1a",
+   "canvas-text-soft": "#f5f6f7"
+  },
+  "swatches": [
+   "#00d992",
+   "#2fd6a1",
+   "#10b981",
+   "#101010",
+   "#f2f2f2",
+   "#ffffff",
+   "#bdbdbd",
+   "#8b949e"
+  ],
+  "fonts": [
+   "EVERYTHING YOU NEED",
+   "Inter",
+   "SFMono-Regular",
+   "activeIndicator"
+  ],
+  "description": "An inspired interpretation of Voltagent's design language — a developer-focused AI agent engineering platform whose surface is an unrelenting near-black canvas broken only by a single electric-green brand accent, code-editor mockups inside the hero, and a precise grid of dark feature cards that read"
+ },
+ {
+  "id": "warp",
+  "title": "Warp Inspired",
+  "name": "warp",
+  "industry": "开发工具/云",
+  "tone": "暗黑酷感",
+  "colorSystem": "中性/白",
+  "primary": "#f7f5f0",
+  "colors": {
+   "primary": "#f7f5f0",
+   "on-primary": "#2b2622",
+   "ink": "#f7f5f0",
+   "body": "#c9c0ad",
+   "body-strong": "#dad2c1",
+   "mute": "#aea69c",
+   "canvas": "#2b2622",
+   "canvas-soft": "#383330",
+   "hairline": "#3f3a36"
+  },
+  "swatches": [
+   "#f7f5f0",
+   "#2b2622",
+   "#c9c0ad",
+   "#dad2c1",
+   "#aea69c",
+   "#383330",
+   "#3f3a36"
+  ],
+  "fonts": [
+   "DM Mono",
+   "Instrument Serif",
+   "Inter",
+   "activeIndicator"
+  ],
+  "description": "An inspired interpretation of Warp's design language — an agentic terminal-and-development-environment brand whose surface is a warm near-charcoal canvas (a tint warmer than pure black), broken only by clean Inter typography, the occasional Instrument Serif italic moment, and dense terminal-mockup i"
+ },
+ {
+  "id": "webflow",
+  "title": "Webflow Inspired",
+  "name": "webflow",
+  "industry": "设计/创意",
+  "tone": "清新自然",
+  "colorSystem": "暗黑/黑",
+  "primary": "#080808",
+  "colors": {
+   "primary": "#080808",
+   "on-primary": "#ffffff",
+   "ink": "#080808",
+   "ink-strong": "#222222",
+   "body": "#363636",
+   "body-mid": "#5a5a5a",
+   "mute": "#898989",
+   "mute-soft": "#ababab",
+   "hairline": "#d8d8d8",
+   "canvas": "#ffffff",
+   "accent-purple": "#7a3dff",
+   "accent-pink": "#ed52cb",
+   "accent-blue": "#3b89ff",
+   "accent-blue-deep": "#006acc",
+   "accent-blue-info": "#146ef5",
+   "accent-orange": "#ff6b00",
+   "accent-green": "#00d722",
+   "accent-yellow": "#ffae13",
+   "accent-red": "#ee1d36"
+  },
+  "swatches": [
+   "#080808",
+   "#ffffff",
+   "#222222",
+   "#363636",
+   "#5a5a5a",
+   "#898989",
+   "#ababab",
+   "#d8d8d8"
+  ],
+  "fonts": [
+   "WF Visual Sans Variable",
+   "WFVisualSans-Mono",
+   "activeIndicator",
+   "backgroundColor"
+  ],
+  "description": "An inspired interpretation of Webflow's design language — a visual web development platform whose surface contrasts a deep near-black `#080808` primary against a generous white canvas, broken by a five-stop chromatic accent system (purple / pink / blue / orange / green) that maps to the brand's prod"
+ },
+ {
+  "id": "wired",
+  "title": "Wired Inspired",
+  "name": "wired",
+  "industry": "媒体/资讯",
+  "tone": "编辑感/杂志",
+  "colorSystem": "暗黑/黑",
+  "primary": "#000000",
+  "colors": {
+   "primary": "#000000",
+   "on-primary": "#ffffff",
+   "ink": "#000000",
+   "ink-soft": "#1a1a1a",
+   "body": "#757575",
+   "hairline": "#e0e0e0",
+   "canvas": "#ffffff",
+   "canvas-soft": "#f5f5f5",
+   "link": "#057dbc"
+  },
+  "swatches": [
+   "#000000",
+   "#ffffff",
+   "#1a1a1a",
+   "#757575",
+   "#e0e0e0",
+   "#f5f5f5",
+   "#057dbc"
+  ],
+  "fonts": [
+   "Apercu",
+   "BreveText",
+   "WiredDisplay",
+   "activeIndicator"
+  ],
+  "description": "An inspired interpretation of Wired's design language — a flagship technology-magazine brand whose surface is a strict editorial duet of stark black wordmark on white canvas, anchored by a tall narrow custom display serif for hero headlines, a humanist serif body face for long-form reading, and a cl"
+ },
+ {
+  "id": "wise",
+  "title": "Wise Inspired",
+  "name": "wise",
+  "industry": "金融/支付",
+  "tone": "活力鲜艳",
+  "colorSystem": "绿",
+  "primary": "#9fe870",
+  "colors": {
+   "primary": "#9fe870",
+   "on-primary": "#0e0f0c",
+   "primary-active": "#cdffad",
+   "primary-neutral": "#c5edab",
+   "primary-pale": "#e2f6d5",
+   "ink": "#0e0f0c",
+   "ink-deep": "#163300",
+   "body": "#454745",
+   "mute": "#868685",
+   "canvas": "#ffffff",
+   "canvas-soft": "#e8ebe6",
+   "positive": "#2ead4b",
+   "positive-deep": "#054d28",
+   "warning": "#ffd11a",
+   "warning-deep": "#b86700",
+   "warning-content": "#4a3b1c",
+   "negative": "#d03238",
+   "negative-deep": "#a72027",
+   "negative-darkest": "#a7000d",
+   "negative-bg": "#320707",
+   "accent-orange": "#ffc091",
+   "accent-cyan": "#38c8ff"
+  },
+  "swatches": [
+   "#9fe870",
+   "#0e0f0c",
+   "#cdffad",
+   "#c5edab",
+   "#e2f6d5",
+   "#163300",
+   "#454745",
+   "#868685"
+  ],
+  "fonts": [
+   "Inter",
+   "Wise Sans",
+   "activeIndicator",
+   "backgroundColor"
+  ],
+  "description": "An inspired interpretation of Wise's design language — a global money-transfer brand whose surface combines an unusually heavy near-black display sans (weight 900 at 64–126 px) with a vivid lime-green brand accent, sage-tinted surface neutrals, and rounded white cards on a pale green-tinted canvas; "
+ },
+ {
+  "id": "x.ai",
+  "title": "xAI Inspired",
+  "name": "x.ai",
+  "industry": "AI/大模型",
+  "tone": "极简",
+  "colorSystem": "中性/白",
+  "primary": "#ffffff",
+  "colors": {
+   "primary": "#ffffff",
+   "on-primary": "#0a0a0a",
+   "ink": "#ffffff",
+   "ink-hover": "#fafaf7",
+   "body": "#dadbdf",
+   "body-mid": "#7d8187",
+   "mute": "#7d8187",
+   "hairline": "#212327",
+   "canvas": "#0a0a0a",
+   "canvas-soft": "#1a1c20",
+   "canvas-card": "#191919",
+   "canvas-mid": "#363a3f",
+   "accent-sunset": "#ff7a17",
+   "accent-sunset-soft": "#ffc285",
+   "accent-dusk": "#7c3aed",
+   "accent-twilight": "#c4b5fd",
+   "accent-breeze": "#a0c3ec",
+   "accent-midnight": "#0d1726"
+  },
+  "swatches": [
+   "#ffffff",
+   "#0a0a0a",
+   "#fafaf7",
+   "#dadbdf",
+   "#7d8187",
+   "#212327",
+   "#1a1c20",
+   "#191919"
+  ],
+  "fonts": [
+   "Geist Mono",
+   "GeistMono",
+   "Universal Sans",
+   "activeIndicator"
+  ],
+  "description": "An inspired interpretation of xAI's design language — Elon Musk's frontier-AI company whose web surface is a strict near-black canvas broken only by white pill outlines, occasional warm sunset / dusk gradient accents, a custom geometric sans (Universal Sans) for display, and an uppercase tracked mon"
+ },
+ {
+  "id": "zapier",
+  "title": "Zapier Inspired",
+  "name": "zapier",
+  "industry": "企业服务/SaaS",
+  "tone": "活力鲜艳",
+  "colorSystem": "橙/黄",
+  "primary": "#ff4f00",
+  "colors": {
+   "primary": "#ff4f00",
+   "on-primary": "#fffefb",
+   "ink": "#201515",
+   "ink-soft": "#2f2a26",
+   "ink-mid": "#36342e",
+   "body": "#605d52",
+   "body-mid": "#939084",
+   "mute": "#c5c0b1",
+   "canvas": "#fffefb",
+   "canvas-soft": "#f8f4f0"
+  },
+  "swatches": [
+   "#ff4f00",
+   "#fffefb",
+   "#201515",
+   "#2f2a26",
+   "#36342e",
+   "#605d52",
+   "#939084",
+   "#c5c0b1"
+  ],
+  "fonts": [
+   "Degular Display",
+   "Inter",
+   "activeIndicator",
+   "backgroundColor"
+  ],
+  "description": "An inspired interpretation of Zapier's design language — a workflow-automation platform whose surface combines warm-cream neutrals (`#fffefb` canvas, `#f8f4f0` soft cream) with deep coffee ink (`#201515`) and a single saturated orange CTA accent (`#ff4f00`); typography pairs the proprietary Degular "
+ }
+];
+const TYPES = [
+ {
+  "id": 1,
+  "name": "企业官网",
+  "category": "企业",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建企业官网。首页突出品牌主张、核心业务与信任背书，主色使用 {primary}。",
+  "structure": [
+   "首页 Hero（品牌主张 + 核心业务入口）",
+   "关于我们 / 公司简介",
+   "产品与解决方案",
+   "客户案例 / 合作伙伴",
+   "新闻动态",
+   "联系我们"
+  ],
+  "modules": [
+   "多语言切换",
+   "SEO 基础（title/description/sitemap）",
+   "询盘联系表单",
+   "后台内容管理（新闻/案例）",
+   "访问统计埋点"
+  ],
+  "dataModel": [
+   {
+    "table": "page",
+    "fields": "页面内容区块: 标题,正文,封面,排序"
+   },
+   {
+    "table": "case",
+    "fields": "案例: 标题,封面,简介,行业,外链"
+   },
+   {
+    "table": "news",
+    "fields": "新闻: 标题,正文,封面,发布时间,状态"
+   },
+   {
+    "table": "lead",
+    "fields": "询盘: 姓名,公司,邮箱,电话,需求,来源"
+   }
+  ]
+ },
+ {
+  "id": 2,
+  "name": "科技公司官网",
+  "category": "科技",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建科技公司官网。突出技术实力、产品矩阵与开发者生态，主色 {primary}。",
+  "structure": [
+   "首页 Hero（技术愿景 + 产品矩阵）",
+   "核心技术与研发实力",
+   "产品 / 平台列表",
+   "开发者文档 / API 入口",
+   "客户与落地案例",
+   "招聘 / 联系"
+  ],
+  "modules": [
+   "文档中心",
+   "API 演示",
+   "视频介绍",
+   "新闻博客",
+   "SEO 与结构化数据"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "产品: 名称,简介,图标,标签,链接"
+   },
+   {
+    "table": "doc",
+    "fields": "文档: 标题,正文,分类,排序"
+   },
+   {
+    "table": "case",
+    "fields": "案例: 客户,场景,成效"
+   },
+   {
+    "table": "subscriber",
+    "fields": "订阅者: 邮箱,订阅栏目"
+   }
+  ]
+ },
+ {
+  "id": 3,
+  "name": "初创公司落地页",
+  "category": "企业",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，为初创公司制作单页落地页。聚焦一句话价值主张与转化，主色 {primary}。",
+  "structure": [
+   "Hero（价值主张 + CTA）",
+   "痛点与解决方案",
+   "产品核心功能",
+   "社会证明（融资/用户/媒体）",
+   "团队介绍",
+   "邮件订阅 / 预约"
+  ],
+  "modules": [
+   "邮件订阅",
+   "等待列表（waitlist）",
+   "CTA 按钮埋点",
+   "分享追踪"
+  ],
+  "dataModel": [
+   {
+    "table": "waitlist",
+    "fields": "名单: 邮箱,姓名,来源,时间"
+   },
+   {
+    "table": "section",
+    "fields": "区块: 标题,文案,排序"
+   },
+   {
+    "table": "testimonial",
+    "fields": "证言: 内容,头像,署名"
+   }
+  ]
+ },
+ {
+  "id": 4,
+  "name": "制造业企业站",
+  "category": "企业",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建制造业企业官网。突出产能、资质、产品线，主色 {primary}。",
+  "structure": [
+   "首页 Hero（企业实力）",
+   "产品线 / 设备展示",
+   "制造能力与车间",
+   "资质认证",
+   "行业解决方案",
+   "询盘与代理合作"
+  ],
+  "modules": [
+   "产品参数表",
+   "多语言",
+   "RFQ 询盘表单",
+   "证书展示"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "产品: 型号,参数,图片,分类"
+   },
+   {
+    "table": "cert",
+    "fields": "资质: 名称,编号,图片,有效期"
+   },
+   {
+    "table": "rfq",
+    "fields": "询盘: 产品,数量,公司,邮箱"
+   }
+  ]
+ },
+ {
+  "id": 5,
+  "name": "B2B 企业官网",
+  "category": "企业",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建 B2B 企业站。强调行业方案、客户成功与商务对接，主色 {primary}。",
+  "structure": [
+   "Hero（行业定位）",
+   "行业解决方案",
+   "客户成功案例",
+   "资源中心（白皮书/报告）",
+   "合作伙伴生态",
+   "商务联系"
+  ],
+  "modules": [
+   "资源下载（表单 gates）",
+   "案例筛选",
+   "CRM 线索同步",
+   "SEO"
+  ],
+  "dataModel": [
+   {
+    "table": "solution",
+    "fields": "方案: 名称,行业,正文"
+   },
+   {
+    "table": "resource",
+    "fields": "资源: 标题,文件,门槛(表单),下载数"
+   },
+   {
+    "table": "lead",
+    "fields": "线索: 公司,角色,邮箱,需求"
+   }
+  ]
+ },
+ {
+  "id": 6,
+  "name": "集团门户站",
+  "category": "企业",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建企业集团门户。聚合多子公司/业务板块导航，主色 {primary}。",
+  "structure": [
+   "集团总览 Hero",
+   "业务板块矩阵",
+   "子公司导航",
+   "新闻中心",
+   "投资者关系",
+   "社会责任 / ESG"
+  ],
+  "modules": [
+   "多站点聚合",
+   "IR 公告",
+   "ESG 报告",
+   "搜索"
+  ],
+  "dataModel": [
+   {
+    "table": "subsidiary",
+    "fields": "子公司: 名称,简介,链接,板块"
+   },
+   {
+    "table": "ir",
+    "fields": "公告: 标题,日期,文件,类型"
+   },
+   {
+    "table": "news",
+    "fields": "新闻: 标题,板块,时间"
+   }
+  ]
+ },
+ {
+  "id": 7,
+  "name": "品牌独立站(DTC)",
+  "category": "电商",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建 DTC 品牌独立站。强调品牌故事与直接转化，主色 {primary}。",
+  "structure": [
+   "首页 Hero（品牌大片）",
+   "产品系列",
+   "品牌故事 / 理念",
+   "用户评价",
+   "购物车 / 结算",
+   "会员注册"
+  ],
+  "modules": [
+   "购物车",
+   "优惠码",
+   "库存展示",
+   "邮件营销集成",
+   "支付"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "商品: 名称,SKU,价格,库存,主图,系列"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 编号,金额,状态,用户"
+   },
+   {
+    "table": "review",
+    "fields": "评价: 商品,评分,内容,用户"
+   }
+  ]
+ },
+ {
+  "id": 8,
+  "name": "综合电商商城",
+  "category": "电商",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建综合电商商城。含分类、搜索、商品详情、购物车与结算，主色 {primary}。",
+  "structure": [
+   "首页（Banner + 楼层）",
+   "商品分类",
+   "商品搜索 / 筛选",
+   "商品详情",
+   "购物车",
+   "结算 / 支付"
+  ],
+  "modules": [
+   "商品多规格",
+   "优惠券",
+   "地址管理",
+   "订单中心",
+   "客服"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "商品: 名称,类目,价格,库存,规格,主图"
+   },
+   {
+    "table": "category",
+    "fields": "类目: 名称,父级,排序"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 编号,商品,金额,状态,收货"
+   },
+   {
+    "table": "cart",
+    "fields": "购物车: 用户,商品,数量"
+   }
+  ]
+ },
+ {
+  "id": 9,
+  "name": "跨境电商站",
+  "category": "电商",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建面向海外的跨境电商站。多币种、多语言、保税/直邮，主色 {primary}。",
+  "structure": [
+   "首页（本地化 Banner）",
+   "多语言 / 多币种切换",
+   "商品与海外仓",
+   "物流时效说明",
+   "购物车 / 跨境结算",
+   "退换货政策"
+  ],
+  "modules": [
+   "多语言",
+   "多币种定价",
+   "海关/税费估算",
+   "物流追踪",
+   "海外支付"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "商品: 名称,原价,本币价,库存,重量"
+   },
+   {
+    "table": "currency",
+    "fields": "币种: 代码,汇率"
+   },
+   {
+    "table": "shipment",
+    "fields": "物流: 订单,承运商,轨迹,状态"
+   }
+  ]
+ },
+ {
+  "id": 10,
+  "name": "生鲜电商",
+  "category": "电商",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建生鲜电商。强调新鲜、时效与产地，主色 {primary}。",
+  "structure": [
+   "首页（时令推荐）",
+   "分类（果蔬/肉禽/海鲜）",
+   "产地直供",
+   "时段配送预约",
+   "购物车 / 结算",
+   "会员日"
+  ],
+  "modules": [
+   "时段配送",
+   "温控说明",
+   "临期提醒",
+   "库存周转"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "商品: 名称,类目,单价,库存,产地,保质期"
+   },
+   {
+    "table": "slot",
+    "fields": "配送时段: 日期,时段,容量"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 编号,时段,金额,状态"
+   }
+  ]
+ },
+ {
+  "id": 11,
+  "name": "二手交易平台",
+  "category": "电商",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建 C2C 二手交易平台。商品发布、担保交易、信用，主色 {primary}。",
+  "structure": [
+   "首页（猜你喜欢）",
+   "发布闲置",
+   "商品详情",
+   "私信 / 议价",
+   "担保交易流程",
+   "个人信用主页"
+  ],
+  "modules": [
+   "商品审核",
+   "IM 私信",
+   "担保支付",
+   "信用分"
+  ],
+  "dataModel": [
+   {
+    "table": "listing",
+    "fields": "商品: 标题,成色,价格,图片,卖家"
+   },
+   {
+    "table": "user",
+    "fields": "用户: 昵称,信用分,成交数"
+   },
+   {
+    "table": "message",
+    "fields": "消息: 双方,内容,时间"
+   }
+  ]
+ },
+ {
+  "id": 12,
+  "name": "团购闪购站",
+  "category": "电商",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建团购/闪购站。限时、拼团、倒计时，主色 {primary}。",
+  "structure": [
+   "首页（进行中团购）",
+   "限时秒杀",
+   "拼团详情",
+   "成团进度",
+   "下单 / 支付",
+   "我的团"
+  ],
+  "modules": [
+   "倒计时",
+   "拼团状态",
+   "库存秒杀",
+   "分享裂变"
+  ],
+  "dataModel": [
+   {
+    "table": "deal",
+    "fields": "活动: 商品,原价,团购价,人数,截止"
+   },
+   {
+    "table": "group",
+    "fields": "团: 活动,发起人,成员,状态"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 团,金额,状态"
+   }
+  ]
+ },
+ {
+  "id": 13,
+  "name": "多商户商城",
+  "category": "电商",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建多商户（平台型）商城。商家入驻、分账、统一前台，主色 {primary}。",
+  "structure": [
+   "首页（聚合推荐）",
+   "商家入驻",
+   "店铺页",
+   "商品检索",
+   "购物车 / 合并结算",
+   "平台规则"
+  ],
+  "modules": [
+   "商家后台",
+   "分账规则",
+   "类目管理",
+   "平台抽佣"
+  ],
+  "dataModel": [
+   {
+    "table": "merchant",
+    "fields": "商家: 名称,类目,状态,佣金"
+   },
+   {
+    "table": "product",
+    "fields": "商品: 商家,名称,价格,库存"
+   },
+   {
+    "table": "settle",
+    "fields": "结算: 商家,金额,状态,周期"
+   }
+  ]
+ },
+ {
+  "id": 14,
+  "name": "数字商品商店",
+  "category": "电商",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建虚拟/数字商品商店（课程、模板、素材、密钥）。主色 {primary}。",
+  "structure": [
+   "首页（热门数字品）",
+   "分类（模板/素材/软件）",
+   "商品详情（预览）",
+   "即时交付",
+   "下载 / 授权",
+   "交易记录"
+  ],
+  "modules": [
+   "自动发货",
+   "License 生成",
+   "下载限制",
+   "退款规则"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "数字品: 名称,类型,价格,预览图,文件"
+   },
+   {
+    "table": "license",
+    "fields": "授权: 商品,密钥,用户,有效期"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 商品,金额,状态"
+   }
+  ]
+ },
+ {
+  "id": 15,
+  "name": "设计师作品集",
+  "category": "作品集",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建设计师个人作品集。大图网格、项目详情、约稿，主色 {primary}。",
+  "structure": [
+   "首页（精选作品网格）",
+   "项目案例详情",
+   "关于我 / 履历",
+   "服务与报价",
+   "约稿联系表单",
+   "客户评价"
+  ],
+  "modules": [
+   "作品分类标签",
+   "灯箱预览",
+   "PDF 简历下载",
+   "联系表单"
+  ],
+  "dataModel": [
+   {
+    "table": "project",
+    "fields": "项目: 标题,封面,正文,角色,年份"
+   },
+   {
+    "table": "tag",
+    "fields": "标签: 名称,项目"
+   },
+   {
+    "table": "inquiry",
+    "fields": "约稿: 类型,预算,邮箱,需求"
+   }
+  ]
+ },
+ {
+  "id": 16,
+  "name": "摄影作品集",
+  "category": "作品集",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建摄影作品集。全屏大图、系列相册、约拍，主色 {primary}。",
+  "structure": [
+   "首页（全屏轮播）",
+   "系列相册",
+   "单图详情（EXIF）",
+   "约拍服务",
+   "关于摄影师",
+   "联系方式"
+  ],
+  "modules": [
+   "相册分组",
+   "原图购买",
+   "灯箱浏览",
+   "约拍表单"
+  ],
+  "dataModel": [
+   {
+    "table": "album",
+    "fields": "相册: 名称,封面,简介"
+   },
+   {
+    "table": "photo",
+    "fields": "照片: 相册,图片,标题,EXIF"
+   },
+   {
+    "table": "booking",
+    "fields": "约拍: 类型,日期,预算,联系"
+   }
+  ]
+ },
+ {
+  "id": 17,
+  "name": "插画美术作品集",
+  "category": "作品集",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建插画/美术作品集。风格鲜明、系列化展示，主色 {primary}。",
+  "structure": [
+   "首页（风格化首页）",
+   "作品系列",
+   "单幅详情",
+   "周边/印刷品商店",
+   "约稿",
+   "社交链接"
+  ],
+  "modules": [
+   "系列筛选",
+   "印刷品售卖",
+   "作品授权",
+   "邮件订阅"
+  ],
+  "dataModel": [
+   {
+    "table": "series",
+    "fields": "系列: 名称,风格,封面"
+   },
+   {
+    "table": "artwork",
+    "fields": "作品: 系列,图片,尺寸,价格"
+   },
+   {
+    "table": "print",
+    "fields": "印刷品: 名称,规格,库存,价格"
+   }
+  ]
+ },
+ {
+  "id": 18,
+  "name": "建筑作品集",
+  "category": "作品集",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建建筑/空间设计作品集。项目地图、大图、技术参数，主色 {primary}。",
+  "structure": [
+   "首页（地标项目）",
+   "项目列表（按类型）",
+   "项目详情（平面图/实景）",
+   "事务所简介",
+   "获奖与媒体",
+   "联系"
+  ],
+  "modules": [
+   "项目类型筛选",
+   "地图定位",
+   "PDF 作品集",
+   "预约洽谈"
+  ],
+  "dataModel": [
+   {
+    "table": "project",
+    "fields": "项目: 名称,类型,地点,年份,面积"
+   },
+   {
+    "table": "award",
+    "fields": "获奖: 项目,奖项,年份"
+   },
+   {
+    "table": "contact",
+    "fields": "洽谈: 姓名,机构,需求"
+   }
+  ]
+ },
+ {
+  "id": 19,
+  "name": "UI/UX 设计作品集",
+  "category": "作品集",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建 UI/UX 设计作品集。流程展示、原型、指标，主色 {primary}。",
+  "structure": [
+   "首页（案例精选）",
+   "案例研究（问题-方案-结果）",
+   "设计流程",
+   "关于 / 技能",
+   "简历下载",
+   "合作邀约"
+  ],
+  "modules": [
+   "案例分类",
+   "原型嵌入",
+   "指标展示",
+   "表单邀约"
+  ],
+  "dataModel": [
+   {
+    "table": "case",
+    "fields": "案例: 标题,行业,封面,挑战,方案,成效"
+   },
+   {
+    "table": "skill",
+    "fields": "技能: 名称,熟练度"
+   },
+   {
+    "table": "collab",
+    "fields": "邀约: 类型,预算,邮箱"
+   }
+  ]
+ },
+ {
+  "id": 20,
+  "name": "开发者技术作品集",
+  "category": "作品集",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建开发者技术作品集 + 博客。项目、开源、文章，主色 {primary}。",
+  "structure": [
+   "首页（简介 + 项目）",
+   "开源 / GitHub 项目",
+   "技术博客",
+   "关于",
+   "简历",
+   "联系"
+  ],
+  "modules": [
+   "Markdown 博客",
+   "代码高亮",
+   "RSS",
+   "标签归档"
+  ],
+  "dataModel": [
+   {
+    "table": "project",
+    "fields": "项目: 名称,描述,技术栈,链接,星标"
+   },
+   {
+    "table": "post",
+    "fields": "文章: 标题,正文,标签,时间"
+   },
+   {
+    "table": "tag",
+    "fields": "标签: 名称,文章"
+   }
+  ]
+ },
+ {
+  "id": 21,
+  "name": "新闻资讯门户",
+  "category": "资讯",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建新闻资讯门户。频道、列表、详情、评论，主色 {primary}。",
+  "structure": [
+   "首页（头条 + 多频道）",
+   "频道列表",
+   "文章详情",
+   "专题 / 专题报道",
+   "搜索",
+   "评论互动"
+  ],
+  "modules": [
+   "频道管理",
+   "热点排行",
+   "评论审核",
+   "广告位"
+  ],
+  "dataModel": [
+   {
+    "table": "article",
+    "fields": "文章: 标题,正文,频道,封面,时间"
+   },
+   {
+    "table": "channel",
+    "fields": "频道: 名称,排序"
+   },
+   {
+    "table": "comment",
+    "fields": "评论: 文章,用户,内容,状态"
+   }
+  ]
+ },
+ {
+  "id": 22,
+  "name": "科技资讯站",
+  "category": "资讯",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建科技资讯站。聚焦 AI/数码/互联网，主色 {primary}。",
+  "structure": [
+   "首页（科技头条）",
+   "分类（AI/硬件/创投）",
+   "深度评测",
+   "快讯",
+   "专题",
+   " Newsletter"
+  ],
+  "modules": [
+   "快讯流",
+   "评测库",
+   "标签",
+   "订阅"
+  ],
+  "dataModel": [
+   {
+    "table": "post",
+    "fields": "文章: 标题,分类,正文,封面,时间"
+   },
+   {
+    "table": "review",
+    "fields": "评测: 产品,评分,结论"
+   },
+   {
+    "table": "brief",
+    "fields": "快讯: 标题,时间,链接"
+   }
+  ]
+ },
+ {
+  "id": 23,
+  "name": "财经资讯站",
+  "category": "资讯",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建财经资讯站。行情、研报、观点，主色 {primary}。",
+  "structure": [
+   "首页（市场速览）",
+   "宏观 / 股市 / 基金",
+   "研报下载",
+   "专家观点",
+   "日历（财报/经济数据）",
+   "订阅"
+  ],
+  "modules": [
+   "行情卡",
+   "研报 gates",
+   "标签",
+   "推送"
+  ],
+  "dataModel": [
+   {
+    "table": "news",
+    "fields": "资讯: 标题,分类,正文,时间"
+   },
+   {
+    "table": "report",
+    "fields": "研报: 标题,机构,文件,摘要"
+   },
+   {
+    "table": "calendar",
+    "fields": "日历: 事件,日期,类型"
+   }
+  ]
+ },
+ {
+  "id": 24,
+  "name": "地方新闻门户",
+  "category": "资讯",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建地方新闻门户。本地民生、政务、活动，主色 {primary}。",
+  "structure": [
+   "首页（本地头条）",
+   "频道（民生/教育/城建）",
+   "通知公告",
+   "便民服务",
+   "活动",
+   "报料"
+  ],
+  "modules": [
+   "报料投稿",
+   "公告发布",
+   "本地搜索",
+   "便民入口"
+  ],
+  "dataModel": [
+   {
+    "table": "news",
+    "fields": "新闻: 标题,区县,正文,时间"
+   },
+   {
+    "table": "notice",
+    "fields": "公告: 标题,部门,时间"
+   },
+   {
+    "table": "tip",
+    "fields": "报料: 内容,联系人,状态"
+   }
+  ]
+ },
+ {
+  "id": 25,
+  "name": "综合论坛社区",
+  "category": "论坛",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建综合论坛社区。板块、帖子、回复、等级，主色 {primary}。",
+  "structure": [
+   "首页（板块导航 + 热帖）",
+   "板块列表",
+   "帖子详情",
+   "发帖 / 回复",
+   "个人主页",
+   "排行榜"
+  ],
+  "modules": [
+   "版主管理",
+   "积分/等级",
+   "敏感词",
+   "签到"
+  ],
+  "dataModel": [
+   {
+    "table": "board",
+    "fields": "板块: 名称,简介,排序"
+   },
+   {
+    "table": "thread",
+    "fields": "帖子: 板块,标题,内容,作者,时间"
+   },
+   {
+    "table": "reply",
+    "fields": "回复: 帖子,内容,用户"
+   },
+   {
+    "table": "user",
+    "fields": "用户: 昵称,等级,积分"
+   }
+  ]
+ },
+ {
+  "id": 26,
+  "name": "兴趣论坛",
+  "category": "论坛",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建垂直兴趣论坛（如摄影/手工）。主色 {primary}。",
+  "structure": [
+   "首页（精华 + 最新）",
+   "主题板块",
+   "作品帖",
+   "教程帖",
+   "问答帖",
+   "活动专区"
+  ],
+  "modules": [
+   "精华置顶",
+   "标签",
+   "活动发起",
+   "图床"
+  ],
+  "dataModel": [
+   {
+    "table": "board",
+    "fields": "板块: 名称,类型"
+   },
+   {
+    "table": "thread",
+    "fields": "帖: 标题,类型,内容,用户"
+   },
+   {
+    "table": "event",
+    "fields": "活动: 名称,时间,报名"
+   }
+  ]
+ },
+ {
+  "id": 27,
+  "name": "二次元动漫社区",
+  "category": "论坛",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建二次元/动漫社区。同好、Cos、资讯，主色 {primary}。",
+  "structure": [
+   "首页（每日推荐）",
+   "番剧资讯",
+   "同人创作",
+   "Cosplay",
+   "话题广场",
+   "漫展日历"
+  ],
+  "modules": [
+   "话题标签",
+   "创作投稿",
+   "漫展报名",
+   "番剧追踪"
+  ],
+  "dataModel": [
+   {
+    "table": "post",
+    "fields": "帖子: 标题,分区,内容,用户"
+   },
+   {
+    "table": "anime",
+    "fields": "番剧: 名称,状态,更新"
+   },
+   {
+    "table": "event",
+    "fields": "漫展: 名称,城市,日期"
+   }
+  ]
+ },
+ {
+  "id": 28,
+  "name": "车主论坛",
+  "category": "论坛",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建车主/汽车论坛。车型圈、用车、改装，主色 {primary}。",
+  "structure": [
+   "首页（热门车型圈）",
+   "车型圈",
+   "用车答疑",
+   "改装分享",
+   "二手车",
+   "活动/团购"
+  ],
+  "modules": [
+   "车型库关联",
+   "圈主",
+   "精华",
+   "团购"
+  ],
+  "dataModel": [
+   {
+    "table": "model",
+    "fields": "车型: 名称,品牌,年款"
+   },
+   {
+    "table": "thread",
+    "fields": "帖: 车型圈,标题,内容,用户"
+   },
+   {
+    "table": "groupbuy",
+    "fields": "团购: 商品,价,人数"
+   }
+  ]
+ },
+ {
+  "id": 29,
+  "name": "SaaS 产品站",
+  "category": "SaaS",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建 SaaS 产品官网。功能、定价、试用，主色 {primary}。",
+  "structure": [
+   "首页 Hero（价值主张）",
+   "功能特性",
+   "定价方案",
+   "客户案例",
+   "免费试用 / Demo",
+   "登录/注册"
+  ],
+  "modules": [
+   "定价对比",
+   "试用注册",
+   "功能对比表",
+   "Changelog"
+  ],
+  "dataModel": [
+   {
+    "table": "plan",
+    "fields": "方案: 名称,价格,周期,权益"
+   },
+   {
+    "table": "feature",
+    "fields": "功能: 名称,分组,说明"
+   },
+   {
+    "table": "trial",
+    "fields": "试用: 用户,邮箱,公司,时间"
+   }
+  ]
+ },
+ {
+  "id": 30,
+  "name": "开发者工具站",
+  "category": "SaaS",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建开发者工具站。文档、CLI、示例、定价，主色 {primary}。",
+  "structure": [
+   "首页（定位 + 安装）",
+   "功能",
+   "快速开始",
+   "文档中心",
+   "示例 / 模板",
+   "定价 / 开源"
+  ],
+  "modules": [
+   "文档搜索",
+   "代码示例",
+   "CLI 安装引导",
+   "GitHub 星标"
+  ],
+  "dataModel": [
+   {
+    "table": "doc",
+    "fields": "文档: 标题,正文,分类,排序"
+   },
+   {
+    "table": "sample",
+    "fields": "示例: 名称,代码,语言"
+   },
+   {
+    "table": "star",
+    "fields": "星标: 用户,仓库,时间"
+   }
+  ]
+ },
+ {
+  "id": 31,
+  "name": "项目管理 SaaS",
+  "category": "SaaS",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建项目管理 SaaS 营销站 + 入口。看板、协作、模板，主色 {primary}。",
+  "structure": [
+   "首页（场景化 Hero）",
+   "功能（任务/看板/甘特）",
+   "行业模板",
+   "客户案例",
+   "定价",
+   "登录/注册"
+  ],
+  "modules": [
+   "模板市场",
+   "集成市场",
+   "试用",
+   "安全合规说明"
+  ],
+  "dataModel": [
+   {
+    "table": "template",
+    "fields": "模板: 名称,行业,结构"
+   },
+   {
+    "table": "feature",
+    "fields": "功能: 名称,说明"
+   },
+   {
+    "table": "lead",
+    "fields": "线索: 公司,规模,邮箱"
+   }
+  ]
+ },
+ {
+  "id": 32,
+  "name": "营销自动化平台",
+  "category": "SaaS",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建营销自动化平台站。邮件/短信/裂变，主色 {primary}。",
+  "structure": [
+   "首页（增长主张）",
+   "功能（EDM/自动化/分析）",
+   "行业方案",
+   "案例与 ROI",
+   "定价",
+   "预约演示"
+  ],
+  "modules": [
+   " demo 预约",
+   "ROI 计算",
+   "集成列表",
+   "资源中心"
+  ],
+  "dataModel": [
+   {
+    "table": "feature",
+    "fields": "功能: 名称,说明"
+   },
+   {
+    "table": "case",
+    "fields": "案例: 客户,行业,ROI"
+   },
+   {
+    "table": "demo",
+    "fields": "演示: 公司,联系人,需求"
+   }
+  ]
+ },
+ {
+  "id": 33,
+  "name": "数据分析平台",
+  "category": "SaaS",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建数据分析平台站。BI、看板、嵌入，主色 {primary}。",
+  "structure": [
+   "首页（数据价值）",
+   "功能（接入/建模/可视化）",
+   "模板市场",
+   "安全与合规",
+   "定价",
+   "试用"
+  ],
+  "modules": [
+   "数据源列表",
+   "看板模板",
+   "合规认证",
+   "试用注册"
+  ],
+  "dataModel": [
+   {
+    "table": "source",
+    "fields": "数据源: 名称,类型"
+   },
+   {
+    "table": "dashboard_tpl",
+    "fields": "看板模板: 名称,场景"
+   },
+   {
+    "table": "trial",
+    "fields": "试用: 用户,公司,邮箱"
+   }
+  ]
+ },
+ {
+  "id": 34,
+  "name": "协作办公平台",
+  "category": "SaaS",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建协作办公平台站。文档/IM/会议，主色 {primary}。",
+  "structure": [
+   "首页（一体化）",
+   "功能（文档/表格/会议）",
+   "模板中心",
+   "企业方案",
+   "安全",
+   "注册/登录"
+  ],
+  "modules": [
+   "企业版询价",
+   "模板中心",
+   "集成",
+   "帮助中心"
+  ],
+  "dataModel": [
+   {
+    "table": "feature",
+    "fields": "功能: 名称,说明"
+   },
+   {
+    "table": "template",
+    "fields": "模板: 名称,分类"
+   },
+   {
+    "table": "enterprise",
+    "fields": "企业: 名称,规模,联系人"
+   }
+  ]
+ },
+ {
+  "id": 35,
+  "name": "AI 工具产品站",
+  "category": "SaaS",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建 AI 工具产品站。对话/生成/API，主色 {primary}。",
+  "structure": [
+   "首页（能力演示）",
+   "功能（文本/图像/代码）",
+   "应用场景",
+   "定价（按量/包月）",
+   "API 文档",
+   "登录/试用"
+  ],
+  "modules": [
+   "用量计费",
+   "API 文档",
+   "场景模板",
+   "试用额度"
+  ],
+  "dataModel": [
+   {
+    "table": "use_case",
+    "fields": "场景: 名称,描述,示例"
+   },
+   {
+    "table": "plan",
+    "fields": "方案: 名称,额度,价格"
+   },
+   {
+    "table": "usage",
+    "fields": "用量: 用户,用量,周期"
+   }
+  ]
+ },
+ {
+  "id": 36,
+  "name": "会议发布会活动页",
+  "category": "活动",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建会议/发布会活动页。议程、嘉宾、报名，主色 {primary}。",
+  "structure": [
+   "Hero（会议主题 + 时间地点）",
+   "议程安排",
+   "嘉宾阵容",
+   "报名表单",
+   "赞助商",
+   "往届回顾"
+  ],
+  "modules": [
+   "票务/报名",
+   "嘉宾筛选",
+   "日程时间轴",
+   "地图"
+  ],
+  "dataModel": [
+   {
+    "table": "agenda",
+    "fields": "议程: 时间,主题,嘉宾"
+   },
+   {
+    "table": "speaker",
+    "fields": "嘉宾: 姓名,头衔,简介,头像"
+   },
+   {
+    "table": "registration",
+    "fields": "报名: 姓名,公司,邮箱,票种"
+   }
+  ]
+ },
+ {
+  "id": 37,
+  "name": "婚礼邀请页",
+  "category": "活动",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建婚礼电子邀请页。浪漫、地图、RSVP，主色 {primary}。",
+  "structure": [
+   "Hero（新人 + 日期）",
+   "我们的故事",
+   "婚礼地点（地图）",
+   "日程安排",
+   "RSVP 回执",
+   "祝福墙"
+  ],
+  "modules": [
+   "地图导航",
+   "RSVP 表单",
+   "祝福留言",
+   "相册"
+  ],
+  "dataModel": [
+   {
+    "table": "rsvp",
+    "fields": "回执: 姓名,出席,人数,餐忌"
+   },
+   {
+    "table": "blessing",
+    "fields": "祝福: 姓名,内容,时间"
+   },
+   {
+    "table": "schedule",
+    "fields": "日程: 时间,事项"
+   }
+  ]
+ },
+ {
+  "id": 38,
+  "name": "线下活动报名页",
+  "category": "活动",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构线下载体活动报名页。沙龙/市集/培训，主色 {primary}。",
+  "structure": [
+   "Hero（活动亮点）",
+   "活动详情",
+   "嘉宾/流程",
+   "票种与报名",
+   "常见问题",
+   "分享"
+  ],
+  "modules": [
+   "票种",
+   "报名表单",
+   "电子票",
+   "分享追踪"
+  ],
+  "dataModel": [
+   {
+    "table": "ticket",
+    "fields": "票种: 名称,价格,库存"
+   },
+   {
+    "table": "registrant",
+    "fields": "报名: 姓名,手机,票种"
+   },
+   {
+    "table": "faq",
+    "fields": "问答: 问题,回答"
+   }
+  ]
+ },
+ {
+  "id": 39,
+  "name": "产品发布落地页",
+  "category": "活动",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建新品发布落地页。卖点、视频、预约，主色 {primary}。",
+  "structure": [
+   "Hero（新品 + 主张）",
+   "核心卖点",
+   "演示视频",
+   "规格参数",
+   "预约 / 抢先购",
+   "FAQ"
+  ],
+  "modules": [
+   "预约登记",
+   "倒计时",
+   "参数对比",
+   "分享"
+  ],
+  "dataModel": [
+   {
+    "table": "spec",
+    "fields": "规格: 名称,数值,分组"
+   },
+   {
+    "table": "reserve",
+    "fields": "预约: 姓名,手机,意向"
+   },
+   {
+    "table": "faq",
+    "fields": "问答: 问题,回答"
+   }
+  ]
+ },
+ {
+  "id": 40,
+  "name": "在线课程平台",
+  "category": "教育",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建在线课程平台。分类、详情、学习、购买，主色 {primary}。",
+  "structure": [
+   "首页（热门课程）",
+   "课程分类",
+   "课程详情",
+   "学习中心",
+   "购物车 / 购买",
+   "讲师主页"
+  ],
+  "modules": [
+   "章节进度",
+   "笔记",
+   "证书",
+   "优惠券"
+  ],
+  "dataModel": [
+   {
+    "table": "course",
+    "fields": "课程: 标题,封面,价格,讲师,简介"
+   },
+   {
+    "table": "lesson",
+    "fields": "课时: 课程,标题,视频,时长"
+   },
+   {
+    "table": "enroll",
+    "fields": "报名: 用户,课程,进度"
+   }
+  ]
+ },
+ {
+  "id": 41,
+  "name": "中小学教育站",
+  "category": "教育",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建中小学教育/辅导站。校区、师资、报名，主色 {primary}。",
+  "structure": [
+   "首页（办学理念）",
+   "课程体系",
+   "师资团队",
+   "校区分布",
+   "报名试听",
+   "家长评价"
+  ],
+  "modules": [
+   "试听预约",
+   "校区筛选",
+   "师资展示",
+   "资讯"
+  ],
+  "dataModel": [
+   {
+    "table": "course",
+    "fields": "课程: 年级,科目,简介,价格"
+   },
+   {
+    "table": "teacher",
+    "fields": "师资: 姓名,学科,简介"
+   },
+   {
+    "table": "campus",
+    "fields": "校区: 名称,地址,电话"
+   }
+  ]
+ },
+ {
+  "id": 42,
+  "name": "语言学习平台",
+  "category": "教育",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建语言学习平台。语种、等级、外教，主色 {primary}。",
+  "structure": [
+   "首页（多语种）",
+   "语种 / 等级",
+   "外教预约",
+   "学习路径",
+   "社区打卡",
+   "会员"
+  ],
+  "modules": [
+   "外教排课",
+   "等级测试",
+   "打卡",
+   "订阅"
+  ],
+  "dataModel": [
+   {
+    "table": "language",
+    "fields": "语种: 名称,等级"
+   },
+   {
+    "table": "tutor",
+    "fields": "外教: 姓名,语种,可约时段"
+   },
+   {
+    "table": "booking",
+    "fields": "预约: 用户,外教,时间"
+   }
+  ]
+ },
+ {
+  "id": 43,
+  "name": "职业培训站",
+  "category": "教育",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建职业技能培训站。认证、就业、班期，主色 {primary}。",
+  "structure": [
+   "首页（就业导向）",
+   "热门职业方向",
+   "课程 / 训练营",
+   "师资与就业率",
+   "班期报名",
+   "企业合作"
+  ],
+  "modules": [
+   "班期",
+   "就业数据",
+   "证书",
+   "企业合作表单"
+  ],
+  "dataModel": [
+   {
+    "table": "track",
+    "fields": "方向: 名称,岗位,薪资区间"
+   },
+   {
+    "table": "cohort",
+    "fields": "班期: 课程,开课,名额,价格"
+   },
+   {
+    "table": "job",
+    "fields": "就业: 学员,岗位,薪资"
+   }
+  ]
+ },
+ {
+  "id": 44,
+  "name": "考研公考辅导",
+  "category": "教育",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建考研/公考辅导站。院校、资料、直播，主色 {primary}。",
+  "structure": [
+   "首页（考试倒计时）",
+   "院校 / 专业库",
+   "资料下载",
+   "直播课表",
+   "真题库",
+   "咨询"
+  ],
+  "modules": [
+   "倒计时",
+   "资料 gates",
+   "直播",
+   "答疑"
+  ],
+  "dataModel": [
+   {
+    "table": "school",
+    "fields": "院校: 名称,专业,分数线"
+   },
+   {
+    "table": "material",
+    "fields": "资料: 标题,文件,权限"
+   },
+   {
+    "table": "live",
+    "fields": "直播: 主题,时间,链接"
+   }
+  ]
+ },
+ {
+  "id": 45,
+  "name": "学校机构官网",
+  "category": "教育",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建学校/培训机构官网。招生、新闻、师资，主色 {primary}。",
+  "structure": [
+   "首页（校貌）",
+   "关于学校",
+   "招生信息",
+   "专业 / 课程",
+   "师资队伍",
+   "校园新闻"
+  ],
+  "modules": [
+   "招生简章",
+   "在线咨询",
+   "新闻",
+   "校友"
+  ],
+  "dataModel": [
+   {
+    "table": "major",
+    "fields": "专业: 名称,简介,学制"
+   },
+   {
+    "table": "news",
+    "fields": "新闻: 标题,正文,时间"
+   },
+   {
+    "table": "admission",
+    "fields": "招生: 年份,计划,要求"
+   }
+  ]
+ },
+ {
+  "id": 46,
+  "name": "医院官网",
+  "category": "医疗",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建医院官网。科室、专家、预约，主色 {primary}。",
+  "structure": [
+   "首页（就医指引）",
+   "科室导航",
+   "专家团队",
+   "预约挂号",
+   "健康科普",
+   "院区信息"
+  ],
+  "modules": [
+   "挂号预约",
+   "科室筛选",
+   "科普文章",
+   "地图"
+  ],
+  "dataModel": [
+   {
+    "table": "department",
+    "fields": "科室: 名称,简介,位置"
+   },
+   {
+    "table": "doctor",
+    "fields": "专家: 姓名,科室,职称,擅长"
+   },
+   {
+    "table": "appointment",
+    "fields": "预约: 用户,科室,医生,时间"
+   }
+  ]
+ },
+ {
+  "id": 47,
+  "name": "在线问诊平台",
+  "category": "医疗",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建在线问诊平台。图文/视频问诊、处方，主色 {primary}。",
+  "structure": [
+   "首页（找医生）",
+   "科室 / 疾病",
+   "医生主页",
+   "图文 / 视频问诊",
+   "电子处方",
+   "健康档案"
+  ],
+  "modules": [
+   "问诊下单",
+   "处方审核",
+   "病历",
+   "随访"
+  ],
+  "dataModel": [
+   {
+    "table": "doctor",
+    "fields": "医生: 姓名,科室,医院,职称"
+   },
+   {
+    "table": "consult",
+    "fields": "问诊: 用户,医生,类型,状态"
+   },
+   {
+    "table": "prescription",
+    "fields": "处方: 问诊,药品,用法"
+   }
+  ]
+ },
+ {
+  "id": 48,
+  "name": "健康管理站",
+  "category": "医疗",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，采用 {style} 调性，构建健康管理站。指标、计划、报告，主色 {primary}。",
+  "structure": [
+   "首页（健康概览）",
+   "健康档案",
+   "指标记录（血压/体重）",
+   "饮食 / 运动计划",
+   "报告解读",
+   "顾问"
+  ],
+  "modules": [
+   "数据录入",
+   "趋势图表",
+   "计划模板",
+   "提醒"
+  ],
+  "dataModel": [
+   {
+    "table": "metric",
+    "fields": "指标: 用户,类型,数值,时间"
+   },
+   {
+    "table": "plan",
+    "fields": "计划: 用户,类型,内容"
+   },
+   {
+    "table": "report",
+    "fields": "报告: 用户,结论,时间"
+   }
+  ]
+ },
+ {
+  "id": 49,
+  "name": "心理咨询平台",
+  "category": "医疗",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建心理咨询平台。匿名、匹配、预约，主色 {primary}。",
+  "structure": [
+   "首页（温和主张）",
+   "心理测评",
+   "咨询师匹配",
+   "预约咨询",
+   "文章 / 电台",
+   "紧急热线"
+  ],
+  "modules": [
+   "匿名咨询",
+   "测评量表",
+   "预约",
+   "危机热线"
+  ],
+  "dataModel": [
+   {
+    "table": "counselor",
+    "fields": "咨询师: 姓名,流派,擅长"
+   },
+   {
+    "table": "assess",
+    "fields": "测评: 名称,题目,结论"
+   },
+   {
+    "table": "booking",
+    "fields": "预约: 用户,咨询师,时间"
+   }
+  ]
+ },
+ {
+  "id": 50,
+  "name": "医药电商药房",
+  "category": "医疗",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建医药电商/药房。OTC、处方、药师，主色 {primary}。",
+  "structure": [
+   "首页（常购药品）",
+   "分类（OTC/保健）",
+   "商品详情",
+   "药师咨询",
+   "购物车 / 结算",
+   "处方上传"
+  ],
+  "modules": [
+   "处方药审核",
+   "药师 IM",
+   "医保",
+   "用药提醒"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "药品: 名称,规格,价格,OTC/处方"
+   },
+   {
+    "table": "rx",
+    "fields": "处方: 用户,图片,审核状态"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 编号,金额,状态"
+   }
+  ]
+ },
+ {
+  "id": 51,
+  "name": "餐厅官网",
+  "category": "餐饮",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建餐厅官网。菜单、环境、预订，主色 {primary}。",
+  "structure": [
+   "首页（招牌菜 + 氛围）",
+   "菜单（分类）",
+   "餐厅环境",
+   "在线预订",
+   "门店信息",
+   "外卖入口"
+  ],
+  "modules": [
+   "桌位预订",
+   "菜单筛选",
+   "门店地图",
+   "外卖跳转"
+  ],
+  "dataModel": [
+   {
+    "table": "menu",
+    "fields": "菜品: 名称,分类,价格,图片"
+   },
+   {
+    "table": "reservation",
+    "fields": "预订: 姓名,人数,时间,手机"
+   },
+   {
+    "table": "branch",
+    "fields": "门店: 名称,地址,电话"
+   }
+  ]
+ },
+ {
+  "id": 52,
+  "name": "外卖点餐平台",
+  "category": "餐饮",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建外卖点餐平台。商家、菜单、下单，主色 {primary}。",
+  "structure": [
+   "首页（附近商家）",
+   "商家列表 / 筛选",
+   "商家菜单",
+   "购物车",
+   "下单 / 配送",
+   "订单跟踪"
+  ],
+  "modules": [
+   "商家入驻",
+   "配送范围",
+   "实时轨迹",
+   "评价"
+  ],
+  "dataModel": [
+   {
+    "table": "shop",
+    "fields": "商家: 名称,品类,评分,起送"
+   },
+   {
+    "table": "dish",
+    "fields": "菜品: 商家,名称,价格"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 商家,金额,状态,地址"
+   }
+  ]
+ },
+ {
+  "id": 53,
+  "name": "美食菜谱站",
+  "category": "餐饮",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建美食菜谱站。分类、步骤、收藏，主色 {primary}。",
+  "structure": [
+   "首页（每日推荐）",
+   "菜系分类",
+   "菜谱详情（步骤）",
+   "视频菜谱",
+   "收藏 / 清单",
+   "发布菜谱"
+  ],
+  "modules": [
+   "收藏",
+   "购物清单",
+   "视频",
+   "发布"
+  ],
+  "dataModel": [
+   {
+    "table": "recipe",
+    "fields": "菜谱: 标题,菜系,步骤,时长,难度"
+   },
+   {
+    "table": "ingredient",
+    "fields": "食材: 名称,用量"
+   },
+   {
+    "table": "collection",
+    "fields": "清单: 用户,菜谱"
+   }
+  ]
+ },
+ {
+  "id": 54,
+  "name": "咖啡茶饮品牌站",
+  "category": "餐饮",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建咖啡/茶饮品牌站。菜单、门店、会员，主色 {primary}。",
+  "structure": [
+   "首页（品牌大片）",
+   "产品菜单",
+   "门店地图",
+   "会员权益",
+   "周边商城",
+   "加盟"
+  ],
+  "modules": [
+   "门店地图",
+   "会员",
+   "周边",
+   "加盟表单"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "饮品: 名称,价格,图片,分类"
+   },
+   {
+    "table": "store",
+    "fields": "门店: 名称,地址,营业时间"
+   },
+   {
+    "table": "member",
+    "fields": "会员: 等级,权益"
+   }
+  ]
+ },
+ {
+  "id": 55,
+  "name": "连锁餐饮加盟",
+  "category": "餐饮",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建连锁餐饮加盟站。优势、单店模型、申请，主色 {primary}。",
+  "structure": [
+   "首页（品牌实力）",
+   "加盟优势",
+   "单店投资模型",
+   "支持体系",
+   "成功案例",
+   "加盟申请"
+  ],
+  "modules": [
+   "投资测算",
+   "申请表单",
+   "案例",
+   "资料下载"
+  ],
+  "dataModel": [
+   {
+    "table": "model",
+    "fields": "单店: 面积,投资,回本周期"
+   },
+   {
+    "table": "case",
+    "fields": "案例: 城市,门店,营收"
+   },
+   {
+    "table": "apply",
+    "fields": "申请: 姓名,城市,预算,电话"
+   }
+  ]
+ },
+ {
+  "id": 56,
+  "name": "旅行社官网",
+  "category": "旅游",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建旅行社官网。线路、度假、定制，主色 {primary}。",
+  "structure": [
+   "首页（热门线路）",
+   "线路分类",
+   "线路详情",
+   "定制游",
+   "签证 / 机票",
+   "咨询报名"
+  ],
+  "modules": [
+   "线路搜索",
+   "定制表单",
+   "签证办理",
+   "顾问"
+  ],
+  "dataModel": [
+   {
+    "table": "tour",
+    "fields": "线路: 名称,目的地,天数,价格"
+   },
+   {
+    "table": "custom",
+    "fields": "定制: 需求,预算,人数"
+   },
+   {
+    "table": "booking",
+    "fields": "报名: 线路,人数,联系人"
+   }
+  ]
+ },
+ {
+  "id": 57,
+  "name": "酒店预订平台",
+  "category": "旅游",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建酒店预订平台。搜索、详情、下单，主色 {primary}。",
+  "structure": [
+   "首页（目的地搜索）",
+   "酒店列表 / 筛选",
+   "酒店详情",
+   "房型选择",
+   "下单 / 支付",
+   "订单管理"
+  ],
+  "modules": [
+   "地图搜索",
+   "价格日历",
+   "取消政策",
+   "会员价"
+  ],
+  "dataModel": [
+   {
+    "table": "hotel",
+    "fields": "酒店: 名称,城市,评分,地址"
+   },
+   {
+    "table": "room",
+    "fields": "房型: 酒店,名称,价格,库存"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 酒店,房型,入住,离店"
+   }
+  ]
+ },
+ {
+  "id": 58,
+  "name": "民宿预订平台",
+  "category": "旅游",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建民宿预订平台。房东、房源、体验，主色 {primary}。",
+  "structure": [
+   "首页（特色房源）",
+   "房源搜索",
+   "房源详情",
+   "房东主页",
+   "预订",
+   "体验活动"
+  ],
+  "modules": [
+   "房东入驻",
+   "日历房态",
+   "体验",
+   "评价"
+  ],
+  "dataModel": [
+   {
+    "table": "listing",
+    "fields": "房源: 标题,地点,价格,房东,图片"
+   },
+   {
+    "table": "host",
+    "fields": "房东: 姓名,简介,房源数"
+   },
+   {
+    "table": "experience",
+    "fields": "体验: 名称,城市,价格"
+   }
+  ]
+ },
+ {
+  "id": 59,
+  "name": "目的地旅游指南",
+  "category": "旅游",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建目的地旅游指南站。景点、攻略、地图，主色 {primary}。",
+  "structure": [
+   "首页（目的地精选）",
+   "城市 / 国家页",
+   "景点 POI",
+   "美食 / 住宿推荐",
+   "行程路线",
+   "实用信息"
+  ],
+  "modules": [
+   "POI 地图",
+   "路线规划",
+   "收藏",
+   "离线"
+  ],
+  "dataModel": [
+   {
+    "table": "destination",
+    "fields": "目的地: 名称,简介,封面"
+   },
+   {
+    "table": "poi",
+    "fields": "景点: 目的地,名称,类型,坐标"
+   },
+   {
+    "table": "route",
+    "fields": "路线: 名称,天数,POI序列"
+   }
+  ]
+ },
+ {
+  "id": 60,
+  "name": "旅行攻略社区",
+  "category": "旅游",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建旅行攻略社区。游记、问答、结伴，主色 {primary}。",
+  "structure": [
+   "首页（精华游记）",
+   "目的地板块",
+   "游记详情",
+   "问答",
+   "结伴同行",
+   "榜单"
+  ],
+  "modules": [
+   "游记发布",
+   "结伴",
+   "问答",
+   "收藏"
+  ],
+  "dataModel": [
+   {
+    "table": "note",
+    "fields": "游记: 标题,目的地,正文,图片"
+   },
+   {
+    "table": "qa",
+    "fields": "问答: 问题,回答,目的地"
+   },
+   {
+    "table": "companion",
+    "fields": "结伴: 路线,时间,人数"
+   }
+  ]
+ },
+ {
+  "id": 61,
+  "name": "机票票务预订",
+  "category": "旅游",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建机票/票务预订站。搜索、比价、下单，主色 {primary}。",
+  "structure": [
+   "首页（出发地搜索）",
+   "航班搜索 / 比价",
+   "航班详情",
+   "乘客与下单",
+   "订单",
+   "值机提醒"
+  ],
+  "modules": [
+   "多程搜索",
+   "低价提醒",
+   "乘客管理",
+   "退改"
+  ],
+  "dataModel": [
+   {
+    "table": "flight",
+    "fields": "航班: 航司,起降,时间,价格"
+   },
+   {
+    "table": "passenger",
+    "fields": "乘客: 姓名,证件"
+   },
+   {
+    "table": "order",
+    "fields": "订单: 航班,乘客,状态"
+   }
+  ]
+ },
+ {
+  "id": 62,
+  "name": "房产中介站",
+  "category": "房产",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建房产中介站。房源、经纪人、委托，主色 {primary}。",
+  "structure": [
+   "首页（房源推荐）",
+   "二手房 / 租房",
+   "房源详情",
+   "地图找房",
+   "经纪人",
+   "委托出售/出租"
+  ],
+  "modules": [
+   "地图搜房",
+   "收藏",
+   "委托表单",
+   "IM"
+  ],
+  "dataModel": [
+   {
+    "table": "house",
+    "fields": "房源: 小区,户型,面积,价格,图"
+   },
+   {
+    "table": "agent",
+    "fields": "经纪人: 姓名,门店,电话"
+   },
+   {
+    "table": "entrust",
+    "fields": "委托: 类型,联系人,需求"
+   }
+  ]
+ },
+ {
+  "id": 63,
+  "name": "新房楼盘展示",
+  "category": "房产",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建新房/楼盘展示站。沙盘、户型、优惠，主色 {primary}。",
+  "structure": [
+   "首页（品牌楼盘）",
+   "楼盘列表",
+   "楼盘详情",
+   "户型鉴赏",
+   "优惠 / 认筹",
+   "预约看房"
+  ],
+  "modules": [
+   "户型对比",
+   "VR 看房",
+   "认筹",
+   "预约"
+  ],
+  "dataModel": [
+   {
+    "table": "project",
+    "fields": "楼盘: 名称,区位,均价,状态"
+   },
+   {
+    "table": "unit",
+    "fields": "户型: 楼盘,面积,房型,图"
+   },
+   {
+    "table": "subscribe",
+    "fields": "认筹: 用户,楼盘,金额"
+   }
+  ]
+ },
+ {
+  "id": 64,
+  "name": "租房平台",
+  "category": "房产",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建租房平台。整租/合租、筛选、签约，主色 {primary}。",
+  "structure": [
+   "首页（房源流）",
+   "整租 / 合租",
+   "房源详情",
+   "地图 / 通勤",
+   "在线签约",
+   "管家"
+  ],
+  "modules": [
+   "信用免押",
+   "通勤测算",
+   "电子合同",
+   "报修"
+  ],
+  "dataModel": [
+   {
+    "table": "listing",
+    "fields": "房源: 标题,区域,租金,户型,图"
+   },
+   {
+    "table": "lease",
+    "fields": "合同: 房源,租客,期限,状态"
+   },
+   {
+    "table": "repair",
+    "fields": "报修: 房源,问题,状态"
+   }
+  ]
+ },
+ {
+  "id": 65,
+  "name": "装修家居平台",
+  "category": "房产",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建装修/家居平台。案例、报价、商城，主色 {primary}。",
+  "structure": [
+   "首页（灵感图）",
+   "装修案例",
+   "设计师 / 工长",
+   "报价估算",
+   "家居商城",
+   "预约"
+  ],
+  "modules": [
+   "案例筛选",
+   "报价器",
+   "商城",
+   "预约"
+  ],
+  "dataModel": [
+   {
+    "table": "case",
+    "fields": "案例: 风格,面积,预算,图"
+   },
+   {
+    "table": "designer",
+    "fields": "设计师: 姓名,风格,报价"
+   },
+   {
+    "table": "quote",
+    "fields": "估算: 面积,风格,结果"
+   }
+  ]
+ },
+ {
+  "id": 66,
+  "name": "银行理财站",
+  "category": "金融",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建银行/理财站。产品、利率、资讯，主色 {primary}。",
+  "structure": [
+   "首页（产品总览）",
+   "存款 / 理财",
+   "贷款",
+   "汇率 / 利率",
+   "资讯中心",
+   "网点"
+  ],
+  "modules": [
+   "产品筛选",
+   "利率表",
+   "网点地图",
+   "资讯"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "理财产品: 名称,类型,期限,收益"
+   },
+   {
+    "table": "rate",
+    "fields": "利率: 类型,期限,数值"
+   },
+   {
+    "table": "branch",
+    "fields": "网点: 名称,地址,电话"
+   }
+  ]
+ },
+ {
+  "id": 67,
+  "name": "证券股票行情",
+  "category": "金融",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建证券/股票行情站。行情、资讯、开户，主色 {primary}。",
+  "structure": [
+   "首页（大盘速览）",
+   "行情中心",
+   "个股详情",
+   "财经资讯",
+   "研报",
+   "开户"
+  ],
+  "modules": [
+   "实时行情",
+   "自选股",
+   "开户表单",
+   "推送"
+  ],
+  "dataModel": [
+   {
+    "table": "stock",
+    "fields": "股票: 代码,名称,价,涨跌"
+   },
+   {
+    "table": "watchlist",
+    "fields": "自选: 用户,股票"
+   },
+   {
+    "table": "news",
+    "fields": "资讯: 标题,时间,影响"
+   }
+  ]
+ },
+ {
+  "id": 68,
+  "name": "保险服务平台",
+  "category": "金融",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建保险服务平台。险种、测算、投保，主色 {primary}。",
+  "structure": [
+   "首页（险种导航）",
+   "产品对比",
+   "保费测算",
+   "健康告知",
+   "在线投保",
+   "理赔指引"
+  ],
+  "modules": [
+   "险种筛选",
+   "保费试算",
+   "告知问卷",
+   "理赔"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "险种: 名称,类型,保额,保费"
+   },
+   {
+    "table": "policy",
+    "fields": "保单: 用户,产品,状态"
+   },
+   {
+    "table": "claim",
+    "fields": "理赔: 保单,原因,状态"
+   }
+  ]
+ },
+ {
+  "id": 69,
+  "name": "信贷借贷平台",
+  "category": "金融",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建信贷/借贷平台。额度、利率、申请，主色 {primary}。",
+  "structure": [
+   "首页（额度测算）",
+   "产品（消费贷/经营贷）",
+   "利率说明",
+   "申请流程",
+   "资质预审",
+   "还款"
+  ],
+  "modules": [
+   "额度试算",
+   "预审表单",
+   "进度",
+   "还款计划"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "贷款: 名称,额度,利率,期限"
+   },
+   {
+    "table": "application",
+    "fields": "申请: 用户,产品,金额,状态"
+   },
+   {
+    "table": "repayment",
+    "fields": "还款: 期次,金额,状态"
+   }
+  ]
+ },
+ {
+  "id": 70,
+  "name": "区块链加密资产",
+  "category": "金融",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建区块链/加密资产站。行情、钱包、资讯，主色 {primary}。",
+  "structure": [
+   "首页（行情总览）",
+   "币种行情",
+   "钱包 / 资产",
+   "质押 / 收益",
+   "学院 / 资讯",
+   "安全中心"
+  ],
+  "modules": [
+   "行情卡",
+   "资产看板",
+   "质押",
+   "教育"
+  ],
+  "dataModel": [
+   {
+    "table": "coin",
+    "fields": "币种: 符号,名称,价格,涨跌"
+   },
+   {
+    "table": "asset",
+    "fields": "资产: 用户,币种,数量"
+   },
+   {
+    "table": "stake",
+    "fields": "质押: 币种,数量,收益"
+   }
+  ]
+ },
+ {
+  "id": 71,
+  "name": "政府门户网站",
+  "category": "政务",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建政府门户网站。信息公开、服务、互动，主色 {primary}。",
+  "structure": [
+   "首页（政务头条）",
+   "信息公开",
+   "政务服务",
+   "部门导航",
+   "互动交流",
+   "数据开放"
+  ],
+  "modules": [
+   "信息分类",
+   "服务入口",
+   "留言",
+   "数据下载"
+  ],
+  "dataModel": [
+   {
+    "table": "info",
+    "fields": "公开: 标题,分类,时间,文件"
+   },
+   {
+    "table": "service",
+    "fields": "服务: 名称,部门,入口"
+   },
+   {
+    "table": "message",
+    "fields": "留言: 主题,内容,状态"
+   }
+  ]
+ },
+ {
+  "id": 72,
+  "name": "政务一网通办",
+  "category": "政务",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建政务一网通办。事项、指南、办理，主色 {primary}。",
+  "structure": [
+   "首页（高频事项）",
+   "事项清单",
+   "办事指南",
+   "在线办理",
+   "进度查询",
+   "好差评"
+  ],
+  "modules": [
+   "事项搜索",
+   "指南",
+   "办理表单",
+   "评价"
+  ],
+  "dataModel": [
+   {
+    "table": "item",
+    "fields": "事项: 名称,部门,材料,时限"
+   },
+   {
+    "table": "guide",
+    "fields": "指南: 事项,步骤,样例"
+   },
+   {
+    "table": "apply",
+    "fields": "办理: 事项,用户,状态"
+   }
+  ]
+ },
+ {
+  "id": 73,
+  "name": "公共服务公示",
+  "category": "政务",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建公共服务公示站。招标、规划、环境，主色 {primary}。",
+  "structure": [
+   "首页（公示列表）",
+   "招标公告",
+   "规划公示",
+   "环境数据",
+   "信用公示",
+   "反馈"
+  ],
+  "modules": [
+   "公告分类",
+   "文件下载",
+   "数据图表",
+   "反馈"
+  ],
+  "dataModel": [
+   {
+    "table": "notice",
+    "fields": "公示: 标题,类型,时间,文件"
+   },
+   {
+    "table": "bid",
+    "fields": "招标: 名称,金额,截止"
+   },
+   {
+    "table": "env",
+    "fields": "环境: 指标,数值,时间"
+   }
+  ]
+ },
+ {
+  "id": 74,
+  "name": "慈善公益组织",
+  "category": "公益",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建慈善公益组织站。项目、捐赠、透明，主色 {primary}。",
+  "structure": [
+   "首页（公益项目）",
+   "项目详情",
+   "捐赠",
+   "透明度报告",
+   "志愿者",
+   "故事"
+  ],
+  "modules": [
+   "捐赠表单",
+   "月捐",
+   "报告",
+   "证书"
+  ],
+  "dataModel": [
+   {
+    "table": "project",
+    "fields": "项目: 名称,目标,已筹,简介"
+   },
+   {
+    "table": "donation",
+    "fields": "捐赠: 用户,项目,金额,方式"
+   },
+   {
+    "table": "report",
+    "fields": "报告: 项目,用途,金额,时间"
+   }
+  ]
+ },
+ {
+  "id": 75,
+  "name": "志愿者平台",
+  "category": "公益",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建志愿者平台。活动、时长、认证，主色 {primary}。",
+  "structure": [
+   "首页（志愿活动）",
+   "活动列表",
+   "活动详情",
+   "报名",
+   "时长记录",
+   "证书"
+  ],
+  "modules": [
+   "活动报名",
+   "时长统计",
+   "技能标签",
+   "证书"
+  ],
+  "dataModel": [
+   {
+    "table": "event",
+    "fields": "活动: 名称,机构,时间,地点,名额"
+   },
+   {
+    "table": "signup",
+    "fields": "报名: 用户,活动,状态"
+   },
+   {
+    "table": "hour",
+    "fields": "时长: 用户,活动,小时数"
+   }
+  ]
+ },
+ {
+  "id": 76,
+  "name": "环保公益站",
+  "category": "公益",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建环保公益站。倡议、行动、数据，主色 {primary}。",
+  "structure": [
+   "首页（行动主张）",
+   "环保项目",
+   "科普文章",
+   "碳足迹工具",
+   "捐赠 / 参与",
+   "数据看板"
+  ],
+  "modules": [
+   "碳计算",
+   "项目参与",
+   "科普",
+   "数据"
+  ],
+  "dataModel": [
+   {
+    "table": "project",
+    "fields": "项目: 名称,类型,目标"
+   },
+   {
+    "table": "article",
+    "fields": "科普: 标题,分类,正文"
+   },
+   {
+    "table": "carbon",
+    "fields": "碳足迹: 用户,数值,时间"
+   }
+  ]
+ },
+ {
+  "id": 77,
+  "name": "个人简历主页",
+  "category": "简历",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建个人简历主页。经历、技能、作品，主色 {primary}。",
+  "structure": [
+   "首页（一句话 + 头像）",
+   "关于我",
+   "工作经历",
+   "项目经历",
+   "技能",
+   "联系方式"
+  ],
+  "modules": [
+   "PDF 下载",
+   "主题切换",
+   "联系表单",
+   "暗黑模式"
+  ],
+  "dataModel": [
+   {
+    "table": "experience",
+    "fields": "经历: 公司,职位,时间,描述"
+   },
+   {
+    "table": "project",
+    "fields": "项目: 名称,角色,链接"
+   },
+   {
+    "table": "skill",
+    "fields": "技能: 名称,熟练度"
+   }
+  ]
+ },
+ {
+  "id": 78,
+  "name": "企业招聘站",
+  "category": "招聘",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建企业招聘站。职位、文化、投递，主色 {primary}。",
+  "structure": [
+   "首页（雇主品牌）",
+   "职位列表",
+   "职位详情",
+   "公司文化",
+   "校园招聘",
+   "投递"
+  ],
+  "modules": [
+   "职位搜索",
+   "投递表单",
+   "校招专区",
+   "内推"
+  ],
+  "dataModel": [
+   {
+    "table": "job",
+    "fields": "职位: 名称,部门,地点,要求"
+   },
+   {
+    "table": "application",
+    "fields": "投递: 用户,职位,简历,状态"
+   },
+   {
+    "table": "campus",
+    "fields": "校招: 届别,岗位,城市"
+   }
+  ]
+ },
+ {
+  "id": 79,
+  "name": "高端猎头招聘",
+  "category": "招聘",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建高端猎头/招聘站。寻访、人才库、委托，主色 {primary}。",
+  "structure": [
+   "首页（顾问实力）",
+   "行业专注",
+   "成功案例",
+   "委托招聘",
+   "人才寻访",
+   "联系顾问"
+  ],
+  "modules": [
+   "委托表单",
+   "案例",
+   "人才保密",
+   "顾问"
+  ],
+  "dataModel": [
+   {
+    "table": "assignment",
+    "fields": "委托: 企业,岗位,薪资,状态"
+   },
+   {
+    "table": "candidate",
+    "fields": "人才: 姓名,职能,保密等级"
+   },
+   {
+    "table": "consultant",
+    "fields": "顾问: 姓名,专注行业"
+   }
+  ]
+ },
+ {
+  "id": 80,
+  "name": "兼职灵活用工",
+  "category": "招聘",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建兼职/灵活用工平台。任务、接单、结算，主色 {primary}。",
+  "structure": [
+   "首页（任务大厅）",
+   "任务详情",
+   "接单",
+   "钱包 / 结算",
+   "评价",
+   "技能认证"
+  ],
+  "modules": [
+   "任务发布",
+   "接单",
+   "结算",
+   "评价"
+  ],
+  "dataModel": [
+   {
+    "table": "task",
+    "fields": "任务: 标题,报酬,期限,状态"
+   },
+   {
+    "table": "order",
+    "fields": "接单: 用户,任务,状态"
+   },
+   {
+    "table": "wallet",
+    "fields": "钱包: 用户,余额,流水"
+   }
+  ]
+ },
+ {
+  "id": 81,
+  "name": "图片素材图库",
+  "category": "图库",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建图片素材图库。搜索、授权、下载，主色 {primary}。",
+  "structure": [
+   "首页（精选图）",
+   "分类 / 搜索",
+   "图片详情",
+   "授权说明",
+   "下载 / 收藏",
+   "订阅"
+  ],
+  "modules": [
+   "关键词搜索",
+   "收藏夹",
+   "授权分级",
+   "订阅"
+  ],
+  "dataModel": [
+   {
+    "table": "photo",
+    "fields": "图片: 标题,标签,作者,授权,预览"
+   },
+   {
+    "table": "collection",
+    "fields": "合集: 名称,图片"
+   },
+   {
+    "table": "license",
+    "fields": "授权: 类型,范围,价格"
+   }
+  ]
+ },
+ {
+  "id": 82,
+  "name": "视频素材库",
+  "category": "图库",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建视频/动效素材库。预览、授权、下载，主色 {primary}。",
+  "structure": [
+   "首页（热门视频）",
+   "分类 / 搜索",
+   "视频详情（预览）",
+   "授权",
+   "下载",
+   "收藏"
+  ],
+  "modules": [
+   "预览播放",
+   "授权",
+   "收藏",
+   "订阅"
+  ],
+  "dataModel": [
+   {
+    "table": "video",
+    "fields": "视频: 标题,标签,时长,预览,授权"
+   },
+   {
+    "table": "collection",
+    "fields": "合集: 名称,视频"
+   },
+   {
+    "table": "download",
+    "fields": "下载: 用户,资源,授权"
+   }
+  ]
+ },
+ {
+  "id": 83,
+  "name": "音乐流媒体艺人站",
+  "category": "音乐",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建音乐流媒体/艺人站。播放、专辑、巡演，主色 {primary}。",
+  "structure": [
+   "首页（新歌/推荐）",
+   "播放器",
+   "专辑 / 单曲",
+   "艺人主页",
+   "巡演日程",
+   "订阅"
+  ],
+  "modules": [
+   "在线播放",
+   "歌单",
+   "巡演",
+   "会员"
+  ],
+  "dataModel": [
+   {
+    "table": "track",
+    "fields": "曲目: 标题,专辑,时长,文件"
+   },
+   {
+    "table": "album",
+    "fields": "专辑: 名称,封面,曲目"
+   },
+   {
+    "table": "tour",
+    "fields": "巡演: 城市,日期,票务"
+   }
+  ]
+ },
+ {
+  "id": 84,
+  "name": "游戏官网",
+  "category": "游戏",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建游戏官网。亮点、角色、下载，主色 {primary}。",
+  "structure": [
+   "首页（主视觉 Hero）",
+   "游戏特色",
+   "角色 / 世界观",
+   "媒体（截图/视频）",
+   "下载 / 预约",
+   "社区"
+  ],
+  "modules": [
+   "预约",
+   "下载",
+   "视频",
+   "社区入口"
+  ],
+  "dataModel": [
+   {
+    "table": "feature",
+    "fields": "特色: 标题,描述,图"
+   },
+   {
+    "table": "character",
+    "fields": "角色: 名称,简介,立绘"
+   },
+   {
+    "table": "reserve",
+    "fields": "预约: 用户,平台"
+   }
+  ]
+ },
+ {
+  "id": 85,
+  "name": "游戏攻略资讯",
+  "category": "游戏",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建游戏攻略/资讯站。攻略、版本、社区，主色 {primary}。",
+  "structure": [
+   "首页（新游/热游）",
+   "游戏专区",
+   "攻略库",
+   "版本更新",
+   "社区帖子",
+   "排行榜"
+  ],
+  "modules": [
+   "专区",
+   "攻略",
+   "版本",
+   "社区"
+  ],
+  "dataModel": [
+   {
+    "table": "game",
+    "fields": "游戏: 名称,类型,状态"
+   },
+   {
+    "table": "guide",
+    "fields": "攻略: 游戏,标题,正文"
+   },
+   {
+    "table": "patch",
+    "fields": "版本: 游戏,版本号,内容"
+   }
+  ]
+ },
+ {
+  "id": 86,
+  "name": "游戏发行平台",
+  "category": "游戏",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建游戏发行/平台站。商店、库、社区，主色 {primary}。",
+  "structure": [
+   "首页（商店）",
+   "游戏商店",
+   "游戏详情",
+   "我的游戏库",
+   "好友 / 社区",
+   "客户端下载"
+  ],
+  "modules": [
+   "购物车",
+   "库管理",
+   "成就",
+   "社区"
+  ],
+  "dataModel": [
+   {
+    "table": "game",
+    "fields": "游戏: 名称,价格,标签,封面"
+   },
+   {
+    "table": "library",
+    "fields": "库: 用户,游戏,状态"
+   },
+   {
+    "table": "friend",
+    "fields": "好友: 用户,关系"
+   }
+  ]
+ },
+ {
+  "id": 87,
+  "name": "美妆品牌站",
+  "category": "美妆",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建美妆品牌站。系列、色号、购买，主色 {primary}。",
+  "structure": [
+   "首页（大片）",
+   "产品系列",
+   "色号试色",
+   "产品详情",
+   "购物车 / 结算",
+   "会员"
+  ],
+  "modules": [
+   "色号试色",
+   "肤质测试",
+   "购物",
+   "会员"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "产品: 名称,系列,价格,色号"
+   },
+   {
+    "table": "shade",
+    "fields": "色号: 产品,名称,色值"
+   },
+   {
+    "table": "review",
+    "fields": "评价: 产品,评分,内容"
+   }
+  ]
+ },
+ {
+  "id": 88,
+  "name": "母婴电商社区",
+  "category": "母婴",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建母婴电商/社区。商品、育儿、圈，主色 {primary}。",
+  "structure": [
+   "首页（阶段推荐）",
+   "商品分类",
+   "育儿知识",
+   "宝妈圈",
+   "购物车",
+   "问答"
+  ],
+  "modules": [
+   "阶段筛选",
+   "社区",
+   "知识",
+   "购物"
+  ],
+  "dataModel": [
+   {
+    "table": "product",
+    "fields": "商品: 名称,阶段,价格,类目"
+   },
+   {
+    "table": "post",
+    "fields": "帖子: 标题,阶段,内容"
+   },
+   {
+    "table": "qa",
+    "fields": "问答: 问题,回答,阶段"
+   }
+  ]
+ },
+ {
+  "id": 89,
+  "name": "汽车品牌官网",
+  "category": "汽车",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建汽车品牌官网。车型、配置、预约，主色 {primary}。",
+  "structure": [
+   "首页（旗舰车型）",
+   "车型矩阵",
+   "车型详情（配置）",
+   "金融方案",
+   "预约试驾",
+   "经销商"
+  ],
+  "modules": [
+   "配置器",
+   "试驾预约",
+   "金融测算",
+   "经销商地图"
+  ],
+  "dataModel": [
+   {
+    "table": "model",
+    "fields": "车型: 名称,级别,起售价,图"
+   },
+   {
+    "table": "config",
+    "fields": "配置: 车型,名称,选装,价"
+   },
+   {
+    "table": "testdrive",
+    "fields": "试驾: 用户,车型,门店,时间"
+   }
+  ]
+ },
+ {
+  "id": 90,
+  "name": "律所官网",
+  "category": "法律",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建律所官网。业务领域、团队、案例，主色 {primary}。",
+  "structure": [
+   "首页（专业定位）",
+   "业务领域",
+   "律师团队",
+   "典型案例",
+   "普法文章",
+   "咨询预约"
+  ],
+  "modules": [
+   "领域筛选",
+   "团队",
+   "案例",
+   "咨询表单"
+  ],
+  "dataModel": [
+   {
+    "table": "practice",
+    "fields": "领域: 名称,简介"
+   },
+   {
+    "table": "lawyer",
+    "fields": "律师: 姓名,领域,简介"
+   },
+   {
+    "table": "case",
+    "fields": "案例: 领域,标题,结果"
+   }
+  ]
+ },
+ {
+  "id": 91,
+  "name": "法律咨询问答",
+  "category": "法律",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建法律咨询/问答平台。提问、律师答、付费，主色 {primary}。",
+  "structure": [
+   "首页（热门问题）",
+   "领域分类",
+   "提问",
+   "律师回答",
+   "付费咨询",
+   "文章"
+  ],
+  "modules": [
+   "提问",
+   "付费咨询",
+   "领域",
+   "文章"
+  ],
+  "dataModel": [
+   {
+    "table": "question",
+    "fields": "问题: 领域,标题,内容,状态"
+   },
+   {
+    "table": "answer",
+    "fields": "回答: 问题,律师,内容"
+   },
+   {
+    "table": "consult",
+    "fields": "付费咨询: 用户,律师,问题"
+   }
+  ]
+ },
+ {
+  "id": 92,
+  "name": "合同文书模板",
+  "category": "法律",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建合同/文书模板站。分类、预览、下载，主色 {primary}。",
+  "structure": [
+   "首页（模板分类）",
+   "模板列表",
+   "模板预览",
+   "在线编辑",
+   "下载 / 代写",
+   "会员"
+  ],
+  "modules": [
+   "在线编辑",
+   "下载",
+   "代写表单",
+   "会员"
+  ],
+  "dataModel": [
+   {
+    "table": "template",
+    "fields": "模板: 名称,分类,字段JSON"
+   },
+   {
+    "table": "order",
+    "fields": "代写: 用户,类型,要求"
+   },
+   {
+    "table": "download",
+    "fields": "下载: 用户,模板"
+   }
+  ]
+ },
+ {
+  "id": 93,
+  "name": "自媒体杂志站",
+  "category": "媒体",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建自媒体/数字杂志站。专栏、专题、订阅，主色 {primary}。",
+  "structure": [
+   "首页（编辑精选）",
+   "栏目",
+   "专题报道",
+   "作者专栏",
+   "订阅 / Newsletter",
+   "关于"
+  ],
+  "modules": [
+   "Newsletter",
+   "专题",
+   "作者",
+   "订阅"
+  ],
+  "dataModel": [
+   {
+    "table": "article",
+    "fields": "文章: 标题,栏目,正文,作者,时间"
+   },
+   {
+    "table": "series",
+    "fields": "专题: 名称,文章"
+   },
+   {
+    "table": "subscriber",
+    "fields": "订阅: 邮箱,栏目"
+   }
+  ]
+ },
+ {
+  "id": 94,
+  "name": "知识付费课程",
+  "category": "知识付费",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建知识付费站。专栏、课程、订阅，主色 {primary}。",
+  "structure": [
+   "首页（推荐）",
+   "专栏 / 课程",
+   "详情",
+   "试听",
+   "订阅 / 购买",
+   "创作者中心"
+  ],
+  "modules": [
+   "试听",
+   "订阅",
+   "分销",
+   "创作"
+  ],
+  "dataModel": [
+   {
+    "table": "column",
+    "fields": "专栏: 名称,作者,价格,简介"
+   },
+   {
+    "table": "lesson",
+    "fields": "课时: 专栏,标题,音频/视频"
+   },
+   {
+    "table": "subscribe",
+    "fields": "订阅: 用户,专栏,状态"
+   }
+  ]
+ },
+ {
+  "id": 95,
+  "name": "电子书文库",
+  "category": "知识付费",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建电子书/文库站。书架、阅读、购买，主色 {primary}。",
+  "structure": [
+   "首页（分类推荐）",
+   "分类",
+   "书籍详情",
+   "在线阅读",
+   "购买 / 会员",
+   "书架"
+  ],
+  "modules": [
+   "阅读器",
+   "书签",
+   "购买",
+   "会员"
+  ],
+  "dataModel": [
+   {
+    "table": "book",
+    "fields": "书: 标题,作者,分类,价格"
+   },
+   {
+    "table": "chapter",
+    "fields": "章: 书,标题,正文,序号"
+   },
+   {
+    "table": "shelf",
+    "fields": "书架: 用户,书,进度"
+   }
+  ]
+ },
+ {
+  "id": 96,
+  "name": "软件下载站",
+  "category": "工具下载",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建软件下载站。分类、详情、安全，主色 {primary}。",
+  "structure": [
+   "首页（热门软件）",
+   "分类",
+   "软件详情",
+   "版本 / 历史",
+   "安全检测",
+   "下载"
+  ],
+  "modules": [
+   "版本历史",
+   "安全标",
+   "平台筛选",
+   "评论"
+  ],
+  "dataModel": [
+   {
+    "table": "software",
+    "fields": "软件: 名称,分类,平台,简介"
+   },
+   {
+    "table": "version",
+    "fields": "版本: 软件,号,大小,时间"
+   },
+   {
+    "table": "download",
+    "fields": "下载: 用户,软件,版本"
+   }
+  ]
+ },
+ {
+  "id": 97,
+  "name": "浏览器插件站",
+  "category": "工具下载",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建浏览器插件/扩展站。商店、评分、安装，主色 {primary}。",
+  "structure": [
+   "首页（精选扩展）",
+   "分类",
+   "扩展详情",
+   "评分评论",
+   "安装指引",
+   "开发者"
+  ],
+  "modules": [
+   "评分",
+   "安装指引",
+   "分类",
+   "开发者中心"
+  ],
+  "dataModel": [
+   {
+    "table": "extension",
+    "fields": "扩展: 名称,分类,简介,评分"
+   },
+   {
+    "table": "review",
+    "fields": "评论: 扩展,用户,内容,星"
+   },
+   {
+    "table": "install",
+    "fields": "安装: 用户,扩展"
+   }
+  ]
+ },
+ {
+  "id": 98,
+  "name": "付费会员订阅站",
+  "category": "会员订阅",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建付费会员订阅站。权益、等级、续费，主色 {primary}。",
+  "structure": [
+   "首页（会员价值）",
+   "会员权益",
+   "等级体系",
+   "订阅 / 续费",
+   "专属内容",
+   "个人中心"
+  ],
+  "modules": [
+   "等级权益",
+   "订阅",
+   "续费提醒",
+   "专属内容"
+  ],
+  "dataModel": [
+   {
+    "table": "tier",
+    "fields": "等级: 名称,价格,权益JSON"
+   },
+   {
+    "table": "subscribe",
+    "fields": "订阅: 用户,等级,周期,状态"
+   },
+   {
+    "table": "perk",
+    "fields": "权益: 等级,名称,内容"
+   }
+  ]
+ },
+ {
+  "id": 99,
+  "name": "问答社区",
+  "category": "问答社区",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建问答社区。提问、回答、话题，主色 {primary}。",
+  "structure": [
+   "首页（热榜）",
+   "话题 / 领域",
+   "提问",
+   "回答 / 赞同",
+   "榜单",
+   "创作"
+  ],
+  "modules": [
+   "话题关注",
+   "赞同",
+   "榜单",
+   "创作激励"
+  ],
+  "dataModel": [
+   {
+    "table": "question",
+    "fields": "问题: 话题,标题,内容,状态"
+   },
+   {
+    "table": "answer",
+    "fields": "回答: 问题,用户,内容,赞同"
+   },
+   {
+    "table": "topic",
+    "fields": "话题: 名称,关注数"
+   }
+  ]
+ },
+ {
+  "id": 100,
+  "name": "AI 创作社区",
+  "category": "问答社区",
+  "prompt": "基于 {brand} 设计规范，采用 {style} 调性，构建 AI 创作社区。作品、提示词、模型，主色 {primary}。",
+  "structure": [
+   "首页（精选作品）",
+   "作品流",
+   "提示词库",
+   "模型/工作流",
+   "发布",
+   "榜单"
+  ],
+  "modules": [
+   "提示词库",
+   "作品发布",
+   "模型",
+   "榜单"
+  ],
+  "dataModel": [
+   {
+    "table": "work",
+    "fields": "作品: 标题,类型,提示词,图片"
+   },
+   {
+    "table": "prompt",
+    "fields": "提示词: 标题,内容,标签"
+   },
+   {
+    "table": "model",
+    "fields": "模型: 名称,类型,链接"
+   }
+  ]
+ }
+];
+const BACKEND = [
+ {
+  "id": "auth",
+  "name": "注册登录",
+  "icon": "🔐",
+  "desc": "账号体系基础：注册、登录、第三方、找回密码、会话管理。",
+  "apis": [
+   {
+    "method": "POST",
+    "path": "/api/auth/register",
+    "desc": "邮箱/手机注册，验证码校验"
+   },
+   {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "desc": "账号密码登录，返回 token"
+   },
+   {
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "desc": "注销当前会话"
+   },
+   {
+    "method": "POST",
+    "path": "/api/auth/refresh",
+    "desc": "刷新 access token"
+   },
+   {
+    "method": "POST",
+    "path": "/api/auth/send-code",
+    "desc": "发送短信/邮件验证码"
+   },
+   {
+    "method": "POST",
+    "path": "/api/auth/reset-password",
+    "desc": "凭验证码重置密码"
+   },
+   {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "desc": "获取当前用户信息"
+   },
+   {
+    "method": "POST",
+    "path": "/api/auth/oauth/{provider}",
+    "desc": "第三方登录（微信/Google/GitHub）"
+   }
+  ],
+  "tables": [
+   {
+    "name": "user",
+    "fields": "id, username, email, phone, password_hash, avatar, status, created_at"
+   },
+   {
+    "name": "user_oauth",
+    "fields": "id, user_id, provider, open_id, union_id, created_at"
+   },
+   {
+    "name": "verification_code",
+    "fields": "id, target, type, code, expires_at, used, created_at"
+   },
+   {
+    "name": "session",
+    "fields": "id, user_id, token, refresh_token, ip, expires_at"
+   }
+  ]
+ },
+ {
+  "id": "rbac",
+  "name": "权限与会员",
+  "icon": "🛡️",
+  "desc": "角色权限控制（RBAC）与会员等级体系。",
+  "apis": [
+   {
+    "method": "GET",
+    "path": "/api/roles",
+    "desc": "角色列表"
+   },
+   {
+    "method": "POST",
+    "path": "/api/roles",
+    "desc": "创建角色并绑定权限"
+   },
+   {
+    "method": "PUT",
+    "path": "/api/roles/{id}",
+    "desc": "更新角色权限"
+   },
+   {
+    "method": "GET",
+    "path": "/api/permissions",
+    "desc": "权限点列表"
+   },
+   {
+    "method": "POST",
+    "path": "/api/users/{id}/roles",
+    "desc": "给用户分配角色"
+   },
+   {
+    "method": "GET",
+    "path": "/api/membership/tiers",
+    "desc": "会员等级配置"
+   },
+   {
+    "method": "POST",
+    "path": "/api/membership/upgrade",
+    "desc": "会员升级/续费"
+   },
+   {
+    "method": "GET",
+    "path": "/api/membership/me",
+    "desc": "我的会员状态"
+   }
+  ],
+  "tables": [
+   {
+    "name": "role",
+    "fields": "id, name, description, created_at"
+   },
+   {
+    "name": "permission",
+    "fields": "id, code, name, group, description"
+   },
+   {
+    "name": "role_permission",
+    "fields": "id, role_id, permission_id"
+   },
+   {
+    "name": "user_role",
+    "fields": "id, user_id, role_id"
+   },
+   {
+    "name": "membership_tier",
+    "fields": "id, name, level, price, perks_json, duration_days"
+   },
+   {
+    "name": "user_membership",
+    "fields": "id, user_id, tier_id, start_at, end_at, status"
+   }
+  ]
+ },
+ {
+  "id": "points",
+  "name": "积分",
+  "icon": "⭐",
+  "desc": "积分获取、消耗、等级与兑换。",
+  "apis": [
+   {
+    "method": "GET",
+    "path": "/api/points/balance",
+    "desc": "查询用户积分余额"
+   },
+   {
+    "method": "POST",
+    "path": "/api/points/earn",
+    "desc": "发放积分（行为/任务）"
+   },
+   {
+    "method": "POST",
+    "path": "/api/points/spend",
+    "desc": "扣减积分（兑换）"
+   },
+   {
+    "method": "GET",
+    "path": "/api/points/history",
+    "desc": "积分流水分页"
+   },
+   {
+    "method": "GET",
+    "path": "/api/points/rules",
+    "desc": "积分规则配置"
+   },
+   {
+    "method": "POST",
+    "path": "/api/points/redeem",
+    "desc": "积分兑换商品/权益"
+   }
+  ],
+  "tables": [
+   {
+    "name": "point_account",
+    "fields": "id, user_id, balance, total_earned, total_spent"
+   },
+   {
+    "name": "point_log",
+    "fields": "id, user_id, type, amount, source, ref_id, created_at"
+   },
+   {
+    "name": "point_rule",
+    "fields": "id, event, amount, daily_limit, enabled"
+   },
+   {
+    "name": "point_product",
+    "fields": "id, name, cost, stock, status"
+   }
+  ]
+ },
+ {
+  "id": "payment",
+  "name": "支付",
+  "icon": "💳",
+  "desc": "多渠道收款、退款、对账与支付回调。",
+  "apis": [
+   {
+    "method": "POST",
+    "path": "/api/pay/create",
+    "desc": "创建支付订单（微信/支付宝/Stripe）"
+   },
+   {
+    "method": "POST",
+    "path": "/api/pay/callback/{channel}",
+    "desc": "支付渠道异步回调"
+   },
+   {
+    "method": "GET",
+    "path": "/api/pay/{id}",
+    "desc": "查询支付状态"
+   },
+   {
+    "method": "POST",
+    "path": "/api/pay/refund",
+    "desc": "发起退款"
+   },
+   {
+    "method": "GET",
+    "path": "/api/pay/methods",
+    "desc": "可用支付方式列表"
+   },
+   {
+    "method": "GET",
+    "path": "/api/pay/reconcile",
+    "desc": "生成对账文件"
+   }
+  ],
+  "tables": [
+   {
+    "name": "payment",
+    "fields": "id, order_no, user_id, channel, amount, currency, status, paid_at"
+   },
+   {
+    "name": "payment_refund",
+    "fields": "id, payment_id, amount, reason, status, created_at"
+   },
+   {
+    "name": "pay_channel",
+    "fields": "id, name, config_json, enabled"
+   },
+   {
+    "name": "pay_callback_log",
+    "fields": "id, channel, payload, processed, created_at"
+   }
+  ]
+ },
+ {
+  "id": "order",
+  "name": "订单",
+  "icon": "🧾",
+  "desc": "下单、状态流转、物流与售后。",
+  "apis": [
+   {
+    "method": "POST",
+    "path": "/api/orders",
+    "desc": "创建订单"
+   },
+   {
+    "method": "GET",
+    "path": "/api/orders",
+    "desc": "订单列表（分页/筛选）"
+   },
+   {
+    "method": "GET",
+    "path": "/api/orders/{id}",
+    "desc": "订单详情"
+   },
+   {
+    "method": "POST",
+    "path": "/api/orders/{id}/cancel",
+    "desc": "取消订单"
+   },
+   {
+    "method": "POST",
+    "path": "/api/orders/{id}/ship",
+    "desc": "发货/填物流"
+   },
+   {
+    "method": "POST",
+    "path": "/api/orders/{id}/refund",
+    "desc": "申请售后/退款"
+   },
+   {
+    "method": "GET",
+    "path": "/api/orders/{id}/logistics",
+    "desc": "物流轨迹"
+   }
+  ],
+  "tables": [
+   {
+    "name": "order",
+    "fields": "id, order_no, user_id, amount, status, address_json, created_at"
+   },
+   {
+    "name": "order_item",
+    "fields": "id, order_id, product_id, sku, qty, price"
+   },
+   {
+    "name": "order_status_log",
+    "fields": "id, order_id, from, to, operator, created_at"
+   },
+   {
+    "name": "shipment",
+    "fields": "id, order_id, carrier, tracking_no, status, trajectory_json"
+   },
+   {
+    "name": "after_sale",
+    "fields": "id, order_id, type, reason, status, refund_amount"
+   }
+  ]
+ },
+ {
+  "id": "notification",
+  "name": "消息通知",
+  "icon": "🔔",
+  "desc": "站内信、邮件、短信、推送统一编排。",
+  "apis": [
+   {
+    "method": "POST",
+    "path": "/api/notify/send",
+    "desc": "发送通知（多通道）"
+   },
+   {
+    "method": "GET",
+    "path": "/api/notify/inbox",
+    "desc": "用户站内信列表"
+   },
+   {
+    "method": "POST",
+    "path": "/api/notify/{id}/read",
+    "desc": "标记已读"
+   },
+   {
+    "method": "GET",
+    "path": "/api/notify/subscriptions",
+    "desc": "用户订阅偏好"
+   },
+   {
+    "method": "POST",
+    "path": "/api/notify/subscriptions",
+    "desc": "更新订阅偏好"
+   },
+   {
+    "method": "POST",
+    "path": "/api/notify/templates",
+    "desc": "通知模板管理"
+   }
+  ],
+  "tables": [
+   {
+    "name": "message",
+    "fields": "id, user_id, channel, title, body, read, created_at"
+   },
+   {
+    "name": "notify_template",
+    "fields": "id, code, channel, title_tpl, body_tpl, variables"
+   },
+   {
+    "name": "subscription",
+    "fields": "id, user_id, event, channel, enabled"
+   },
+   {
+    "name": "push_device",
+    "fields": "id, user_id, platform, device_token, enabled"
+   }
+  ]
+ },
+ {
+  "id": "cms",
+  "name": "内容管理后台",
+  "icon": "🗂️",
+  "desc": "文章、页面、媒体、分类的统一后台管理。",
+  "apis": [
+   {
+    "method": "GET",
+    "path": "/api/cms/articles",
+    "desc": "文章列表"
+   },
+   {
+    "method": "POST",
+    "path": "/api/cms/articles",
+    "desc": "创建文章"
+   },
+   {
+    "method": "PUT",
+    "path": "/api/cms/articles/{id}",
+    "desc": "编辑文章"
+   },
+   {
+    "method": "DELETE",
+    "path": "/api/cms/articles/{id}",
+    "desc": "删除/下架"
+   },
+   {
+    "method": "GET",
+    "path": "/api/cms/pages",
+    "desc": "单页管理"
+   },
+   {
+    "method": "POST",
+    "path": "/api/cms/media",
+    "desc": "媒体资源上传"
+   },
+   {
+    "method": "GET",
+    "path": "/api/cms/categories",
+    "desc": "分类树"
+   }
+  ],
+  "tables": [
+   {
+    "name": "article",
+    "fields": "id, title, slug, body, cover, category_id, author, status, published_at"
+   },
+   {
+    "name": "page",
+    "fields": "id, title, slug, body, template, status"
+   },
+   {
+    "name": "category",
+    "fields": "id, name, parent_id, slug, sort"
+   },
+   {
+    "name": "media",
+    "fields": "id, name, type, url, size, uploaded_by, created_at"
+   }
+  ]
+ },
+ {
+  "id": "analytics",
+  "name": "数据统计",
+  "icon": "📊",
+  "desc": "埋点采集、指标看板与导出。",
+  "apis": [
+   {
+    "method": "POST",
+    "path": "/api/track",
+    "desc": "上报埋点事件"
+   },
+   {
+    "method": "GET",
+    "path": "/api/analytics/overview",
+    "desc": "核心指标概览（DAU/留存/转化）"
+   },
+   {
+    "method": "GET",
+    "path": "/api/analytics/funnel",
+    "desc": "转化漏斗"
+   },
+   {
+    "method": "GET",
+    "path": "/api/analytics/report",
+    "desc": "自定义报表"
+   },
+   {
+    "method": "POST",
+    "path": "/api/analytics/export",
+    "desc": "导出 CSV/Excel"
+   },
+   {
+    "method": "GET",
+    "path": "/api/analytics/realtime",
+    "desc": "实时在线看板"
+   }
+  ],
+  "tables": [
+   {
+    "name": "event_log",
+    "fields": "id, user_id, event, props_json, page, created_at"
+   },
+   {
+    "name": "metric_daily",
+    "fields": "id, date, metric, value, dimension"
+   },
+   {
+    "name": "report",
+    "fields": "id, name, query_json, creator, schedule"
+   },
+   {
+    "name": "dashboard",
+    "fields": "id, name, widgets_json, owner"
+   }
+  ]
+ }
+];
+const state = { brand:null, type:null, notes:"", backend:[], docs:"" };
+const STEPS = ["品牌","网站类型","风格规范","后端模块","文档补充"];
+
+/* ---------- helpers ---------- */
+function el(id){return document.getElementById(id);}
+function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function hexLum(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);return (0.299*r+0.587*g+0.114*b)/255;}
+function onLight(hex){return hexLum(hex)>0.6;}
+
+/* ---------- brand library ---------- */
+let bf = {q:"", industry:[], color:[], tone:[]};
+function uniq(arr){return [...new Set(arr)];}
+function renderBrandFilters(){
+  const ind=uniq(BRANDS.map(b=>b.industry)).sort();
+  const col=uniq(BRANDS.map(b=>b.colorSystem)).sort();
+  const ton=uniq(BRANDS.map(b=>b.tone)).sort();
+  const mk=(label,vals,key)=>{
+    let h=`<div class="frow"><span class="flab">${label}</span>`;
+    vals.forEach(v=>{const on=bf[key].includes(v)?'on':'';h+=`<span class="chip ${on}" onclick="toggleF('${key}','${esc(v)}')">${esc(v)}</span>`;});
+    return h+`</div>`;
+  };
+  el('brandFilters').innerHTML = mk('行业',ind,'industry')+mk('色系',col,'color')+mk('调性',ton,'tone');
+}
+function toggleF(key,v){const i=bf[key].indexOf(v);if(i>=0)bf[key].splice(i,1);else bf[key].push(v);renderBrandFilters();renderBrands();}
+function filteredBrands(){
+  return BRANDS.filter(b=>{
+    if(bf.q){const q=bf.q.toLowerCase();if(!(b.name+b.title+b.description+b.fonts.join(' ')).toLowerCase().includes(q))return false;}
+    if(bf.industry.length&&!bf.industry.includes(b.industry))return false;
+    if(bf.color.length&&!bf.color.includes(b.colorSystem))return false;
+    if(bf.tone.length&&!bf.tone.includes(b.tone))return false;
+    return true;
+  });
+}
+function renderBrands(){
+  const list=filteredBrands();
+  el('brandCount').textContent = `${list.length} / ${BRANDS.length} 个品牌`;
+  el('brandGrid').innerHTML = list.map(b=>{
+    const sw0=(b.swatches&&b.swatches.length)?b.swatches:[(b.primary||'#667eea')];
+    const sw=sw0.slice(0,6).map(c=>`<span class="sw" data-hex="${c}" style="background:${c}"></span>`).join('');
+    const headBg = `linear-gradient(135deg,${sw0[0]},${sw0[1]||sw0[0]})`;
+    const fnt=(b.fonts&&b.fonts[0])||'系统默认';
+    const sel = state.brand===b.id?'sel':'';
+    return `<div class="bcard ${sel}" onclick="pickBrand('${b.id}')">
+      <div class="bpreview" style="background:${headBg};color:${onLight(sw0[0])?'#111':'#fff'}">
+        <div class="bname">${esc(b.title)}</div>
+        <div class="bpill">${esc(b.name)}</div>
+      </div>
+      <div class="bmeta">
+        <div class="tt">${esc(b.title)}</div>
+        <div class="swatches">${sw}</div>
+        <div class="font">字体：${esc(fnt)}${b.fonts[1]?' / '+esc(b.fonts[1]):''}</div>
+        <div class="tags"><span class="tag">${esc(b.industry)}</span><span class="tag tone">${esc(b.tone)}</span><span class="tag">${esc(b.colorSystem)}</span></div>
+      </div></div>`;
+  }).join('');
+}
+function pickBrand(id){state.brand=id;renderBrands();if(currentStep===0)wizGoto(1);}
+
+/* ---------- type library ---------- */
+let tf={q:"",cat:"",collapsed:new Set()};
+function renderTypeCats(){
+  const cats=uniq(TYPES.map(t=>t.category)).sort();
+  el('typeCat').innerHTML='<option value="">全部大类</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+function filteredTypes(){
+  return TYPES.filter(t=>{
+    if(tf.cat&&t.category!==tf.cat)return false;
+    if(tf.q){const q=tf.q.toLowerCase();if(!(t.name+t.category+t.prompt+t.modules.join(' ')+t.structure.join(' ')).toLowerCase().includes(q))return false;}
+    return true;
+  });
+}
+function renderTypes(){
+  const list=filteredTypes();
+  el('typeCount').textContent=`${list.length} / ${TYPES.length} 种`;
+  el('typeList').innerHTML=list.map(t=>{
+    const open=tf.collapsed.has(t.id)?'':'open';
+    const sel=state.type===t.id?'sel':'';
+    const struct=t.structure.map(s=>esc(s)).join('\n• ');
+    const mods=t.modules.map(m=>esc(m)).join('\n• ');
+    const dm=t.dataModel.map(d=>`<div class="dm"><b>${esc(d.table)}</b>(${esc(d.fields)})</div>`).join('');
+    return `<div class="titem ${open} ${sel}" data-id="${t.id}">
+      <div class="theader" onclick="toggleType(${t.id})">
+        <span class="tno">${t.id}</span><span class="tname">${esc(t.name)}</span><span class="tcat">${esc(t.category)}</span>
+        <button class="tuse" onclick="event.stopPropagation();useType(${t.id})">${state.type===t.id?'✓ 已选用':'选用此类型'}</button>
+      </div>
+      <div class="tbody">
+        <div class="tblock"><h4>生成提示词模板</h4><div class="kv">${esc(t.prompt)}</div></div>
+        <div class="tblock"><h4>页面结构</h4><ul class="mini">${t.structure.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>
+        <div class="tblock"><h4>核心模块</h4><ul class="mini">${t.modules.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>
+        <div class="tblock"><h4>数据模型要点</h4>${dm}</div>
+      </div></div>`;
+  }).join('');
+}
+function toggleType(id){if(tf.collapsed.has(id))tf.collapsed.delete(id);else tf.collapsed.add(id);renderTypes();}
+function useType(id){const t=TYPES.find(x=>x.id===id);state.type=id;renderTypes();if(currentStep===1)wizGoto(2);}
+
+/* ---------- backend ---------- */
+function renderBackend(){
+  el('backendCount').textContent=`${BACKEND.length} 个可勾选模块`;
+  el('backendGrid').innerHTML=BACKEND.map(m=>{
+    const on=state.backend.includes(m.id);
+    return `<div class="bmod ${on}" onclick="toggleMod('${m.id}')">
+      <div class="chk">${on?'✓':''}</div>
+      <div class="ic">${m.icon}</div><div class="nm">${esc(m.name)}</div><div class="ds">${esc(m.desc)}</div></div>`;
+  }).join('');
+}
+function toggleMod(id){const i=state.backend.indexOf(id);if(i>=0)state.backend.splice(i,1);else state.backend.push(id);renderBackend();renderBackendDetail();}
+function renderBackendDetail(){
+  const sel=BACKEND.filter(m=>state.backend.includes(m.id));
+  if(!sel.length){el('backendDetail').innerHTML='<div class="selbox">勾选上方模块以查看接口清单与数据表结构。</div>';return;}
+  el('backendDetail').innerHTML=sel.map(m=>{
+    const apis=`<table class="api"><tr><th>方法</th><th>路径</th><th>说明</th></tr>${m.apis.map(a=>`<tr><td class="mth">${a.method}</td><td>${esc(a.path)}</td><td>${esc(a.desc)}</td></tr>`).join('')}</table>`;
+    const tabs=m.tables.map(t=>`<div class="tbl">${esc(t.name)} ( ${esc(t.fields)} )</div>`).join('');
+    return `<div class="bmod-card"><h3>${m.icon} ${esc(m.name)}</h3><div class="inner"><h4 style="margin:0 0 6px;font-size:12px;color:var(--muted)">接口清单（${m.apis.length}）</h4>${apis}<h4 style="margin:10px 0 6px;font-size:12px;color:var(--muted)">数据表结构（${m.tables.length}）</h4>${tabs}</div></div>`;
+  }).join('');
+}
+
+/* ---------- wizard ---------- */
+let currentStep=0;
+function renderStepper(){
+  el('stepper').innerHTML=STEPS.map((s,i)=>{
+    const cls=i===currentStep?'active':(i<currentStep?'done':'');
+    const dot=i<currentStep?'✓':(i+1);
+    return `<div class="step ${cls}" onclick="wizGoto(${i})"><span class="dot">${dot}</span>${s}</div>`;
+  }).join('');
+}
+function renderStepBody(){
+  const b=BRANDS.find(x=>x.id===state.brand);
+  const t=TYPES.find(x=>x.id===state.type);
+  let h='';
+  if(currentStep===0){
+    h=`<h3>① 选择品牌风格</h3>`;
+    h+= b?`<div class="selbox ok">已选：<b>${esc(b.title)}</b> （${esc(b.industry)} · ${esc(b.tone)} · 主色 ${b.primary}）<div style="margin-top:8px"><a href="#brand" onclick="document.querySelector('#brand').scrollIntoView()">在品牌库中更换 →</a></div></div>`
+         :`<div class="selbox">尚未选择。请在「品牌库」中点击任意品牌卡片完成选择。</div>`;
+  }else if(currentStep===1){
+    h=`<h3>② 选择网站类型</h3>`;
+    h+= t?`<div class="selbox ok">已选：<b>${t.id}. ${esc(t.name)}</b> （${esc(t.category)}）<div style="margin-top:6px;font-size:13px;color:var(--muted)">${esc(t.prompt)}</div><div style="margin-top:8px"><a href="#types" onclick="document.querySelector('#types').scrollIntoView()">在类型库中更换 →</a></div></div>`
+         :`<div class="selbox">尚未选择。请在「类型库」中点击「选用此类型」。</div>`;
+  }else if(currentStep===2){
+    h=`<h3>③ 风格规范（自动提取所选品牌设计 token）</h3>`;
+    if(b){
+      const swb=(b.swatches&&b.swatches.length)?b.swatches:[(b.primary||'#667eea')];
+      const toks=swb.slice(0,8).map(c=>`<div class="tok"><span class="sw2" style="background:${c}"></span>${c}</div>`).join('');
+      h+=`<div class="selbox ok" style="text-align:left">
+        <div><b>品牌：</b>${esc(b.title)} ｜ <b>视觉基调：</b>${esc(b.tone)} ｜ <b>色系：</b>${esc(b.colorSystem)}</div>
+        <div style="margin-top:6px"><b>字体：</b>${(b.fonts||[]).join('、')||'系统默认'}</div>
+        <div style="margin-top:8px;font-size:13px;color:var(--muted)">${esc(b.description)}</div>
+        <div class="tokgrid">${toks}</div></div>`;
+    }else{
+      h+=`<div class="selbox">请先在第①步选择品牌，以自动注入配色与字体规范。</div>`;
+    }
+    h+=`<label style="font-size:13px;color:var(--muted);display:block;margin-top:12px">补充风格要求（可选，将合并进设计规范）：</label>`;
+    h+=`<textarea class="notes" id="notesInput" placeholder="例如：主色用品牌 indigo，圆角要小，留白多一点，按钮做成胶囊形…">${esc(state.notes)}</textarea>`;
+  }else if(currentStep===3){
+    h=`<h3>④ 后端模块选配</h3>`;
+    if(state.backend.length){
+      const names=BACKEND.filter(m=>state.backend.includes(m.id)).map(m=>m.name).join('、');
+      h+=`<div class="selbox ok">已勾选 <b>${state.backend.length}</b> 个模块：${esc(names)}<div style="margin-top:8px"><a href="#backend" onclick="document.querySelector('#backend').scrollIntoView()">在后端选配区调整 →</a></div></div>`;
+    }else{
+      h+=`<div class="selbox">尚未勾选。可跳过（纯前端站点），或在「后端选配」区勾选注册登录、支付、订单等模块。</div>`;
+    }
+  }else if(currentStep===4){
+    h=`<h3>⑤ 开发文档补充</h3>`;
+    h+=`<div class="selbox" style="text-align:left;border-style:solid">
+      <div style="margin-bottom:8px;font-weight:600">补充项目背景、特殊需求或参考文档（可选）：</div>
+      <textarea class="notes" id="docsInput" placeholder="例如：需要对接微信登录、数据库用 PostgreSQL、部署到 EdgeOne、参考竞品 xxx…">${esc(state.docs)}</textarea>
+      <div class="filein">📎 上传文档（支持 .txt/.md/.json 直接读入内容，或附加 .pdf/.doc/.docx 随附交付）：<input type="file" id="docFile" accept=".txt,.md,.markdown,.json,.text,.pdf,.doc,.docx" onchange="readDoc(event)" /></div>
+      <div id="docReadout" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+    </div>`;
+  }
+  el('stepBody').innerHTML=h;
+  el('prevBtn').disabled = currentStep===0;
+  el('nextBtn').style.display = currentStep===STEPS.length-1?'none':'inline-block';
+}
+function readDoc(e){
+  const f=e.target.files[0]; if(!f) return;
+  const name=f.name.toLowerCase();
+  const isText=/\.(txt|md|markdown|json|text)$/.test(name);
+  if(isText){
+    const r=new FileReader();
+    r.onload=()=>{
+      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+r.result;
+      el('docReadout').textContent='已读取：'+f.name+'（'+r.result.length+' 字符）';
+      if(el('docsInput')) el('docsInput').value=state.docs;
+    };
+    r.readAsText(f);
+  }else{
+    state.docs=(state.docs?state.docs+"\n":"")+"【已附加文件："+f.name+"】（PDF/Word 二进制，交付时随附，由后端解析内容）";
+    el('docReadout').textContent='已附加：'+f.name+'（'+Math.round(f.size/1024)+' KB）';
+    if(el('docsInput')) el('docsInput').value=state.docs;
+  }
+}
+function wizGoto(i){currentStep=i;if(i===2){/* notes persist via input on blur */}renderStepper();renderStepBody();el('wizard').scrollIntoView({behavior:'smooth'});}
+function wizNext(){if(currentStep<STEPS.length-1){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4&&el('docsInput'))state.docs=el('docsInput').value;wizGoto(currentStep+1);}}
+function wizPrev(){if(currentStep>0){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4&&el('docsInput'))state.docs=el('docsInput').value;wizGoto(currentStep-1);}}
+
+/* ---------- summary ---------- */
+function renderSummary(){
+  const b=BRANDS.find(x=>x.id===state.brand);
+  const t=TYPES.find(x=>x.id===state.type);
+  const mods=BACKEND.filter(m=>state.backend.includes(m.id)).map(m=>m.name).join('、')||'（无，纯前端）';
+  el('summaryCard').innerHTML=`
+    <div class="sumrow"><span class="k">品牌风格</span><span class="v">${b?esc(b.title)+'（'+esc(b.tone)+' · 主色 '+b.primary+'）':'未选择'}</span></div>
+    <div class="sumrow"><span class="k">网站类型</span><span class="v">${t?(t.id+'. '+esc(t.name)+' / '+esc(t.category)):'未选择'}</span></div>
+    <div class="sumrow"><span class="k">风格补充</span><span class="v">${state.notes?esc(state.notes):'（无）'}</span></div>
+    <div class="sumrow"><span class="k">后端模块</span><span class="v">${esc(mods)}</span></div>
+    <div class="sumrow"><span class="k">文档补充</span><span class="v">${state.docs?esc(state.docs.slice(0,200))+(state.docs.length>200?'…':''):'（无）'}</span></div>`;
+}
+
+/* ---------- generate ---------- */
+function buildSite(brand,type){
+  const c=(brand.swatches&&brand.swatches.length)?brand.swatches:[(brand.primary||'#667eea')];
+  const primary=c[0];const ink=c[1]||'#1b1d29';const canvas=c[2]||'#ffffff';const soft=c[3]||'#f6f7f9';
+  const font=(brand.fonts&&brand.fonts[0])||'system-ui,sans-serif';
+  const lightOnP=onLight(primary);
+  const sections=type.structure.map((s,i)=>{
+    const al=i%2?`background:${soft};`:'';
+    return `<section style="padding:54px 24px;${al}"><div class="wrap"><h2 style="font-size:24px;margin:0 0 10px">${esc(s)}</h2><p style="color:#6b7080;max-width:640px">基于 ${esc(brand.title)} 设计规范生成的「${esc(type.name)}」板块。此处放置该模块的真实内容与组件。</p></div></section>`;
+  }).join('');
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(type.name)} · ${esc(brand.title)}</title>
+<style>
+:root{--p:${primary};--ink:${ink};--canvas:${canvas};--soft:${soft};--font:${font},-apple-system,"PingFang SC",sans-serif}
+*{box-sizing:border-box}body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto}
+header.hero{background:linear-gradient(135deg,${c[0]},${c[1]||c[0]});color:${lightOnP?'#111':'#fff'};padding:84px 24px}
+header.hero h1{font-size:40px;margin:0 0 12px;letter-spacing:.5px}
+header.hero p{font-size:17px;max-width:620px;opacity:.92;margin:0 0 22px}
+.btn{display:inline-block;background:${lightOnP?'#111':'#fff'};color:${lightOnP?'#fff':primary};padding:12px 24px;border-radius:10px;font-weight:700;text-decoration:none}
+footer{padding:30px 24px;background:var(--soft);color:#6b7080;font-size:13px;text-align:center}
+</style></head>
+<body>
+<header class="hero"><div class="wrap">
+  <h1>${esc(type.name)}</h1>
+  <p>由「光体 · AI 网站开发设计平台」基于 ${esc(brand.title)} 设计规范（主色 ${primary}，字体 ${esc(font)}）生成。视觉风格与品牌基调保持一致。</p>
+  <a class="btn" href="#">开始体验</a>
+</div></header>
+${sections}
+<footer>© ${new Date().getFullYear()} ${esc(type.name)} · 设计语言源自 ${esc(brand.title)} · 由光体平台生成</footer>
+</body></html>`;
+}
+function buildBackendDoc(){
+  const sel=BACKEND.filter(m=>state.backend.includes(m.id));
+  if(!sel.length)return '# 后端配置说明\n\n未选择后端模块，本项目为纯前端静态站点，无需服务端接口与数据库。\n';
+  let md='# 后端配置说明文档\n\n> 由「光体 · AI 网站开发设计平台」根据所选模块自动生成。\n\n';
+  sel.forEach(m=>{
+    md+=`## ${m.icon} ${m.name}\n\n${m.desc}\n\n### 接口清单\n\n`;
+    m.apis.forEach(a=>{md+=`- \`${a.method} ${a.path}\` — ${a.desc}\n`;});
+    md+='\n### 数据表结构\n\n';
+    m.tables.forEach(t=>{md+=`- **${t.name}** ( ${t.fields} )\n`;});
+    md+='\n';
+  });
+  return md;
+}
+function generate(){
+  const b=BRANDS.find(x=>x.id===state.brand);
+  const t=TYPES.find(x=>x.id===state.type);
+  if(!b||!t){alert('请先在引导流程中完成「品牌」与「网站类型」的选择。');el('summary').scrollIntoView();return;}
+  const prog=el('progress');prog.style.display='block';el('outputs').style.display='none';
+  const logs=['① 调用设计技能，加载品牌视觉规范…','② 注入设计 token（配色/字体/圆角）…','③ Code 质量校验：响应式 / 语义化 / 可访问性…','④ 后端模块优化：接口与数据表编排…','⑤ 产出网站 HTML 与后端配置文档…'];
+  const plog=el('plog');plog.innerHTML='';
+  let i=0;
+  el('pfill').style.width='0%';
+  const tick=()=>{
+    if(i<logs.length){
+      const d=document.createElement('div');d.textContent=logs[i];plog.appendChild(d);
+      requestAnimationFrame(()=>d.classList.add('show'));
+      el('pfill').style.width=((i+1)/logs.length*100)+'%';
+      i++;setTimeout(tick,520);
+    }else{
+      const site=buildSite(b,t);
+      const doc=buildBackendDoc();
+      el('sitePreview').srcdoc=site;
+      el('backendDoc').textContent=doc;
+      el('outputs').style.display='grid';
+      // downloads
+      el('dlSite').href='data:text/html;charset=utf-8,'+encodeURIComponent(site);
+      el('dlDoc').href='data:text/markdown;charset=utf-8,'+encodeURIComponent(doc);
+      el('summary').scrollIntoView({behavior:'smooth'});
+    }
+  };
+  tick();
+}
+
+/* ---------- events & init ---------- */
+el('brandSearch').addEventListener('input',e=>{bf.q=e.target.value;renderBrands();});
+el('typeSearch').addEventListener('input',e=>{tf.q=e.target.value;renderTypes();});
+el('typeCat').addEventListener('change',e=>{tf.cat=e.target.value;renderTypes();});
+// nav active state
+const navLinks=[...document.querySelectorAll('#nav a')];
+window.addEventListener('scroll',()=>{
+  let cur='brand';
+  ['brand','types','backend','wizard','summary'].forEach(id=>{const s=el(id);if(s&&s.getBoundingClientRect().top<120)cur=id;});
+  navLinks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+});
+
+renderBrandFilters();renderBrands();
+renderTypeCats();renderTypes();
+renderBackend();renderBackendDetail();
+renderStepper();renderStepBody();
+state._sumTimer=setInterval(renderSummary,400);
+renderSummary();
+</script>
+</body>
+</html>
