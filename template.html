@@ -152,6 +152,9 @@
   iframe.preview{width:100%;height:420px;border:1px solid var(--line);border-radius:10px;background:#fff}
 
   footer{border-top:1px solid var(--line);padding:22px 20px;text-align:center;color:var(--muted);font-size:13px}
+  .btn-act{background:var(--panel);color:var(--accent);border:1px solid var(--line);cursor:pointer}
+  .btn-act:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .hist-item{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
   .hidden{display:none!important}
   @media(max-width:640px){.sec-head h2{font-size:19px}.stepper{font-size:12px}}
 </style>
@@ -237,9 +240,19 @@
       </div>
       <div class="outcard" id="snapCard" style="display:none">
         <h4>📋 项目快照（可同步到 WorkBuddy 任务）</h4>
-        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">包含本次全部开发数据（品牌/类型/后端/备注），下载后在 WorkBuddy 中新建任务并导入即可追溯。</p>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">包含本次全部开发数据 + 成果（品牌/类型/后端/备注/生成网站 HTML/后端文档）。复制任务简报后，在 WorkBuddy 对话里发送即可新建一个可追溯任务卡。</p>
         <div class="dm" id="snapJson" style="max-height:300px;overflow:auto;white-space:pre"></div>
-        <a class="dl" id="dlSnap" download="project-snapshot.json">⬇ 下载项目快照 .json</a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <a class="dl" id="dlSnap" download="project-snapshot.json">⬇ 下载项目快照 .json</a>
+          <button class="dl btn-act" id="btnCopyBrief">📋 复制任务简报（贴到 WorkBuddy 新建任务）</button>
+          <button class="dl btn-act" id="btnSaveLocal">💾 保存到本地历史</button>
+        </div>
+        <div id="syncHint" style="font-size:12px;color:var(--ok);margin-top:8px;min-height:16px"></div>
+      </div>
+      <div class="outcard" id="histCard">
+        <h4>🗂 本地历史项目</h4>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">本机浏览器保存的历史设计项目，可一键复制任务简报或重新载入。</p>
+        <div id="histList"></div>
       </div>
     </div>
   </section>
@@ -668,6 +681,88 @@ function buildBackendDoc(){
   });
   return md;
 }
+
+/* ---------- WorkBuddy task sync ---------- */
+function buildTaskBrief(s){
+  const p=s.project||{}, br=s.brand||{}, ty=s.type||{};
+  const back=(s.backend&&s.backend.length)?s.backend.map(x=>x.name).join('、'):'纯前端静态站点（无后端模块）';
+  const sw=(br.swatches||[]).join('  ');
+  const fo=(br.fonts||[]).join('、');
+  const struct=(ty.structure||[]).map((x,i)=>`${i+1}. ${x}`).join('\n');
+  const mods=(ty.modules||[]).map((x,i)=>`${i+1}. ${x}`).join('\n');
+  const dm=(ty.dataModel||[]).map(x=>`- ${x}`).join('\n');
+  const backDetail=(s.backend&&s.backend.length)?s.backend.map(x=>`- ${x.name}（${x.apis} 接口 / ${x.tables} 数据表）`).join('\n'):'- 无';
+  const notes=s.notes?('> '+s.notes.replace(/\n/g,' ')).slice(0,300):'无';
+  const docFile=s.docFile?('「'+s.docFile+'」'):'无';
+  return `# 光体网站项目 · 任务简报
+
+> 由「光体 · AI 网站开发设计平台」生成。把本简报粘贴到 WorkBuddy 对话并发送，即可新建一个可追溯的任务卡，方便后期修改优化。
+
+- **项目名称**：${p.name||'未命名'}
+- **品牌风格**：${br.title||''}（主色 ${br.primary||''} · 字体 ${fo||''} · 基调 ${br.tone||''}）
+- **网站类型**：${ty.category||''} / ${ty.name||''}
+- **后端模块**：${back}
+- **补充文档**：${docFile}
+- **开发备注**：${notes}
+
+## 配置摘要
+- 主色：${br.primary||''}
+- 配色板：${sw||'—'}
+- 字体：${fo||'—'}
+- 行业：${br.industry||'—'}
+- 品牌基调：${br.tone||'—'}
+
+## 页面结构（${ (ty.structure||[]).length } 个板块）
+${struct||'—'}
+
+## 核心模块（${ (ty.modules||[]).length } 个）
+${mods||'—'}
+
+## 数据模型
+${dm||'—'}
+
+## 后端接口与数据表
+${backDetail}
+
+---
+<!-- GUANGTI_SNAPSHOT
+${JSON.stringify(s)}
+-->
+`;
+}
+function copyText(text, hint){
+  const ok=()=>{if(hint)hint.textContent='✅ 任务简报已复制，去 WorkBuddy 对话里粘贴并发送即可新建任务卡';};
+  const fail=()=>{if(hint)hint.textContent='⚠️ 复制失败，请手动选择上方快照文本复制';};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok).catch(fail);}
+  else{try{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);ok();}catch(e){fail();}}
+}
+function saveProject(snap){
+  try{const key='guangti_projects';const arr=JSON.parse(localStorage.getItem(key)||'[]');arr.unshift({savedAt:new Date().toISOString(),snapshot:snap});localStorage.setItem(key,JSON.stringify(arr.slice(0,50)));}catch(e){}
+}
+function renderHistory(){
+  const box=el('histList');if(!box)return;
+  let arr=[];try{arr=JSON.parse(localStorage.getItem('guangti_projects')||'[]');}catch(e){}
+  if(!arr.length){box.innerHTML='<div style="font-size:13px;color:var(--muted)">暂无历史项目。生成网站后点「保存到本地历史」即可。</div>';return;}
+  box.innerHTML=arr.map((p,i)=>{
+    const s=p.snapshot||{};const proj=s.project||{};
+    return `<div class="hist-item"><div style="font-weight:700">${esc(proj.name||'未命名项目')} <span style="color:var(--muted);font-weight:400;font-size:12px">· ${esc(proj.brand||'')}</span></div><div style="font-size:12px;color:var(--muted);margin:4px 0 8px">${esc((p.savedAt||'').slice(0,19).replace('T',' '))}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="dl btn-act" onclick="copyHistory(${i})">📋 复制任务简报</button><button class="dl btn-act" onclick="reloadHistory(${i})">↺ 重新载入</button></div></div>`;
+  }).join('');
+}
+function copyHistory(i){
+  try{const arr=JSON.parse(localStorage.getItem('guangti_projects')||'[]');const s=arr[i].snapshot;copyText(buildTaskBrief(s), el('syncHint'));}catch(e){}
+}
+function reloadHistory(i){
+  try{
+    const arr=JSON.parse(localStorage.getItem('guangti_projects')||'[]');const s=arr[i].snapshot;
+    state.brand=s.brand.id;state.type=s.type.id;
+    if(s.backend)state.backend=s.backend.map(x=>x.id);
+    if(s.notes)state.notes=s.notes;
+    renderBrands();renderTypes();renderBackend();renderBackendDetail();renderStepper();renderStepBody();renderSummary();
+    el('summary').scrollIntoView({behavior:'smooth'});
+    if(el('syncHint'))el('syncHint').textContent='↺ 已载入历史项目配置';
+  }catch(e){}
+}
+
 function generate(){
   const b=BRANDS.find(x=>x.id===state.brand);
   const t=TYPES.find(x=>x.id===state.type);
@@ -695,17 +790,20 @@ function generate(){
       const doc=buildBackendDoc();
       /* ── Project Snapshot for WorkBuddy sync ── */
       const selBack=BACKEND.filter(m=>state.backend.includes(m.id));
+      const notes=(el('devNotes')?el('devNotes').value:'')||state.notes||'';
       const snapshot={
-        version:'1.0',generatedAt:new Date().toISOString(),
+        version:'1.1',generatedAt:new Date().toISOString(),
         project:{name:t.name,brand:b.title,category:t.category},
         brand:{id:b.id,title:b.title,primary:(b.swatches&&b.swatches[0])||b.primary||'',swatches:(b.swatches||[]).slice(0,5),fonts:b.fonts||[],tone:b.tone||'',industry:b.industry||''},
-        type:{id:t.id,name:t.name,category:t.category,prompt:(t.prompt||'').slice(0,500),structure:t.structure||[],modules:(t.modules||[]).slice(0,10),dataModel:(t.dataModel||[]).slice(0,10)},
+        type:{id:t.id,name:t.name,category:t.category,prompt:(t.prompt||'').slice(0,800),structure:t.structure||[],modules:(t.modules||[]).slice(0,12),dataModel:(t.dataModel||[]).slice(0,12)},
         backend:selBack.map(m=>({id:m.id,name:m.name,apis:m.apis.length,tables:m.tables.length})),
-        notes:el('devNotes')?el('devNotes').value:'',
+        notes:notes,
         docFile:state.docFileName||null,
+        outputs:{siteHtml:site, backendDoc:doc},
         outputFiles:['guangti-site.html','backend-config.md','project-snapshot.json']
       };
       const snapStr=JSON.stringify(snapshot,null,2);
+      const brief=buildTaskBrief(snapshot);
       /* render outputs */
       el('sitePreview').srcdoc=site;
       el('backendDoc').textContent=doc;
@@ -717,6 +815,9 @@ function generate(){
       el('dlSite').href='data:text/html;charset=utf-8,'+encodeURIComponent(site);
       el('dlDoc').href='data:text/markdown;charset=utf-8,'+encodeURIComponent(doc);
       el('dlSnap').href='data:application/json;charset=utf-8,'+encodeURIComponent(snapStr);
+      /* wire sync buttons */
+      el('btnCopyBrief').onclick=()=>copyText(brief, el('syncHint'));
+      el('btnSaveLocal').onclick=()=>{saveProject(snapshot);renderHistory();if(el('syncHint'))el('syncHint').textContent='✅ 已保存到本地历史';};
       el('summary').scrollIntoView({behavior:'smooth'});
     }
   };
@@ -741,6 +842,7 @@ renderBackend();renderBackendDetail();
 renderStepper();renderStepBody();
 state._sumTimer=setInterval(renderSummary,400);
 renderSummary();
+renderHistory();
 </script>
 </body>
 </html>
