@@ -131,6 +131,16 @@
   .tok{border:1px solid var(--line2);border-radius:9px;padding:9px;display:flex;align-items:center;gap:8px;font-size:12.5px}
   .tok .sw2{width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.08);flex:0 0 auto}
   .filein{margin-top:10px;font-size:13px;color:var(--muted)}
+  .fld{margin-top:14px}
+  .flab{display:block;font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:4px}
+  .fhint{font-size:12px;color:var(--muted);margin-bottom:6px;line-height:1.5}
+  textarea.notes#promptInput{min-height:120px}
+  .docfiles{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .docchip{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#fff;font-size:12.5px}
+  .docchip .doci{font-weight:700;color:var(--ink);flex:0 0 auto;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .docchip .doct{color:var(--muted);flex:1 1 auto}
+  .docchip .docx{margin-left:auto;background:transparent;border:1px solid var(--line);border-radius:6px;cursor:pointer;color:var(--muted);width:24px;height:24px;line-height:1;flex:0 0 auto}
+  .docchip .docx:hover{color:#e5484d;border-color:#e5484d}
 
   /* Summary */
   .sumcard{border:1px solid var(--line);border-radius:12px;background:#fff;padding:18px;margin-bottom:16px}
@@ -209,7 +219,7 @@
 
   <!-- 引导流程 -->
   <section id="wizard">
-    <div class="sec-head"><h2>分步引导流程</h2><span class="sub">品牌 → 类型 → 风格规范 → 后端模块 → 文档补充（任一步可回退修改）</span></div>
+    <div class="sec-head"><h2>分步引导流程</h2><span class="sub">品牌 → 类型 → 风格规范 → 后端模块 → 需求与文档（任一步可回退修改）</span></div>
     <div class="stepper" id="stepper"></div>
     <div class="stepbody" id="stepBody"></div>
     <div class="stepnav">
@@ -231,7 +241,8 @@
       <div class="outcard">
         <h4>📄 生成的网站预览（基于所选品牌规范与类型结构）</h4>
         <iframe class="preview" id="sitePreview"></iframe>
-        <a class="dl" id="dlSite" download="guangti-site.html">⬇ 下载网站 HTML</a>
+        <a class="dl" id="dlSite" download="guangti-site.html">⬇ 下载网站 HTML（单文件）</a>
+        <button class="dl btn-act" id="btnZip">📦 下载完整项目（多文件 .zip）</button>
       </div>
       <div class="outcard">
         <h4>🛠 后端配置说明文档（接口 + 数据表）</h4>
@@ -7746,8 +7757,8 @@ const BACKEND = [
   ]
  }
 ];
-const state = { brand:null, type:null, notes:"", backend:[], docs:"" };
-const STEPS = ["品牌","网站类型","风格规范","后端模块","文档补充"];
+const state = { brand:null, type:null, prompt:"", notes:"", backend:[], docs:"", heroImage:null, files:[] };
+const STEPS = ["品牌","网站类型","风格规范","后端模块","需求与文档"];
 
 /* ---------- helpers ---------- */
 function el(id){return document.getElementById(id);}
@@ -7907,39 +7918,190 @@ function renderStepBody(){
       h+=`<div class="selbox">尚未勾选。可跳过（纯前端站点），或在「后端选配」区勾选注册登录、支付、订单等模块。</div>`;
     }
   }else if(currentStep===4){
-    h=`<h3>⑤ 开发文档补充</h3>`;
+    h=`<h3>⑤ 需求与文档</h3>`;
     h+=`<div class="selbox" style="text-align:left;border-style:solid">
-      <div style="margin-bottom:8px;font-weight:600">补充项目背景、特殊需求或参考文档（可选）：</div>
-      <textarea class="notes" id="docsInput" placeholder="例如：需要对接微信登录、数据库用 PostgreSQL、部署到 EdgeOne、参考竞品 xxx…">${esc(state.docs)}</textarea>
-      <div class="filein">📎 上传文档（支持 .txt/.md/.json 直接读入内容，或附加 .pdf/.doc/.docx 随附交付）：<input type="file" id="docFile" accept=".txt,.md,.markdown,.json,.text,.pdf,.doc,.docx" onchange="readDoc(event)" /></div>
+      <div class="fld">
+        <label class="flab" for="promptInput">📝 网站提示词（必填建议 · 描述网站要做什么）</label>
+        <div class="fhint">用自然语言写清：这个网站是做什么的？面向谁？要解决什么问题？期望的调性与核心转化目标？写越细，生成越贴合。</div>
+        <textarea class="notes" id="promptInput" placeholder="例如：做一个面向中小制造企业的 B2B 官网，主推智能质检 SaaS，访客是工厂采购/厂长，要突出「降本 30%」「7 天上线」，调性专业可信、科技感，首页要有客户案例与咨询入口…">${esc(state.prompt)}</textarea>
+      </div>
+      <div class="fld">
+        <label class="flab" for="docsInput">📄 补充说明 / 项目背景（可选）</label>
+        <div class="fhint">对接要求、技术栈、部署方式、参考竞品、文案要点等，也可直接上传开发文档由系统读入。</div>
+        <textarea class="notes" id="docsInput" placeholder="例如：需要对接微信登录、数据库用 PostgreSQL、部署到 EdgeOne、参考竞品 xxx…">${esc(state.docs)}</textarea>
+      </div>
+      <div class="filein">📎 上传开发文档（支持 .txt/.md/.json/.csv 直接读入正文；.docx/.pdf 自动解析文字；.doc 记录元数据随附）：<input type="file" id="docFile" accept=".txt,.md,.markdown,.json,.text,.csv,.pdf,.doc,.docx" onchange="readDoc(event)" /></div>
+      <div id="docFiles" class="docfiles"></div>
+      <div class="filein">🖼 上传主视觉图片（可选，用作生成网站 Hero 真实配图）：<input type="file" id="heroImgFile" accept="image/*" onchange="readHeroImg(event)" /></div>
       <div id="docReadout" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
     </div>`;
   }
   el('stepBody').innerHTML=h;
+  if(currentStep===4){ renderDocFiles(); }
   el('prevBtn').disabled = currentStep===0;
   el('nextBtn').style.display = currentStep===STEPS.length-1?'none':'inline-block';
 }
+
+/* ---------- 已上传文档列表 ---------- */
+function renderDocFiles(){
+  const box=el('docFiles'); if(!box) return;
+  if(!state.files||!state.files.length){ box.innerHTML=''; return; }
+  box.innerHTML=state.files.map((f,i)=>{
+    const kb=Math.round(f.size/1024);
+    const tag=f.kind==='text'?'已读入':(f.text?'已解析':'已附加');
+    return `<div class="docchip"><span class="doci">${esc(f.name)}</span><span class="doct">${tag} · ${kb}KB · ${f.text?f.text.length+' 字':''}</span><button class="docx" title="移除" onclick="removeDoc(${i})">✕</button></div>`;
+  }).join('');
+}
+function removeDoc(i){
+  try{ state.files.splice(i,1); renderDocFiles();
+    if(el('docReadout')) el('docReadout').textContent='已移除文档，可重新上传。';
+  }catch(e){}
+}
+
+/* ---------- 文档读取与解析 ---------- */
 function readDoc(e){
   const f=e.target.files[0]; if(!f) return;
   const name=f.name.toLowerCase();
-  const isText=/\.(txt|md|markdown|json|text)$/.test(name);
-  if(isText){
+  const readout=el('docReadout');
+  const setOut=(t)=>{ if(readout) readout.textContent=t; };
+  if(/\.(txt|md|markdown|json|text|csv)$/.test(name)){
     const r=new FileReader();
     r.onload=()=>{
-      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+r.result;
-      el('docReadout').textContent='已读取：'+f.name+'（'+r.result.length+' 字符）';
+      const txt=String(r.result||'');
+      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+txt;
+      state.files.push({name:f.name,size:f.size,type:f.type||'text/plain',kind:'text',text:txt});
       if(el('docsInput')) el('docsInput').value=state.docs;
+      renderDocFiles(); setOut('已读取：'+f.name+'（'+txt.length+' 字符）');
     };
     r.readAsText(f);
-  }else{
-    state.docs=(state.docs?state.docs+"\n":"")+"【已附加文件："+f.name+"】（PDF/Word 二进制，交付时随附，由后端解析内容）";
-    el('docReadout').textContent='已附加：'+f.name+'（'+Math.round(f.size/1024)+' KB）';
-    if(el('docsInput')) el('docsInput').value=state.docs;
+    return;
   }
+  if(/\.docx$/.test(name)){
+    setOut('正在解析 Word 文档 '+f.name+' …');
+    parseDocx(f).then(txt=>{
+      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+txt;
+      state.files.push({name:f.name,size:f.size,type:f.type||'application/vnd.openxmlformats-officedocument.wordprocessingml.document',kind:'docx',text:txt});
+      if(el('docsInput')) el('docsInput').value=state.docs;
+      renderDocFiles(); setOut('已解析 Word：'+f.name+'（'+txt.length+' 字符）');
+    }).catch(err=>{
+      state.files.push({name:f.name,size:f.size,type:f.type||'',kind:'docx',text:''});
+      renderDocFiles(); setOut('⚠️ Word 解析失败（'+err.message+'），已记录文件随附交付');
+    });
+    return;
+  }
+  if(/\.pdf$/.test(name)){
+    setOut('正在解析 PDF 文档 '+f.name+' …（首次解析会按需加载解析库）');
+    parsePdf(f).then(txt=>{
+      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+txt;
+      state.files.push({name:f.name,size:f.size,type:f.type||'application/pdf',kind:'pdf',text:txt});
+      if(el('docsInput')) el('docsInput').value=state.docs;
+      renderDocFiles(); setOut('已解析 PDF：'+f.name+'（'+txt.length+' 字符）');
+    }).catch(err=>{
+      state.files.push({name:f.name,size:f.size,type:f.type||'application/pdf',kind:'pdf',text:''});
+      renderDocFiles(); setOut('⚠️ PDF 解析失败（'+err.message+'），已记录文件随附交付');
+    });
+    return;
+  }
+  // .doc 等二进制：仅记录元数据
+  state.files.push({name:f.name,size:f.size,type:f.type||'',kind:'bin',text:''});
+  state.docs=(state.docs?state.docs+"\n":"")+"【已附加文件："+f.name+"】（二进制，交付时随附，由实施端解析）";
+  if(el('docsInput')) el('docsInput').value=state.docs;
+  renderDocFiles(); setOut('已附加：'+f.name+'（'+Math.round(f.size/1024)+' KB）');
+}
+
+/* ---------- .docx 解析（ZIP + DecompressionStream 内联解压） ---------- */
+async function parseDocx(file){
+  const buf=await file.arrayBuffer();
+  const u8=new Uint8Array(buf);
+  // 解析 EOCD 定位中央目录
+  let eocd=-1;
+  for(let i=u8.length-22;i>=0 && i>u8.length-66000;i--){
+    if(u8[i]===0x50&&u8[i+1]===0x4b&&u8[i+2]===0x05&&u8[i+3]===0x06){eocd=i;break;}
+  }
+  if(eocd<0) throw new Error('不是有效的 docx 文件');
+  const dv=new DataView(buf,eocd);
+  const cdCount=dv.getUint16(10,true);
+  const cdOffset=dv.getUint32(16,true);
+  let off=cdOffset;
+  let documentXml=null;
+  for(let n=0;n<cdCount;n++){
+    const cv=new DataView(buf,off);
+    if(cv.getUint32(0,true)!==0x02014b50) break;
+    const comp=cv.getUint16(10,true);
+    const csize=cv.getUint32(20,true);
+    const usize=cv.getUint32(24,true);
+    const nl=cv.getUint16(28,true);
+    const name=new TextDecoder().decode(u8.subarray(off+46,off+46+nl));
+    const lho=cv.getUint32(42,true); // 本地文件头偏移
+    if(name==='word/document.xml'){
+      const ldv=new DataView(buf,lho);
+      const lnl=ldv.getUint16(26,true);
+      const lxl=ldv.getUint16(28,true);
+      const dataStart=lho+30+lnl+lxl;
+      let xml;
+      if(comp===0){ xml=new TextDecoder().decode(u8.subarray(dataStart,dataStart+csize)); }
+      else if(comp===8){ const raw=u8.subarray(dataStart,dataStart+csize); xml=await inflateRaw(raw); }
+      else throw new Error('不支持的压缩方式 '+comp);
+      documentXml=xml; break;
+    }
+    off+=46+nl+cv.getUint16(30,true)+cv.getUint16(32,true);
+  }
+  if(!documentXml) throw new Error('未找到 document.xml');
+  // 提取正文：<w:t> 文本，<w:p> 段落
+  const text=documentXml
+    .replace(/<w:p[ >]/g,'\n<w:p>')
+    .replace(/<w:tab\/>/g,'\t')
+    .replace(/<w:br\/>/g,'\n')
+    .replace(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g,(m,p1)=>p1)
+    .replace(/<[^>]+>/g,'')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'")
+    .replace(/\n{3,}/g,'\n\n').trim();
+  return text||'(Word 文档已读取，但正文为空或无法提取)';
+}
+async function inflateRaw(u8){
+  if(typeof DecompressionStream==='undefined') throw new Error('浏览器不支持 DecompressionStream');
+  const ds=new DecompressionStream('deflate-raw');
+  const stream=new Blob([u8]).stream().pipeThrough(ds);
+  const ab=await new Response(stream).arrayBuffer();
+  return new TextDecoder().decode(new Uint8Array(ab));
+}
+
+/* ---------- .pdf 解析（按需加载 pdf.js） ---------- */
+let _pdfjsLoading=null;
+function loadPdfJs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(_pdfjsLoading) return _pdfjsLoading;
+  _pdfjsLoading=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload=()=>{
+      try{
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        resolve(window.pdfjsLib);
+      }catch(e){ reject(e); }
+    };
+    s.onerror=()=>reject(new Error('pdf.js 加载失败（可能离线）'));
+    document.head.appendChild(s);
+  });
+  return _pdfjsLoading;
+}
+async function parsePdf(file){
+  const pdfjs=await loadPdfJs();
+  const buf=await file.arrayBuffer();
+  const doc=await pdfjs.getDocument({data:new Uint8Array(buf)}).promise;
+  let txt='';
+  for(let p=1;p<=doc.numPages;p++){
+    const page=await doc.getPage(p);
+    const c=await page.getTextContent();
+    txt+=(c.items.map(it=>it.str).join(' '))+'\n';
+  }
+  txt=txt.trim();
+  if(!txt) throw new Error('PDF 未提取到文本（可能是扫描件图片）');
+  return txt;
 }
 function wizGoto(i){currentStep=i;if(i===2){/* notes persist via input on blur */}renderStepper();renderStepBody();el('wizard').scrollIntoView({behavior:'smooth'});}
-function wizNext(){if(currentStep<STEPS.length-1){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4&&el('docsInput'))state.docs=el('docsInput').value;wizGoto(currentStep+1);}}
-function wizPrev(){if(currentStep>0){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4&&el('docsInput'))state.docs=el('docsInput').value;wizGoto(currentStep-1);}}
+function wizNext(){if(currentStep<STEPS.length-1){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4){if(el('promptInput'))state.prompt=el('promptInput').value;if(el('docsInput'))state.docs=el('docsInput').value;}wizGoto(currentStep+1);}}
+function wizPrev(){if(currentStep>0){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4){if(el('promptInput'))state.prompt=el('promptInput').value;if(el('docsInput'))state.docs=el('docsInput').value;}wizGoto(currentStep-1);}}
 
 /* ---------- summary ---------- */
 function renderSummary(){
@@ -7949,207 +8111,334 @@ function renderSummary(){
   el('summaryCard').innerHTML=`
     <div class="sumrow"><span class="k">品牌风格</span><span class="v">${b?esc(b.title)+'（'+esc(b.tone)+' · 主色 '+b.primary+'）':'未选择'}</span></div>
     <div class="sumrow"><span class="k">网站类型</span><span class="v">${t?(t.id+'. '+esc(t.name)+' / '+esc(t.category)):'未选择'}</span></div>
+    <div class="sumrow"><span class="k">网站提示词</span><span class="v">${state.prompt?esc(state.prompt.slice(0,200))+(state.prompt.length>200?'…':''):'（未填写）'}</span></div>
     <div class="sumrow"><span class="k">风格补充</span><span class="v">${state.notes?esc(state.notes):'（无）'}</span></div>
+    <div class="sumrow"><span class="k">开发文档</span><span class="v">${(state.files&&state.files.length)?('已上传 '+state.files.length+' 个：'+state.files.map(f=>esc(f.name)).join('、')):(state.docs?'（仅文本）':'（无）')}</span></div>
     <div class="sumrow"><span class="k">后端模块</span><span class="v">${esc(mods)}</span></div>
     <div class="sumrow"><span class="k">文档补充</span><span class="v">${state.docs?esc(state.docs.slice(0,200))+(state.docs.length>200?'…':''):'（无）'}</span></div>`;
 }
 
-/* ---------- generate (high-quality output per DESIGN_QUALITY.md) ---------- */
-function buildSite(brand,type){
-  /* ── Brand tokens ── */
-  const sw=(brand.swatches&&brand.swatches.length>=4)?brand.swatches:
+/* =====================================================================
+   设计技能接入层（ui-design / frontend-design / figma-to-html）
+   本块替换原 buildSite，提供：
+   - genSite(brand,type) -> { inline, files }  多文件组件化输出
+   - buildSite(...) = genSite(...).inline        兼容测试/预览
+   - buildProject(...) = genSite(...).files      多文件映射
+   - downloadProject(name, files)                前端 zip 导出
+   ===================================================================== */
+
+/* ---------- 工具：文件 slug ---------- */
+function slugName(s){return String(s).toLowerCase().replace(/[^a-z0-9一-龥]+/g,'-').replace(/(^-|-$)/g,'');}
+/* HTML 注释安全化：避免出现 -- 导致注释提前结束 */
+function safeComment(s){return String(s==null?'':s).replace(/--/g,'—').replace(/]]>/g,']]›');}
+
+/* ---------- 真实图片：分类 -> Picsum 稳定种子 ---------- */
+const IMG_MAP={'电商':'store','SaaS':'saas','企业官网':'office','社区论坛':'community','教育在线':'education','博客资讯':'blog','作品集':'portfolio','问答社区':'qanda','着陆页':'landing','门户':'portal','新闻':'news','医疗':'health','金融':'finance','旅行':'travel','美食':'food','房产':'estate','招聘':'jobs','工具':'tool','游戏':'game','论坛':'forum','商城':'shop','支付':'pay','媒体':'media'};
+function imgUrl(seed,w,h){return 'https://picsum.photos/seed/'+encodeURIComponent(seed)+'/'+w+'/'+h;}
+
+/* ---------- 品牌 SVG 艺术图（兜底，永不破图） ---------- */
+function brandArt(brand){
+  var sw=(brand.swatches&&brand.swatches.length)?brand.swatches:[(brand.primary||'#667eea'),'#1b1d29','#ffffff','#f6f7f9'];
+  var P=sw[0]||'#667eea',S=sw[1]||P,A=sw[2]||'#ffffff',B=sw[3]||'#f6f7f9';
+  var tone=(brand.tone||'').toLowerCase();
+  var ang=135; if(/科技|未来/.test(tone))ang=115; else if(/自然|有机/.test(tone))ang=160; else if(/高端|奢侈/.test(tone))ang=120;
+  var svg='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">'
+    +'<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate('+ang+' .5 .5)">'
+    +'<stop offset="0" stop-color="'+P+'"/><stop offset="1" stop-color="'+S+'"/></linearGradient>'
+    +'<radialGradient id="r" cx=".82" cy=".18" r=".75"><stop offset="0" stop-color="'+A+'" stop-opacity=".38"/><stop offset="1" stop-color="'+A+'" stop-opacity="0"/></radialGradient></defs>'
+    +'<rect width="1200" height="900" fill="url(#g)"/>'
+    +'<rect width="1200" height="900" fill="url(#r)"/>';
+  var shapes='';
+  if(/科技|未来|工业/.test(tone)){
+    shapes+='<circle cx="980" cy="220" r="160" fill="'+A+'" fill-opacity=".12"/><rect x="120" y="640" width="240" height="240" rx="24" fill="'+A+'" fill-opacity=".1" transform="rotate(12 240 760)"/>';
+  } else if(/自然|有机/.test(tone)){
+    shapes+='<circle cx="960" cy="240" r="180" fill="'+A+'" fill-opacity=".14"/><circle cx="1080" cy="430" r="90" fill="'+A+'" fill-opacity=".1"/>';
+  } else if(/高端|奢侈|精致/.test(tone)){
+    shapes+='<rect x="820" y="120" width="300" height="300" rx="150" fill="none" stroke="'+A+'" stroke-opacity=".25" stroke-width="2"/>';
+  } else {
+    shapes+='<circle cx="1000" cy="260" r="150" fill="'+A+'" fill-opacity=".12"/><rect x="140" y="660" width="200" height="200" rx="20" fill="'+A+'" fill-opacity=".1" transform="rotate(15 240 760)"/>';
+  }
+  svg+=shapes+'</svg>';
+  return 'data:image/svg+xml,'+encodeURIComponent(svg);
+}
+
+/* ---------- 专业图标库（内联 SVG，禁用 emoji 图标） ---------- */
+const ICONS={
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h.01"/><path d="M3 9h14a2 2 0 0 1 2 2v0"/></svg>',
+  cart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 3h2l2.2 12.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.3L21 7H6"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5.5L20 9.3l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.8z"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M8 9h2"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>',
+  cog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M1 12h4M19 12h4M4.2 19.8l2.8-2.8M17 7l2.8-2.8"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>'
+};
+function iconFor(label){
+  var k=String(label||'');
+  if(/登录|注册|账户|用户|会员|资料/i.test(k))return ICONS.user;
+  if(/支付|付款|钱包|微信|支付宝|coin|积分/i.test(k))return ICONS.wallet;
+  if(/订单|交易|购物|商城|cart/i.test(k))return ICONS.cart;
+  if(/会员|订阅|vip/i.test(k))return ICONS.star;
+  if(/消息|通知|推送|bell/i.test(k))return ICONS.bell;
+  if(/内容|文章|文档|cms|博客|blog/i.test(k))return ICONS.doc;
+  if(/统计|数据|分析|chart/i.test(k))return ICONS.chart;
+  if(/权限|安全|认证|shield|锁|lock/i.test(k))return ICONS.shield;
+  if(/设置|配置|config|gear/i.test(k))return ICONS.cog;
+  if(/搜索|search/i.test(k))return ICONS.search;
+  return ICONS.spark;
+}
+
+/* ---------- 设计规范前置（ui-design：先出规范再写码） ---------- */
+function designSpec(brand,type){
+  var tone=(brand.tone||'').toLowerCase();
+  var a='Editorial / 精致克制';
+  if(/活泼|鲜艳|活力|playful/i.test(tone))a='Playful / 活力鲜明';
+  else if(/高端|奢侈|奢华|luxury|精致/i.test(tone))a='Luxury / 克制高级';
+  else if(/极简|简约|minimal/i.test(tone))a='Minimal / 极简利落';
+  else if(/科技|未来|复古未来|tech/i.test(tone))a='Retro-futuristic / 科技质感';
+  else if(/自然|有机|organic/i.test(tone))a='Organic / 自然有机';
+  else if(/工业|硬核|utilitarian/i.test(tone))a='Industrial / 工业实用';
+  return {aesthetic:a, palette:[(brand.swatches&&brand.swatches[0])||brand.primary||'#667eea',(brand.swatches&&brand.swatches[1])||'#1b1d29',(brand.swatches&&brand.swatches[2])||'#fff'], type:(brand.fonts&&brand.fonts[0])||'系统默认', layout:'split-asymmetric', category:type.category||''};
+}
+
+/* ---------- 核心：生成多文件站点 ---------- */
+function genSite(brand,type){
+  var sw=(brand.swatches&&brand.swatches.length>=4)?brand.swatches.slice(0,5):
     (brand.swatches&&brand.swatches.length)?[brand.swatches[0],brand.swatches[0]||'#1b1d29','#ffffff','#f6f7f9']:
     [(brand.primary||'#667eea'),'#1b1d29','#ffffff','#f6f7f9'];
-  const P=sw[0],INK=sw[1],CAN=sw[2],SFT=sw[3];
-  const fontStack=(brand.fonts&&brand.fonts[0])||'-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif';
-  const mono='ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
-  const tone=(brand.tone||'').toLowerCase();
-  const isLight=onLight(P);
-  const txtOnP=isLight?'#111111':'#ffffff';
-  const subOnP=isLight?'rgba(17,17,17,.75)':'rgba(255,255,255,.85)';
-  const accent2=sw[4]||P; /* optional 5th color or fallback to primary */
-  const radius='12px';
-  const cat=type.category||'';
-  /* ── Content helpers: derive real copy from type data ── */
-  const mods=(type.modules&&type.modules.length)?type.modules:[];
-  const structs=(type.structure&&type.structure.length)?type.structure:['首页','关于我们','服务展示','联系我们'];
-  const dmFields=(type.dataModel&&type.dataModel.length)?type.dataModel.map(d=>(typeof d==='string'?d:(d.name||d.field||''))).filter(Boolean):[];
-  const promptHead=(type.prompt||'').split('\n')[0]||type.name;
-  /* section-aware headline */
-  const heroH1=type.name;
-  const heroSub=promptHead.length>200?promptHead.slice(0,200)+'…':promptHead;
-  /* feature cards from modules */
-  const featCards=mods.slice(0,6).map((m,i)=>{
-    const label=typeof m==='string'?m:(m.name||m.title||m||'');
-    const desc=typeof m==='object'&&m.desc?m.desc:(typeof m==='object'&&m.description?m.description:'');
-    return `<div class="g-feat" style="--delay:${i*80}ms"><div class="g-ficon">✦</div><div><strong>${esc(label)}</strong>${desc?`<span>${esc(desc)}</span>`:''}</div></div>`;
+  var P=sw[0],INK=sw[1]||'#1b1d29',CAN=sw[2]||'#ffffff',SFT=sw[3]||'#f6f7f9',A2=sw[4]||P;
+  var fontStack=(brand.fonts&&brand.fonts[0])||'-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  var mono='ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
+  var isLight=onLight(P);
+  var tone=(brand.tone||'').toLowerCase();
+  var cat=type.category||'';
+  var catSeed=slugName(cat)||'website';
+  var uploaded=(typeof state!=='undefined'&&state.heroImage)?state.heroImage:null;
+  var heroSrc=uploaded||imgUrl(catSeed+'-hero',1200,900);
+  var heroFallback=brandArt(brand);
+  var spec=designSpec(brand,type);
+
+  /* 内容 */
+  var mods=(type.modules&&type.modules.length)?type.modules:[];
+  var modItems=mods.slice(0,6).map(function(m){
+    var label=typeof m==='string'?m:((m&&(m.name||m.title))||'');
+    var desc=(typeof m==='object'&&m)?((m.desc||m.description)||''):'';
+    return {label:String(label),desc:String(desc)};
+  });
+  var structs=(type.structure&&type.structure.length)?type.structure:['首页','关于我们','服务展示','联系我们'];
+  var dmFields=(type.dataModel&&type.dataModel.length)?type.dataModel.map(function(d){return typeof d==='string'?d:((d&&(d.name||d.field))||'');}).filter(Boolean):[];
+  var promptHead=(type.prompt||'').split('\n')[0]||type.name;
+  var heroH1=type.name;
+  var heroSub=promptHead.length>200?promptHead.slice(0,200)+'…':promptHead;
+  var ctaMap={'电商':'立即选购','SaaS':'免费试用','企业官网':'了解更多','社区论坛':'加入讨论','教育在线':'开始学习','博客资讯':'订阅更新','作品集':'查看作品','问答社区':'提问交流','着陆页':'立即行动','门户':'进入平台'};
+  var ctaText=ctaMap[cat]||'立即开始';
+
+  /* 板块 HTML */
+  var featCards=modItems.map(function(m,i){
+    return '<div class="g-feat" style="--d:'+(i*70)+'ms"><div class="g-fic">'+iconFor(m.label)+'</div><div><b>'+esc(m.label)+'</b>'+(m.desc?'<span>'+esc(m.desc)+'</span>':'')+'</div></div>';
   }).join('');
-  /* stats row */
-  const stats=[
-    {n:mods.length,l:'核心模块'},
-    {n:structs.length,l:'页面结构'},
-    {n:dmFields.length||'-',l:'数据字段'},
-    {n:cat,l:'所属分类'}
-  ];
-  const statsHtml=stats.map(s=>`<div class="g-stat"><b>${s.n}</b><span>${s.l}</span></div>`).join('');
-  /* process steps from structure */
-  const stepsHtml=structs.slice(0,5).map((s,i)=>`
-    <div class="g-step"><div class="g-snum">${i+1}</div><div><b>${esc(s)}</b><p>按 ${esc(brand.title)} 设计规范构建此板块的布局、交互与视觉细节。</p></div></div>`).join('');
-  /* data model table if exists */
-  const dmTable=dmFields.length?`<section class="g-sec g-alt" id="data"><div class="g-wrap">
-    <h2>数据模型</h2><p>基于业务需求定义的数据结构，支撑 ${esc(type.name)} 的完整信息流转。</p>
-    <div class="g-dm-table">${dmFields.map(f=>`<div class="g-dm-row"><code>${esc(f)}</code><span>字段</span></div>`).join('')}</div></div></section>`:'';
-  /* CTA text by category */
-  const ctaMap={'电商':'立即选购','SaaS':'免费试用','企业官网':'了解更多','社区论坛':'加入讨论','教育在线':'开始学习','博客资讯':'订阅更新','作品集':'查看作品','问答社区':'提问交流','着陆页':'立即行动','门户':'进入平台'};
-  const ctaText=ctaMap[cat]||'立即开始';
+  var stats=[{n:mods.length,l:'核心模块'},{n:structs.length,l:'页面结构'},{n:dmFields.length||'-',l:'数据字段'},{n:cat||'-',l:'所属分类'}];
+  var statsHtml=stats.map(function(s){return '<div class="g-stat"><b>'+s.n+'</b><span>'+esc(s.l)+'</span></div>';}).join('');
+  var stepsHtml=structs.slice(0,5).map(function(s,i){
+    return '<div class="g-step"><div class="g-snum">'+(i+1)+'</div><div><b>'+esc(s)+'</b><p>按 '+esc(brand.title)+' 设计规范构建此板块的布局、交互与视觉细节。</p></div></div>';
+  }).join('');
+  var dmHtml=dmFields.length?'<section class="g-sec g-alt" id="data"><div class="g-wrap"><h2 class="g-h2">数据模型</h2><p class="g-lead">基于业务需求定义的数据结构，支撑 '+esc(type.name)+' 的完整信息流转。</p><div class="g-dm">'+dmFields.map(function(f){return '<div class="g-dm-row"><code>'+esc(f)+'</code><span>字段</span></div>';}).join('')+'</div></div></section>':'';
+  var showSeeds=['a','b','c'];
+  var showHtml='<section class="g-sec" id="showcase"><div class="g-wrap"><h2 class="g-h2">作品展示</h2><p class="g-lead">基于 '+esc(brand.title)+' 视觉语言呈现的真实场景示例。</p><div class="g-show">'+showSeeds.map(function(s,i){
+    var m=modItems[i]||{label:''};
+    var u=imgUrl(catSeed+'-'+s,800,600);
+    return '<figure class="g-show-item"><img class="g-show-img" src="'+u+'" alt="'+esc(m.label||type.name)+' 场景示例" loading="lazy" onerror="this.onerror=null;this.src=\''+heroFallback+'\'"><figcaption>'+esc(m.label||('场景 '+(i+1)))+'</figcaption></figure>';
+  }).join('')+'</div></div></section>';
+  var year=new Date().getFullYear();
 
-  /* ── Full HTML output ── */
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>${esc(type.name)} · ${esc(brand.title)}</title>
-<style>
-  :root{
-    --p:${P};--ink:${INK};--can:${CAN};--sft:${SFT};
-    --font:${fontStack};--rad:${radius};
-    --on-p:${txtOnP};--sub-p:${subOnP};
-    --p2:${accent2};
-    --rw:1120px;--gap:16px;
+  /* 导航（非对称 + 主题切换 + 移动菜单） */
+  var nav='<header class="g-nav"><div class="g-nav-in"><a class="g-logo" href="#main">'+esc(brand.title)+'</a>'
+    +'<nav class="g-nav-links"><a href="#features">核心能力</a><a href="#process">构建流程</a>'
+    +(dmFields.length?'<a href="#data">数据模型</a>':'')+'<a href="#showcase">作品展示</a><a href="#cta">'+esc(ctaText)+'</a></nav>'
+    +'<button class="g-theme" onclick="toggleTheme()" aria-label="切换主题">◐</button>'
+    +'<button class="g-burger" onclick="toggleMenu()" aria-label="菜单">☰</button></div>'
+    +'<div class="g-mobile" id="gMobile"><a href="#features">核心能力</a><a href="#process">构建流程</a>'
+    +(dmFields.length?'<a href="#data">数据模型</a>':'')+'<a href="#showcase">作品展示</a><a href="#cta">'+esc(ctaText)+'</a></div></header>';
+
+  /* Hero（左文 + 右视觉，非对称） */
+  var hero='<header class="g-hero"><div class="g-hero-grid"><div class="g-hero-copy">'
+    +'<span class="g-eyebrow" style="background:'+P+'1a;color:'+P+'">'+esc(spec.aesthetic)+'</span>'
+    +'<h1 class="g-h1">'+esc(heroH1)+'</h1>'
+    +'<p class="g-hero-sub">'+esc(heroSub)+'</p>'
+    +'<a href="#cta" class="g-cta">'+esc(ctaText)+' →</a>'
+    +'<div class="g-trust">由 '+esc(brand.title)+' 设计语言驱动 · '+mods.length+' 个核心模块 · '+structs.length+' 个页面板块</div>'
+    +'</div><div class="g-hero-visual"><img class="g-hero-img" src="'+heroSrc+'" alt="'+esc(type.name)+' 主视觉" loading="eager" onerror="this.onerror=null;this.src=\''+heroFallback+'\'"/>'
+    +'<div class="g-float" style="border-color:'+P+'33"><b style="color:'+P+'">'+mods.length+'</b><span>核心模块已就绪</span></div></div></div></header>';
+
+  /* 外链版 HTML（多文件） */
+  var reqLines=['<!-- 光体平台 · 项目需求与文档'];
+  if(typeof state!=='undefined'&&state.prompt) reqLines.push('网站提示词：'+safeComment(state.prompt));
+  if(typeof state!=='undefined'&&state.notes) reqLines.push('风格补充：'+safeComment(state.notes));
+  if(typeof state!=='undefined'&&state.docs) reqLines.push('补充说明：'+safeComment(state.docs));
+  if(typeof state!=='undefined'&&state.files&&state.files.length){
+    reqLines.push('开发文档（'+state.files.length+' 个）：');
+    state.files.forEach(function(f){ reqLines.push(' - '+f.name+' ['+f.kind+(f.text?', '+f.text.length+' 字':'')+']'); if(f.text) reqLines.push(safeComment(f.text)); });
   }
-  *,*::before,*::after{box-sizing:border-box}
-  body{margin:0;font-family:var(--font);color:var(--ink);background:var(--can);line-height:1.65;-webkit-font-smoothing:antialiased}
-  .g-wrap{max-width:var(--rw);margin:0 auto;padding:0 24px}
+  reqLines.push('-->');
+  var reqComment=reqLines.join('\n');
+  var htmlExternal='<!DOCTYPE html>\n'+reqComment+'\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8"/>\n<meta name="viewport" content="width=device-width,initial-scale=1.0"/>\n<title>'+esc(type.name)+' · '+esc(brand.title)+'</title>\n<meta name="description" content="'+esc(heroSub)+'"/>\n<link rel="preconnect" href="https://picsum.photos">\n<link rel="stylesheet" href="assets/css/style.css"/>\n</head>\n<body>\n<a class="g-skip" href="#main">跳到主内容</a>\n'
+    +nav+'\n<main id="main">\n'+hero+'\n'
+    +'<section class="g-sec" id="features"><div class="g-wrap"><h2 class="g-h2">核心能力</h2><p class="g-lead">基于 '+esc(brand.title)+' 设计语言构建，每个模块都经过视觉一致性与交互体验的双重打磨。</p><div class="g-feats">'+featCards+'</div></div></section>\n'
+    +'<section class="g-sec g-alt" id="stats"><div class="g-wrap"><div class="g-stats">'+statsHtml+'</div></div></section>\n'
+    +'<section class="g-sec" id="process"><div class="g-wrap"><h2 class="g-h2">构建流程</h2><p class="g-lead">从品牌规范到页面落地，每一步都有据可依。</p><div class="g-steps">'+stepsHtml+'</div></div></section>\n'
+    +dmHtml+'\n'+showHtml+'\n'
+    +'<section class="g-cta-banner" id="cta"><div class="g-wrap"><h2 class="g-h2">准备好开始了吗？</h2><p class="g-lead">使用光体平台，基于 '+esc(brand.title)+' 的设计规范，快速生成高品质网站。</p><a href="#" class="g-cta" onclick="event.preventDefault();">'+esc(ctaText)+' →</a></div></section>\n'
+    +'</main>\n<footer class="g-footer"><div class="g-wrap">© '+year+' '+esc(type.name)+' · 设计语言源自 '+esc(brand.title)+' · 由 <strong>光体平台</strong> 生成</div></footer>\n'
+    +'<script src="assets/js/site.js"><\/script>\n</body>\n</html>';
 
-  /* ── Nav ── */
-  .g-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.85);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid rgba(0,0,0,.06)}
-  .g-nav-in{max-width:var(--rw);margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
-  .g-logo{font-weight:800;font-size:18px;color:var(--p);letter-spacing:.3px}
-  .g-nav-links{display:flex;gap:28px;font-size:14px;font-weight:600}
-  .g-nav-links a{color:var(--ink);text-decoration:none;opacity:.7;transition:opacity .2s}
-  .g-nav-links a:hover{opacity:1;text-decoration:none}
+  /* 设计系统 CSS（注入品牌 token） */
+  var CSS=':root{'
+    +'--p:'+P+';--ink:'+INK+';--can:'+CAN+';--sft:'+SFT+';--a2:'+A2+';'
+    +'--muted:#6b7080;--line:rgba(0,0,0,.08);--radius:14px;'
+    +'--font:'+fontStack+';--mono:'+mono+';'
+    +'--on-p:'+(isLight?'#111':'#fff')+';--sub-p:'+(isLight?'rgba(17,17,17,.72)':'rgba(255,255,255,.82)')+';'
+    +'--rw:1140px;--ease:cubic-bezier(.25,1,.5,1);--dur:300ms;'
+    +'--t-h1:clamp(34px,5vw,56px);--t-h2:clamp(26px,3.5vw,38px);}\n'
+    +'*{box-sizing:border-box}html{scroll-behavior:smooth}'
+    +'body{margin:0;font-family:var(--font);color:var(--ink);background:var(--can);line-height:1.65;-webkit-font-smoothing:antialiased}\n'
+    +'.g-wrap{max-width:var(--rw);margin:0 auto;padding:0 24px}\n'
+    +'.g-skip{position:absolute;left:-999px;top:0;background:var(--p);color:var(--on-p);padding:10px 16px;border-radius:0 0 8px 0;z-index:200}.g-skip:focus{left:0}\n'
+    +':focus-visible{outline:3px solid var(--p);outline-offset:2px}\n'
+    +'.g-nav{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--can) 82%,transparent);backdrop-filter:saturate(170%) blur(14px);border-bottom:1px solid var(--line)}\n'
+    +'.g-nav-in{max-width:var(--rw);margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}\n'
+    +'.g-logo{font-weight:800;font-size:19px;color:var(--p);letter-spacing:.3px;text-decoration:none}\n'
+    +'.g-nav-links{display:flex;gap:26px;font-size:14px;font-weight:600}\n'
+    +'.g-nav-links a{color:var(--ink);text-decoration:none;opacity:.72;transition:opacity .2s}.g-nav-links a:hover{opacity:1}\n'
+    +'.g-theme,.g-burger{background:none;border:1px solid var(--line);border-radius:10px;width:40px;height:40px;font-size:18px;cursor:pointer;color:var(--ink)}\n'
+    +'.g-burger{display:none}.g-mobile{display:none;flex-direction:column;gap:4px;padding:8px 24px 14px;border-bottom:1px solid var(--line)}\n'
+    +'.g-mobile a{color:var(--ink);text-decoration:none;padding:10px 0;font-weight:600;border-bottom:1px solid var(--line)}\n'
+    +'.g-mobile.open{display:flex}\n'
+    +'.g-hero{padding:84px 24px 64px;background:radial-gradient(120% 120% at 80% 0%, color-mix(in srgb,var(--p) 14%,transparent), transparent 60%), var(--can)}\n'
+    +'.g-hero-grid{max-width:var(--rw);margin:0 auto;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}\n'
+    +'.g-eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:6px 12px;border-radius:999px;margin-bottom:18px}\n'
+    +'.g-h1{font-size:var(--t-h1);line-height:1.1;margin:0 0 18px;font-weight:900;letter-spacing:-.02em}\n'
+    +'.g-hero-sub{font-size:clamp(15px,2vw,19px);max-width:560px;color:var(--muted);margin:0 0 28px}\n'
+    +'.g-cta{display:inline-flex;align-items:center;gap:8px;background:var(--p);color:var(--on-p);padding:14px 30px;border-radius:12px;font-weight:800;font-size:15px;text-decoration:none;transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}\n'
+    +'.g-cta:hover{transform:translateY(-2px);box-shadow:0 12px 34px color-mix(in srgb,var(--p) 40%,transparent)}\n'
+    +'.g-trust{margin-top:22px;font-size:13px;color:var(--muted);font-weight:600}\n'
+    +'.g-hero-visual{position:relative}\n'
+    +'.g-hero-img{width:100%;height:auto;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.16);display:block;aspect-ratio:4/3;object-fit:cover}\n'
+    +'.g-float{position:absolute;right:-10px;bottom:-16px;background:var(--can);border:1px solid;border-radius:16px;padding:14px 18px;box-shadow:0 16px 40px rgba(0,0,0,.14);display:flex;flex-direction:column;gap:2px}\n'
+    +'.g-float b{font-size:26px;font-weight:900;line-height:1}.g-float span{font-size:12px;color:var(--muted);font-weight:600}\n'
+    +'.g-sec{padding:78px 24px}.g-sec.g-alt{background:var(--sft)}\n'
+    +'.g-h2{font-size:var(--t-h2);margin:0 0 10px;font-weight:900;letter-spacing:-.02em}.g-lead{font-size:16px;color:var(--muted);max-width:600px;margin:0 0 36px}\n'
+    +'.g-feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}\n'
+    +'.g-feat{background:var(--can);border:1px solid var(--line);border-radius:var(--radius);padding:24px;display:flex;gap:14px;align-items:flex-start;transition:transform var(--dur) var(--ease),border-color var(--dur) var(--ease);animation:gUp .55s var(--ease) both;animation-delay:var(--d)}\n'
+    +'.g-feat:hover{transform:translateY(-4px);border-color:var(--p)}\n'
+    +'.g-fic{flex:0 0 44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--p) 14%,transparent);color:var(--p);display:grid;place-items:center}\n'
+    +'.g-fic svg{width:22px;height:22px}.g-feat b{display:block;font-size:15px;margin-bottom:4px}.g-feat span{font-size:13px;color:var(--muted);line-height:1.5}\n'
+    +'.g-stats{display:flex;gap:36px;flex-wrap:wrap;justify-content:center;padding:6px 0}\n'
+    +'.g-stat{text-align:center}.g-stat b{display:block;font-size:large;font-size:clamp(30px,4vw,46px);font-weight:900;color:var(--p)}.g-stat span{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}\n'
+    +'.g-steps{display:flex;flex-direction:column;gap:20px;max-width:720px;margin:0 auto}.g-step{display:flex;gap:16px;align-items:flex-start}\n'
+    +'.g-snum{flex:0 0 42px;height:42px;border-radius:50%;background:var(--p);color:var(--on-p);display:grid;place-items:center;font-weight:900;font-size:16px}\n'
+    +'.g-step b{display:block;font-size:16px;margin-bottom:4px}.g-step p{margin:0;font-size:14px;color:var(--muted);line-height:1.55}\n'
+    +'.g-dm{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.g-dm-row{background:var(--can);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px}\n'
+    +'.g-dm-row code{font-family:var(--mono);font-weight:700;color:var(--p)}.g-dm-row span{color:var(--muted);font-size:12px}\n'
+    +'.g-show{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}.g-show-item{margin:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);background:var(--can)}\n'
+    +'.g-show-img{width:100%;height:200px;object-fit:cover;display:block}.g-show-item figcaption{padding:12px 14px;font-size:13px;font-weight:600;color:var(--ink)}\n'
+    +'.g-cta-banner{text-align:center;background:linear-gradient(135deg,var(--p),'+INK+');color:var(--on-p);padding:78px 24px}.g-cta-banner .g-h2{color:var(--on-p)}.g-cta-banner .g-lead{color:var(--sub-p);margin-left:auto;margin-right:auto}.g-cta-banner .g-cta{background:var(--on-p);color:'+(isLight?P:'#fff')+'}\n'
+    +'.g-footer{border-top:1px solid var(--line);padding:36px 24px;text-align:center;font-size:13px;color:var(--muted)}.g-footer a{color:var(--p);text-decoration:none;font-weight:600}\n'
+    +'.dark{--can:#0f1115;--sft:#171b22;--ink:#eef1f6;--muted:#9aa3b2;--line:rgba(255,255,255,.1)}\n'
+    +'.dark .g-nav{background:rgba(15,17,21,.8)}.dark .g-feat,.dark .g-dm-row,.dark .g-show-item{background:var(--sft)}\n'
+    +'@keyframes gUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}\n'
+    +'.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease)}.reveal.in{opacity:1;transform:none}\n'
+    +'@media(max-width:880px){.g-hero-grid{grid-template-columns:1fr;gap:32px}.g-hero-visual{order:-1}}\n'
+    +'@media(max-width:640px){.g-nav-links{display:none}.g-burger{display:block}.g-hero{padding:56px 18px 44px}.g-sec{padding:52px 16px}.g-stats{gap:22px}}\n';
 
-  /* ── Hero ── */
-  .g-hero{background:linear-gradient(135deg,${P},${sw[1]||P});color:var(--on-p);padding:100px 24px 80px;text-align:center;position:relative;overflow:hidden}
-  .g-hero::before{content:'';position:absolute;top:-40%;left:-20%;width:70%;height:140%;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
-  .g-hero h1{font-size:clamp(32px,5vw,52px);margin:0 0 18px;line-height:1.15;font-weight:900;letter-spacing:-.3px}
-  .g-hero p{font-size:clamp(15px,2vw,19px);max-width:640px;margin:0 auto 32px;opacity:.92;line-height:1.6}
-  .g-cta{display:inline-flex;align-items:center;gap:8px;background:var(--on-p);color:${isLight?P:'#fff'};padding:14px 32px;border-radius:10px;font-weight:800;font-size:15px;text-decoration:none;transition:transform .2s,box-shadow .2s}
-  .g-cta:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.18);text-decoration:none}
+  /* 交互 JS（site.js） */
+  var JS='(function(){'
+    +'function toggleTheme(){var b=document.body;b.classList.toggle(\'dark\');try{localStorage.setItem(\'gt_theme\',b.classList.contains(\'dark\')?\'dark\':\'light\');}catch(e){}}'
+    +'function toggleMenu(){var m=document.getElementById(\'gMobile\');if(m)m.classList.toggle(\'open\');}'
+    +'window.toggleTheme=toggleTheme;window.toggleMenu=toggleMenu;'
+    +'try{var t=localStorage.getItem(\'gt_theme\');if(t===\'dark\')document.body.classList.add(\'dark\');}catch(e){}'
+    +'var els=document.querySelectorAll(\'.g-sec, .g-step, .g-show-item\');'
+    +'if(\'IntersectionObserver\' in window){var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add(\'in\');io.unobserve(en.target);}});},{threshold:.12});els.forEach(function(e){e.classList.add(\'reveal\');io.observe(e);});}'
+    +'document.querySelectorAll(\'.g-mobile a\').forEach(function(a){a.addEventListener(\'click\',function(){var m=document.getElementById(\'gMobile\');if(m)m.classList.remove(\'open\');});});'
+    +'})();';
 
-  /* ── Sections ── */
-  .g-sec{padding:72px 24px}
-  .g-sec.g-alt{background:var(--sft)}
-  .g-sec h2{font-size:clamp(24px,3.5vw,34px);margin:0 0 12px;font-weight:900;letter-spacing:-.2px}
-  .g-sec>p{font-size:16px;color:#6b7080;max-width:600px;margin:0 0 36px;line-height:1.6}
+  /* 内联版（预览 / 单文件下载） */
+  var inline=htmlExternal
+    .replace('<link rel="stylesheet" href="assets/css/style.css"/>','<style>'+CSS+'</style>')
+    .replace('<script src="assets/js/site.js"><\/script>','<script>'+JS+'<\/script>');
 
-  /* Features grid */
-  .g-feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-  .g-feat{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:var(--rad);padding:24px;display:flex;gap:14px;align-items:flex-start;transition:transform .2s,border-color .2s;animation:gFadeIn .5s ease both;animation-delay:var(--delay)}
-  .g-feat:hover{transform:translateY(-3px);border-color:var(--p)}
-  .g-ficon{flex:0 0 42px;height:42px;border-radius:10px;background:linear-gradient(135deg,${P}22,${P}33);display:grid;place-items:center;font-size:18px;color:var(--p)}
-  .g-feat strong{display:block;font-size:15px;margin-bottom:4px}
-  .g-feat span{font-size:13px;color:#6b7080;line-height:1.5}
+  /* README */
+  var readme='# '+type.name+' · '+brand.title+'\n\n由「光体 · AI 网站开发设计平台」生成（多文件组件化输出）。\n\n## 文件结构\n- index.html — 页面结构（语义化 nav/main/section/footer，顶部内嵌项目需求注释）\n- assets/css/style.css — 设计系统与组件样式（注入品牌 token）\n- assets/js/site.js — 交互（主题切换 / 移动菜单 / 滚动入场）\n- requirements.md — 本项目需求与上传的开发文档（提示词 / 补充说明 / 解析正文）\n- 图片：通过真实图床 URL 引用（如需自托管，将图片保存到 assets/img/ 并改路径）\n\n## 设计规范\n- 美学方向：'+spec.aesthetic+'\n- 主色：'+P+'\n- 配色板：'+sw.join(' / ')+'\n- 字体：'+((brand.fonts||[]).join('、')||'系统默认')+'\n- 品牌基调：'+brand.tone+'\n\n## 自定义\n编辑 assets/css/style.css 中的 :root 变量即可全局换肤；编辑 index.html 调整板块文案。\n';
 
-  /* Stats */
-  .g-stats{display:flex;gap:32px;flex-wrap:wrap;justify-content:center;padding:8px 0}
-  .g-stat{text-align:center}
-  .g-stat b{display:block;font-size:clamp(28px,4vw,42px);font-weight:900;color:var(--p)}
-  .g-stat span{font-size:13px;color:#6b7080;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-
-  /* Process / Steps */
-  .g-steps{display:flex;flex-direction:column;gap:20px;max-width:700px;margin:0 auto}
-  .g-step{display:flex;gap:16px;align-items:flex-start}
-  .g-snum{flex:0 0 40px;height:40px;border-radius:50%;background:var(--p);color:var(--on-p);display:grid;place-items:center;font-weight:900;font-size:16px}
-  .g-step b{display:block;font-size:16px;margin-bottom:4px}
-  .g-step p{margin:0;font-size:14px;color:#6b7080;line-height:1.55}
-
-  /* Data model */
-  .g-dm-table{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-  .g-dm-row{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:9px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
-  .g-dm-row code{font-family:${mono};font-weight:700;color:var(--p);font-size:13px}
-  .g-dm-row span{color:#6b7080;font-size:12px}
-
-  /* CTA Banner */
-  .g-cta-banner{text-align:center;background:linear-gradient(135deg,${P},${sw[1]||P});color:var(--on-p);padding:72px 24px}
-  .g-cta-banner h2{font-size:clamp(26px,4vw,38px);margin:0 0 14px}
-  .g-cta-banner p{font-size:17px;opacity:.88;margin:0 0 28px;max-width:520px;margin-left:auto;margin-right:auto}
-  .g-cta-banner .g-cta{background:var(--on-p);color:${isLight?P:'#fff'}}
-
-  /* Footer */
-  .g-footer{border-top:1px solid rgba(0,0,0,.06);padding:36px 24px;text-align:center;font-size:13px;color:#9ca3af}
-  .g-footer a{color:var(--p);text-decoration:none;font-weight:600}
-
-  /* Animations */
-  @keyframes gFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-
-  /* Responsive */
-  @media(max-width:640px){
-    .g-nav-links{display:none}
-    .g-hero{padding:60px 20px 48px}
-    .g-sec{padding:48px 16px}
-    .g-stats{gap:20px}
-    .g-feats{grid-template-columns:1fr}
+  /* 需求文档 */
+  var reqMd='# 项目需求与开发文档 · '+type.name+' · '+brand.title+'\n\n> 由「光体 · AI 网站开发设计平台」导出。\n\n';
+  if(typeof state!=='undefined'&&state.prompt){ reqMd+='## 网站提示词\n\n'+state.prompt+'\n\n'; }
+  if(typeof state!=='undefined'&&state.notes){ reqMd+='## 风格补充\n\n'+state.notes+'\n\n'; }
+  if(typeof state!=='undefined'&&state.docs){ reqMd+='## 补充说明 / 项目背景\n\n'+state.docs+'\n\n'; }
+  if(typeof state!=='undefined'&&state.files&&state.files.length){
+    reqMd+='## 上传的开发文档（'+state.files.length+' 个）\n\n';
+    state.files.forEach(function(f){ reqMd+='### '+f.name+'（'+(f.kind==='text'?'已读入':(f.text?'已解析':'已附加'))+' · '+Math.round(f.size/1024)+' KB）\n\n'+(f.text?f.text:'（二进制文件，正文需在实施端解析）')+'\n\n'; });
   }
-</style>
-</head>
-<body>
+  if(reqMd=== '> 由「光体 · AI 网站开发设计平台」导出。\n\n') reqMd+='（本次未填写提示词或上传文档。）\n';
 
-<!-- Nav -->
-<nav class="g-nav"><div class="g-nav-in">
-  <div class="g-logo">${esc(brand.title)}</div>
-  <div class="g-nav-links">
-    <a href="#features">核心能力</a>
-    <a href="#process">构建流程</a>
-    ${dmFields.length?'<a href="#data">数据模型</a>':''}
-    <a href="#cta">立即开始</a>
-  </div>
-</div></nav>
-
-<!-- Hero -->
-<header class="g-hero"><div class="g-wrap">
-  <h1>${esc(heroH1)}</h1>
-  <p>${esc(heroSub)}</p>
-  <a href="#cta" class="g-cta">${esc(ctaText)} →</a>
-</div></header>
-
-<!-- Features -->
-<section class="g-sec" id="features"><div class="g-wrap">
-  <h2>核心能力</h2>
-  <p>基于 ${esc(brand.title)} 设计语言构建，每个模块都经过视觉一致性与交互体验的双重打磨。</p>
-  <div class="g-feats">${featCards}</div>
-</div></section>
-
-<!-- Stats -->
-<section class="g-sec g-alt" id="stats"><div class="g-wrap">
-  <div class="g-stats">${statsHtml}</div>
-</div></section>
-
-<!-- Process -->
-<section class="g-sec" id="process"><div class="g-wrap">
-  <h2>构建流程</h2>
-  <p>从品牌规范到页面落地，每一步都有据可依。</p>
-  <div class="g-steps">${stepsHtml}</div>
-</div></section>
-
-${dmTable}
-
-<!-- CTA -->
-<section class="g-cta-banner" id="cta"><div class="g-wrap">
-  <h2>准备好开始了吗？</h2>
-  <p>使用光体平台，基于 ${esc(brand.title)} 的设计规范，快速生成高品质网站。</p>
-  <a href="#" class="g-cta" onclick="event.preventDefault();">${esc(ctaText)} →</a>
-</div></section>
-
-<!-- Footer -->
-<footer class="g-footer"><div class="g-wrap">
-  © ${new Date().getFullYear()} ${esc(type.name)} · 设计语言源自 <a href="#">${esc(brand.title)}</a> · 由 <strong>光体平台</strong> 生成
-</div></footer>
-
-</body>
-</html>`;
+  var files={'index.html':htmlExternal,'assets/css/style.css':CSS,'assets/js/site.js':JS,'requirements.md':reqMd,'README.md':readme};
+  return {inline:inline, files:files};
 }
+
+/* ---------- 兼容 / 导出入口 ---------- */
+function buildSite(brand,type){return genSite(brand,type).inline;}
+function buildProject(brand,type){return genSite(brand,type).files;}
+
+/* ---------- 主视觉图片上传 ---------- */
+function readHeroImg(e){
+  var f=e.target.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(){
+    state.heroImage=r.result;
+    if(el('docReadout'))el('docReadout').textContent='已载入主视觉图片（'+Math.round(f.size/1024)+' KB），将用于生成网站 Hero。';
+  };
+  r.readAsDataURL(f);
+}
+
+/* ---------- 前端 zip 导出（store 模式，无依赖） ---------- */
+var _crcTable=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function _crc32(bytes){var c=0xFFFFFFFF;for(var i=0;i<bytes.length;i++)c=_crcTable[(c^bytes[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function downloadProject(name, files){
+  try{
+    var enc=new TextEncoder();
+    var out=[]; var pos=0; var central=[]; var names=Object.keys(files); var offsets=[];
+    function u16(n){return new Uint8Array([n&0xFF,(n>>>8)&0xFF]);}
+    function u32(n){return new Uint8Array([n&0xFF,(n>>>8)&0xFF,(n>>>16)&0xFF,(n>>>24)&0xFF]);}
+    names.forEach(function(fn){
+      var fnb=enc.encode(fn); var data=enc.encode(String(files[fn])); var crc=_crc32(data);
+      offsets.push(pos);
+      var lh=new Uint8Array(30+fnb.length); var dv=new DataView(lh.buffer);
+      dv.setUint32(0,0x04034b50,true); dv.setUint16(4,20,true); dv.setUint16(6,0,true); dv.setUint16(8,0,true);
+      dv.setUint32(10,0,true); dv.setUint32(12,0,true); dv.setUint32(14,crc,true);
+      dv.setUint32(18,data.length,true); dv.setUint32(22,data.length,true); dv.setUint16(26,fnb.length,true); dv.setUint16(28,0,true);
+      lh.set(fnb,30); out.push(lh,data); pos+=lh.length+data.length;
+      var ch=new Uint8Array(46+fnb.length); var cv=new DataView(ch.buffer);
+      cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true); cv.setUint16(8,0,true); cv.setUint16(10,0,true);
+      cv.setUint32(12,0,true); cv.setUint32(14,0,true); cv.setUint32(16,crc,true); cv.setUint32(20,data.length,true); cv.setUint32(24,data.length,true);
+      cv.setUint16(28,fnb.length,true); cv.setUint16(30,0,true); cv.setUint16(32,0,true); cv.setUint16(34,0,true); cv.setUint16(36,0,true); cv.setUint32(38,0,true);
+      cv.setUint32(42,offsets[offsets.length-1],true); ch.set(fnb,46); central.push(ch);
+    });
+    var cdSize=central.reduce(function(a,c){return a+c.length;},0); var cdOffset=pos;
+    var eo=new Uint8Array(22); var ev=new DataView(eo.buffer);
+    ev.setUint32(0,0x06054b50,true); ev.setUint16(4,0,true); ev.setUint16(6,0,true);
+    ev.setUint16(8,names.length,true); ev.setUint16(10,names.length,true); ev.setUint32(12,cdSize,true); ev.setUint32(16,cdOffset,true); ev.setUint16(20,0,true);
+    var all=out.concat(central,[eo]); var total=all.reduce(function(a,c){return a+c.length;},0);
+    var zip=new Uint8Array(total); var o=0; all.forEach(function(c){zip.set(c,o);o+=c.length;});
+    var blob=new Blob([zip],{type:'application/zip'}); var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download=(name||'project')+'.zip'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},2000);
+  }catch(err){ if(el('syncHint'))el('syncHint').textContent='⚠️ 导出失败：'+err.message; }
+}
+
+
+
 function buildBackendDoc(){
   const sel=BACKEND.filter(m=>state.backend.includes(m.id));
   if(!sel.length)return '# 后端配置说明\n\n未选择后端模块，本项目为纯前端静态站点，无需服务端接口与数据库。\n';
@@ -8175,7 +8464,8 @@ function buildTaskBrief(s){
   const dm=(ty.dataModel||[]).map(x=>`- ${x}`).join('\n');
   const backDetail=(s.backend&&s.backend.length)?s.backend.map(x=>`- ${x.name}（${x.apis} 接口 / ${x.tables} 数据表）`).join('\n'):'- 无';
   const notes=s.notes?('> '+s.notes.replace(/\n/g,' ')).slice(0,300):'无';
-  const docFile=s.docFile?('「'+s.docFile+'」'):'无';
+  const prompt=s.websitePrompt?('> '+s.websitePrompt.replace(/\n/g,' ')).slice(0,400):'（未填写）';
+  const files=(s.files&&s.files.length)?s.files.map(f=>'- '+f.name+'（'+(f.kind==='text'?'已读入':(f.text?'已解析 '+f.text.length+' 字':'已附加'))+'）').join('\n'):'（无）';
   return `# 光体网站项目 · 任务简报
 
 > 由「光体 · AI 网站开发设计平台」生成。把本简报粘贴到 WorkBuddy 对话并发送，即可新建一个可追溯的任务卡，方便后期修改优化。
@@ -8184,8 +8474,16 @@ function buildTaskBrief(s){
 - **品牌风格**：${br.title||''}（主色 ${br.primary||''} · 字体 ${fo||''} · 基调 ${br.tone||''}）
 - **网站类型**：${ty.category||''} / ${ty.name||''}
 - **后端模块**：${back}
-- **补充文档**：${docFile}
-- **开发备注**：${notes}
+- **上传文档**：${(s.files&&s.files.length)?s.files.length+' 个':'无'}
+
+## 网站提示词（核心需求）
+${prompt}
+
+## 开发备注
+${notes}
+
+## 上传的开发文档
+${files}
 
 ## 配置摘要
 - 主色：${br.primary||''}
@@ -8239,6 +8537,9 @@ function reloadHistory(i){
     state.brand=s.brand.id;state.type=s.type.id;
     if(s.backend)state.backend=s.backend.map(x=>x.id);
     if(s.notes)state.notes=s.notes;
+    if(s.websitePrompt)state.prompt=s.websitePrompt; else state.prompt='';
+    if(s.docs)state.docs=s.docs; else state.docs='';
+    if(s.files&&Array.isArray(s.files))state.files=s.files.map(f=>({name:f.name,size:f.size||0,type:f.type||'',kind:f.kind||'bin',text:f.text||''})); else state.files=[];
     renderBrands();renderTypes();renderBackend();renderBackendDetail();renderStepper();renderStepBody();renderSummary();
     el('summary').scrollIntoView({behavior:'smooth'});
     if(el('syncHint'))el('syncHint').textContent='↺ 已载入历史项目配置';
@@ -8256,7 +8557,8 @@ function generate(){
     '③ 按类型生成真实板块（模块 / 结构 / 数据模型）…',
     '④ 质量门禁：响应式 / 语义化 / 无占位 / 品牌一致性…',
     '⑤ 后端接口与数据表编排…',
-    '⑥ 生成项目快照（可同步到 WorkBuddy 任务）…'
+    '⑥ 生成项目快照（可同步到 WorkBuddy 任务）…',
+    '⑦ 接入真实图片与多文件组件 zip 导出…'
   ];
   const plog=el('plog');plog.innerHTML='';
   let i=0;
@@ -8268,21 +8570,26 @@ function generate(){
       el('pfill').style.width=((i+1)/logs.length*100)+'%';
       i++;setTimeout(tick,480);
     }else{
-      const site=buildSite(b,t);
+      const gen=genSite(b,t);
+      const site=gen.inline;
       const doc=buildBackendDoc();
       /* ── Project Snapshot for WorkBuddy sync ── */
       const selBack=BACKEND.filter(m=>state.backend.includes(m.id));
       const notes=(el('devNotes')?el('devNotes').value:'')||state.notes||'';
+      const prompt=(el('promptInput')?el('promptInput').value:'')||state.prompt||'';
+      const docs=(el('docsInput')?el('docsInput').value:'')||state.docs||'';
       const snapshot={
-        version:'1.1',generatedAt:new Date().toISOString(),
+        version:'1.2',generatedAt:new Date().toISOString(),
         project:{name:t.name,brand:b.title,category:t.category},
         brand:{id:b.id,title:b.title,primary:(b.swatches&&b.swatches[0])||b.primary||'',swatches:(b.swatches||[]).slice(0,5),fonts:b.fonts||[],tone:b.tone||'',industry:b.industry||''},
         type:{id:t.id,name:t.name,category:t.category,prompt:(t.prompt||'').slice(0,800),structure:t.structure||[],modules:(t.modules||[]).slice(0,12),dataModel:(t.dataModel||[]).slice(0,12)},
         backend:selBack.map(m=>({id:m.id,name:m.name,apis:m.apis.length,tables:m.tables.length})),
+        websitePrompt:prompt,
         notes:notes,
-        docFile:state.docFileName||null,
+        docs:docs,
+        files:(state.files||[]).map(f=>({name:f.name,size:f.size,type:f.type,kind:f.kind,text:f.text||''})),
         outputs:{siteHtml:site, backendDoc:doc},
-        outputFiles:['guangti-site.html','backend-config.md','project-snapshot.json']
+        outputFiles:['index.html','assets/css/style.css','assets/js/site.js','README.md','requirements.md','backend-config.md','project-snapshot.json']
       };
       const snapStr=JSON.stringify(snapshot,null,2);
       const brief=buildTaskBrief(snapshot);
@@ -8297,6 +8604,7 @@ function generate(){
       el('dlSite').href='data:text/html;charset=utf-8,'+encodeURIComponent(site);
       el('dlDoc').href='data:text/markdown;charset=utf-8,'+encodeURIComponent(doc);
       el('dlSnap').href='data:application/json;charset=utf-8,'+encodeURIComponent(snapStr);
+      if(el('btnZip'))el('btnZip').onclick=()=>downloadProject(slugName(t.name+'_'+b.title)||'project', gen.files);
       /* wire sync buttons */
       el('btnCopyBrief').onclick=()=>copyText(brief, el('syncHint'));
       el('btnSaveLocal').onclick=()=>{saveProject(snapshot);renderHistory();if(el('syncHint'))el('syncHint').textContent='✅ 已保存到本地历史';};

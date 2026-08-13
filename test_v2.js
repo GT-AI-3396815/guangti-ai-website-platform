@@ -59,7 +59,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 // 把 const 改成 var / 直接赋值，便于后续访问
-scriptBody = scriptBody.replace(/const BRANDS =/, 'BRANDS =').replace(/const TYPES =/, 'TYPES =').replace(/const BACKEND =/, 'BACKEND =').replace(/const state = \{[^}]*\}/, 'state = { brand:null, type:null, notes:"", backend:[], docs:"" }');
+scriptBody = scriptBody.replace(/const BRANDS =/, 'BRANDS =').replace(/const TYPES =/, 'TYPES =').replace(/const BACKEND =/, 'BACKEND =').replace(/const state = \{[^}]*\}/, 'state = { brand:null, type:null, prompt:"", notes:"", backend:[], docs:"", heroImage:null, files:[] }');
 vm.runInContext(scriptBody, ctx);
 
 BRANDS = ctx.BRANDS; TYPES = ctx.TYPES; BACKEND = ctx.BACKEND;
@@ -147,6 +147,102 @@ try {
   check(reparsed.project.name === t0.name, 'GUANGTI_SNAPSHOT re-parses to original project');
 } catch(e) {
   check(false, `sync functions THROW: ${e.message}`);
+}
+
+// 测试 ② 多文件组件化输出 buildProject（返回值为 files 映射，非 {inline,files}）
+try {
+  const b0 = BRANDS[2], t0 = TYPES[5];
+  const fp = ctx.buildProject(b0, t0);
+  const names = Object.keys(fp);
+  check(names.includes('index.html') && names.includes('assets/css/style.css') && names.includes('assets/js/site.js') && names.includes('README.md'), 'buildProject has index/css/js/readme');
+  const idx = fp['index.html'];
+  check(idx.includes('assets/css/style.css') && idx.includes('assets/js/site.js'), 'index.html links external css/js (multi-file)');
+  check(fp['assets/css/style.css'].includes('--p:'), 'css contains injected brand token');
+  check(fp['assets/js/site.js'].includes('toggleTheme'), 'js contains theme toggle');
+  check(fp['README.md'].includes('文件结构'), 'readme documents file structure');
+  check(idx.includes('picsum.photos'), 'generated site uses real image URL (picsum)');
+  check(idx.includes('data:image/svg+xml'), 'generated site has brand-art fallback');
+  check(idx.includes('<svg') && !idx.includes('✦'), 'features use SVG icons, no emoji icons');
+  check(idx.includes('g-mobile') && idx.includes('toggleMenu'), 'nav has mobile menu + theme toggle (frontend-design)');
+  // 抽样 50 组合确保 buildProject 不抛错且含真实内容
+  let projErr=0;
+  for (let bi=0; bi<BRANDS.length; bi+=7) {
+    for (let ti=0; ti<TYPES.length; ti+=9) {
+      try {
+        const f = ctx.buildProject(BRANDS[bi], TYPES[ti]);
+        if (!f['index.html'] || !f['assets/css/style.css']) projErr++;
+      } catch(e) { projErr++; fails.push('buildProject THROW '+BRANDS[bi].title+'/'+TYPES[ti].name+': '+e.message); }
+    }
+  }
+  check(projErr===0, 'buildProject sampled combos all OK (expect 0 errors), got '+projErr);
+  // zip 函数存在且为函数
+  check(typeof ctx.downloadProject === 'function', 'downloadProject(zip) function defined');
+} catch(e) {
+  check(false, `buildProject THROW: ${e.message}`);
+}
+
+// 测试 ③ 产品级校验：导航锚点↔section id 一致 / 图片 onerror 兜底 / picsum URL 编码
+try {
+  let anchorMiss=0, imgTot=0, imgOk=0, encTot=0, encOk=0, leak=0;
+  const combos=[[0,0],[2,5],[10,5],[30,40],[50,70],[73,99],[5,55],[20,20]];
+  combos.forEach(([bi,ti])=>{
+    const s=ctx.buildSite(BRANDS[bi],TYPES[ti]);
+    if(/undefined|NaN|\[object/.test(s)) leak++;
+    const anchors=[...s.matchAll(/href="#([a-zA-Z]+)"/g)].map(x=>x[1]);
+    const ids=[...s.matchAll(/id="([a-zA-Z]+)"/g)].map(x=>x[1]);
+    anchors.forEach(a=>{ if(a!=='main' && !ids.includes(a)) anchorMiss++; });
+    const imgs=[...s.matchAll(/<img[^>]*>/g)];
+    imgTot+=imgs.length;
+    imgs.forEach(im=>{ if(/onerror=/.test(im[0])) imgOk++; });
+    const pics=[...s.matchAll(/https:\/\/picsum\.photos\/seed\/([^'")\s]+)/g)];
+    encTot+=pics.length;
+    pics.forEach(p=>{ if(/%[0-9A-Fa-f]{2}/.test(p[1])) encOk++; });
+  });
+  check(leak===0, 'product: no undefined/NaN/[object] leak in sampled sites, got '+leak);
+  check(anchorMiss===0, 'product: every nav anchor has matching section id (no dead nav), got '+anchorMiss);
+  check(imgOk===imgTot && imgTot>0, 'product: every <img> has onerror fallback ('+imgOk+'/'+imgTot+')');
+  check(encOk===encTot && encTot>0, 'product: every picsum seed URL is percent-encoded ('+encOk+'/'+encTot+')');
+} catch(e) {
+  check(false, `product check THROW: ${e.message}`);
+}
+
+// 测试 ④ 新增：网站提示词 + 开发文档（word/pdf/txt）贯穿生成链路
+try {
+  const b0 = BRANDS[4], t0 = TYPES[9];
+  ctx.state.brand = b0.id; ctx.state.type = t0.id;
+  ctx.state.prompt = '做一个面向中小企业的 SaaS 官网，强调信任感与转化率';
+  ctx.state.docs = '需要对接微信登录，部署到 EdgeOne';
+  ctx.state.files = [
+    { name:'需求.docx', size:12345, type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document', kind:'docx', text:'这是从 Word 解析出的正文第一段。' },
+    { name:'说明.pdf', size:6789, type:'application/pdf', kind:'pdf', text:'这是从 PDF 解析出的正文。' },
+    { name:'备注.txt', size:200, type:'text/plain', kind:'text', text:'纯文本补充说明。' }
+  ];
+  const fp = ctx.buildProject(b0, t0);
+  // 1) 生成站点顶部内嵌需求注释
+  check(fp['index.html'].includes('项目需求与文档'), 'generated site embeds 项目需求与文档 comment');
+  check(fp['index.html'].includes('面向中小企业的 SaaS 官网'), 'generated site comment contains website prompt');
+  check(fp['index.html'].includes('需求.docx') && fp['index.html'].includes('说明.pdf'), 'generated site comment lists uploaded docs');
+  // 2) 导出 requirements.md
+  check(fp['requirements.md'] && fp['requirements.md'].includes('网站提示词'), 'zip exports requirements.md with prompt section');
+  check(fp['requirements.md'].includes('从 Word 解析出的正文'), 'requirements.md includes parsed docx text');
+  check(fp['requirements.md'].includes('从 PDF 解析出的正文'), 'requirements.md includes parsed pdf text');
+  check(fp['requirements.md'].includes('纯文本补充说明'), 'requirements.md includes txt content');
+  // 3) 任务简报含提示词与文档
+  const snap = { version:'1.2', generatedAt:new Date().toISOString(),
+    project:{name:t0.name,brand:b0.title,category:t0.category},
+    brand:{id:b0.id,title:b0.title,primary:(b0.swatches&&b0.swatches[0])||'',swatches:(b0.swatches||[]).slice(0,5),fonts:b0.fonts||[],tone:b0.tone||'',industry:b0.industry||''},
+    type:{id:t0.id,name:t0.name,category:t0.category,prompt:(t0.prompt||''),structure:t0.structure||[],modules:(t0.modules||[]).slice(0,12),dataModel:(t0.dataModel||[]).slice(0,12)},
+    backend:[], websitePrompt:ctx.state.prompt, notes:'测试备注', docs:ctx.state.docs,
+    files:ctx.state.files.map(f=>({name:f.name,size:f.size,type:f.type,kind:f.kind,text:f.text||''})),
+    outputs:{siteHtml:'<html>x</html>', backendDoc:'# doc'} };
+  const brief = ctx.buildTaskBrief(snap);
+  check(brief.includes('网站提示词（核心需求）'), 'brief has website prompt section');
+  check(brief.includes('面向中小企业的 SaaS 官网'), 'brief contains website prompt text');
+  check(brief.includes('需求.docx') && brief.includes('说明.pdf'), 'brief lists uploaded doc files');
+  // 4) 注释安全化：不应含提前结束的 -->
+  check(!/-->/.test(fp['index.html'].split('<!-- 光体平台')[1].split('-->')[0]) || fp['index.html'].indexOf('<!-- 光体平台')===fp['index.html'].lastIndexOf('<!-- 光体平台'), 'requirement comment does not contain premature -->');
+} catch(e) {
+  check(false, `prompt/doc flow THROW: ${e.message}`);
 }
 
 console.log(`\n=== RESULT ===`);
