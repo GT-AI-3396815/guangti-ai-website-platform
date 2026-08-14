@@ -22,6 +22,7 @@
   .top-in{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .brandmark{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px;letter-spacing:.5px}
   .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#22d3ee);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:900;box-shadow:var(--shadow)}
+  .ver{font-size:11px;font-weight:800;letter-spacing:.5px;color:#6366f1;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);padding:2px 8px;border-radius:999px;vertical-align:middle}
   .nav{display:flex;gap:6px;flex-wrap:wrap}
   .nav a{padding:7px 13px;border-radius:9px;color:var(--muted);font-size:14px;font-weight:600}
   .nav a:hover{background:var(--line2);color:var(--ink);text-decoration:none}
@@ -172,7 +173,7 @@
 <body>
 <header class="top">
   <div class="top-in">
-    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台</div>
+    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台 <span class="ver" id="verBadge">v3.2</span></div>
     <nav class="nav" id="nav">
       <a href="#brand" class="active">品牌库</a>
       <a href="#types">类型库</a>
@@ -7964,13 +7965,18 @@ function readDoc(e){
   const name=f.name.toLowerCase();
   const readout=el('docReadout');
   const setOut=(t)=>{ if(readout) readout.textContent=t; };
+  // 合并写入：以「补充说明」输入框当前内容为基础（保留用户手打文本），再追加本次文档内容，避免上传覆盖手打
+  const mergeDoc=(label,txt)=>{
+    const base=(el('docsInput')&&el('docsInput').value)?el('docsInput').value:(state.docs||'');
+    state.docs = base ? base+"\n"+label+"\n"+(txt||'') : label+(txt?("\n"+txt):'');
+    if(el('docsInput')) el('docsInput').value=state.docs;
+  };
   if(/\.(txt|md|markdown|json|text|csv)$/.test(name)){
     const r=new FileReader();
     r.onload=()=>{
       const txt=String(r.result||'');
-      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+txt;
+      mergeDoc('【参考文档 '+f.name+'】', txt);
       state.files.push({name:f.name,size:f.size,type:f.type||'text/plain',kind:'text',text:txt});
-      if(el('docsInput')) el('docsInput').value=state.docs;
       renderDocFiles(); setOut('已读取：'+f.name+'（'+txt.length+' 字符）');
     };
     r.readAsText(f);
@@ -7979,9 +7985,8 @@ function readDoc(e){
   if(/\.docx$/.test(name)){
     setOut('正在解析 Word 文档 '+f.name+' …');
     parseDocx(f).then(txt=>{
-      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+txt;
+      mergeDoc('【参考文档 '+f.name+'】', txt);
       state.files.push({name:f.name,size:f.size,type:f.type||'application/vnd.openxmlformats-officedocument.wordprocessingml.document',kind:'docx',text:txt});
-      if(el('docsInput')) el('docsInput').value=state.docs;
       renderDocFiles(); setOut('已解析 Word：'+f.name+'（'+txt.length+' 字符）');
     }).catch(err=>{
       state.files.push({name:f.name,size:f.size,type:f.type||'',kind:'docx',text:''});
@@ -7992,9 +7997,8 @@ function readDoc(e){
   if(/\.pdf$/.test(name)){
     setOut('正在解析 PDF 文档 '+f.name+' …（首次解析会按需加载解析库）');
     parsePdf(f).then(txt=>{
-      state.docs=(state.docs?state.docs+"\n":"")+"【参考文档 "+f.name+"】\n"+txt;
+      mergeDoc('【参考文档 '+f.name+'】', txt);
       state.files.push({name:f.name,size:f.size,type:f.type||'application/pdf',kind:'pdf',text:txt});
-      if(el('docsInput')) el('docsInput').value=state.docs;
       renderDocFiles(); setOut('已解析 PDF：'+f.name+'（'+txt.length+' 字符）');
     }).catch(err=>{
       state.files.push({name:f.name,size:f.size,type:f.type||'application/pdf',kind:'pdf',text:''});
@@ -8004,8 +8008,7 @@ function readDoc(e){
   }
   // .doc 等二进制：仅记录元数据
   state.files.push({name:f.name,size:f.size,type:f.type||'',kind:'bin',text:''});
-  state.docs=(state.docs?state.docs+"\n":"")+"【已附加文件："+f.name+"】（二进制，交付时随附，由实施端解析）";
-  if(el('docsInput')) el('docsInput').value=state.docs;
+  mergeDoc('【已附加文件：'+f.name+'】（二进制，交付时随附，由实施端解析）', '');
   renderDocFiles(); setOut('已附加：'+f.name+'（'+Math.round(f.size/1024)+' KB）');
 }
 
@@ -8100,8 +8103,13 @@ async function parsePdf(file){
   return txt;
 }
 function wizGoto(i){currentStep=i;if(i===2){/* notes persist via input on blur */}renderStepper();renderStepBody();el('wizard').scrollIntoView({behavior:'smooth'});}
-function wizNext(){if(currentStep<STEPS.length-1){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4){if(el('promptInput'))state.prompt=el('promptInput').value;if(el('docsInput'))state.docs=el('docsInput').value;}wizGoto(currentStep+1);}}
-function wizPrev(){if(currentStep>0){if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;if(currentStep===4){if(el('promptInput'))state.prompt=el('promptInput').value;if(el('docsInput'))state.docs=el('docsInput').value;}wizGoto(currentStep-1);}}
+function persistStep(){
+  // 采集当前步骤表单到 state；最后一步没有"下一步"按钮，也必须在此兜底保存
+  if(currentStep===2&&el('notesInput'))state.notes=el('notesInput').value;
+  if(currentStep===4){ if(el('promptInput'))state.prompt=el('promptInput').value; if(el('docsInput'))state.docs=el('docsInput').value; }
+}
+function wizNext(){persistStep();if(currentStep<STEPS.length-1)wizGoto(currentStep+1);}
+function wizPrev(){persistStep();if(currentStep>0)wizGoto(currentStep-1);}
 
 /* ---------- summary ---------- */
 function renderSummary(){
@@ -8444,10 +8452,10 @@ function buildBackendDoc(){
   if(!sel.length)return '# 后端配置说明\n\n未选择后端模块，本项目为纯前端静态站点，无需服务端接口与数据库。\n';
   let md='# 后端配置说明文档\n\n> 由「光体 · AI 网站开发设计平台」根据所选模块自动生成。\n\n';
   sel.forEach(m=>{
-    md+=`## ${m.icon} ${m.name}\n\n${m.desc}\n\n### 接口清单\n\n`;
-    m.apis.forEach(a=>{md+=`- \`${a.method} ${a.path}\` — ${a.desc}\n`;});
+    md+=`## ${m.icon||'•'} ${m.name}\n\n${m.desc||''}\n\n### 接口清单\n\n`;
+    (m.apis||[]).forEach(a=>{md+=`- \`${a.method} ${a.path}\` — ${a.desc}\n`;});
     md+='\n### 数据表结构\n\n';
-    m.tables.forEach(t=>{md+=`- **${t.name}** ( ${t.fields} )\n`;});
+    (m.tables||[]).forEach(t=>{md+=`- **${t.name}** ( ${t.fields} )\n`;});
     md+='\n';
   });
   return md;
@@ -8550,6 +8558,9 @@ function generate(){
   const b=BRANDS.find(x=>x.id===state.brand);
   const t=TYPES.find(x=>x.id===state.type);
   if(!b||!t){alert('请先在引导流程中完成「品牌」与「网站类型」的选择。');el('summary').scrollIntoView();return;}
+  // 兜底采集：向导最后一步没有"下一步"按钮，需在此把最新填写的需求/文档写入 state，保证生成站点与快照都包含提示词
+  if(el('promptInput')) state.prompt=el('promptInput').value||'';
+  if(el('docsInput')) state.docs=el('docsInput').value||'';
   const prog=el('progress');prog.style.display='block';el('outputs').style.display='none';
   const logs=[
     '① 加载品牌视觉规范（配色 / 字体 / 基调）…',
@@ -8570,6 +8581,7 @@ function generate(){
       el('pfill').style.width=((i+1)/logs.length*100)+'%';
       i++;setTimeout(tick,480);
     }else{
+     try{
       const gen=genSite(b,t);
       const site=gen.inline;
       const doc=buildBackendDoc();
@@ -8609,6 +8621,14 @@ function generate(){
       el('btnCopyBrief').onclick=()=>copyText(brief, el('syncHint'));
       el('btnSaveLocal').onclick=()=>{saveProject(snapshot);renderHistory();if(el('syncHint'))el('syncHint').textContent='✅ 已保存到本地历史';};
       el('summary').scrollIntoView({behavior:'smooth'});
+     }catch(err){
+       // 兜底：任何生成期异常都给出可见提示，而不是留下空白
+       el('progress').style.display='none';
+       el('outputs').style.display='grid';
+       if(el('plog')) el('plog').innerHTML='<div style="color:#c0392b;padding:12px 14px;background:#fff3f3;border-radius:10px">⚠️ 生成失败：'+esc(err&&err.message?err.message:String(err))+'。请确认已选择品牌与类型，或刷新页面重试。</div>';
+       if(el('sitePreview')) el('sitePreview').srcdoc='<div style="padding:24px;color:#c0392b;font-family:sans-serif">生成出错，请检查选择后重试。</div>';
+       console.error('generate error:',err);
+     }
     }
   };
   tick();
