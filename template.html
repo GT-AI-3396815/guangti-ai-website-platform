@@ -173,7 +173,7 @@
 <body>
 <header class="top">
   <div class="top-in">
-    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台 <span class="ver" id="verBadge">v3.2</span></div>
+    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台 <span class="ver" id="verBadge">v3.3</span></div>
     <nav class="nav" id="nav">
       <a href="#brand" class="active">品牌库</a>
       <a href="#types">类型库</a>
@@ -238,10 +238,12 @@
       <div class="plog" id="plog"></div>
     </div>
     <button class="btn primary" id="genBtn" onclick="generate()">⚡ 一键生成网站与后端文档</button>
+    <div id="genStatus" style="display:none;margin:12px 0;padding:14px 18px;border-radius:10px;font-size:14px"></div>
     <div class="outputs" id="outputs">
       <div class="outcard">
         <h4>📄 生成的网站预览（基于所选品牌规范与类型结构）</h4>
         <iframe class="preview" id="sitePreview"></iframe>
+        <div id="siteInfo" style="margin-top:8px;font-size:13px;color:var(--muted)"></div>
         <a class="dl" id="dlSite" download="guangti-site.html">⬇ 下载网站 HTML（单文件）</a>
         <button class="dl btn-act" id="btnZip">📦 下载完整项目（多文件 .zip）</button>
       </div>
@@ -458,7 +460,18 @@ function renderStepBody(){
   el('stepBody').innerHTML=h;
   if(currentStep===4){ renderDocFiles(); }
   el('prevBtn').disabled = currentStep===0;
-  el('nextBtn').style.display = currentStep===STEPS.length-1?'none':'inline-block';
+  const nb=el('nextBtn');
+  if(currentStep===STEPS.length-1){
+    nb.style.display='inline-block';
+    nb.textContent='⚡ 生成网站';
+    nb.onclick=function(){ generate(); };
+    nb.className='btn primary';
+  }else{
+    nb.style.display='inline-block';
+    nb.textContent='下一步 →';
+    nb.onclick=function(){ wizNext(); };
+    nb.className='btn primary';
+  }
 }
 
 /* ---------- 已上传文档列表 ---------- */
@@ -1125,6 +1138,24 @@ function generate(){
       const brief=buildTaskBrief(snapshot);
       /* render outputs */
       el('sitePreview').srcdoc=site;
+      /* 生成成功提示：让用户明确知道已生成成功 */
+      const statusEl=el('genStatus');
+      if(statusEl){
+        statusEl.style.display='block';
+        statusEl.style.background='linear-gradient(135deg,#d1fae5,#a7f3d0)';
+        statusEl.style.color='#065f46';
+        statusEl.style.border='1px solid #34d399';
+        statusEl.innerHTML='<strong>✅ 网站生成成功！</strong>'+esc(t.name)+' · '+esc(b.title)+' — 共 '+site.length+' 字符（'+Math.round(site.length/1024)+' KB）· 包含 '+((t.structure||[]).length)+' 个板块';
+      }
+      const infoEl=el('siteInfo');
+      if(infoEl){
+        const hasPrompt=state.prompt&&state.prompt.trim().length>0;
+        const hasDocs=(state.files||[]).length>0;
+        let info='📄 已生成完整 HTML（可下载或上方预览查看）';
+        if(hasPrompt) info+=' · 提示词已纳入（'+state.prompt.trim().slice(0,40)+'…）';
+        if(hasDocs) info+=' · 文档 ×'+(state.files||[]).length;
+        infoEl.textContent=info;
+      }
       el('backendDoc').textContent=doc;
       /* show snapshot card */
       const snapCard=el('snapCard');
@@ -1141,10 +1172,23 @@ function generate(){
       el('summary').scrollIntoView({behavior:'smooth'});
      }catch(err){
        // 兜底：任何生成期异常都给出可见提示，而不是留下空白
-       el('progress').style.display='none';
+       el('progress').style.display='block';
+       const statusEl=el('genStatus');
+       if(statusEl){
+         statusEl.style.display='block';
+         statusEl.style.background='#fef2f2';
+         statusEl.style.color='#991b1b';
+         statusEl.style.border='1px solid #f87171';
+         statusEl.innerHTML='<strong>⚠️ 生成失败</strong>：'+esc(err&&err.message?err.message:String(err))+' — 请确认已选择品牌与类型，或刷新页面重试。';
+       }
        el('outputs').style.display='grid';
-       if(el('plog')) el('plog').innerHTML='<div style="color:#c0392b;padding:12px 14px;background:#fff3f3;border-radius:10px">⚠️ 生成失败：'+esc(err&&err.message?err.message:String(err))+'。请确认已选择品牌与类型，或刷新页面重试。</div>';
-       if(el('sitePreview')) el('sitePreview').srcdoc='<div style="padding:24px;color:#c0392b;font-family:sans-serif">生成出错，请检查选择后重试。</div>';
+       if(el('plog')) {
+         const d=document.createElement('div');
+         d.style.color='#c0392b';d.style.padding='8px 12px';d.style.background='#fff3f3';d.style.borderRadius='8px';
+         d.textContent='✗ '+esc(err&&err.message?err.message:String(err));
+         el('plog').appendChild(d);
+       }
+       if(el('sitePreview')) el('sitePreview').srcdoc='<div style="padding:24px;color:#c0392b;font-family:sans-serif;text-align:center">生成出错<br><small>'+esc(err&&err.message?err.message:String(err))+'</small><br><br><button onclick="parent.generate()">重试</button></div>';
        console.error('generate error:',err);
      }
     }
