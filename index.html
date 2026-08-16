@@ -173,7 +173,7 @@
 <body>
 <header class="top">
   <div class="top-in">
-    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台 <span class="ver" id="verBadge">v3.4</span></div>
+    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台 <span class="ver" id="verBadge">v3.5</span></div>
     <nav class="nav" id="nav">
       <a href="#brand" class="active">品牌库</a>
       <a href="#types">类型库</a>
@@ -220,7 +220,7 @@
 
   <!-- 引导流程 -->
   <section id="wizard">
-    <div class="sec-head"><h2>分步引导流程</h2><span class="sub">品牌 → 类型 → 风格规范 → 后端模块 → 需求与文档（任一步可回退修改）</span></div>
+    <div class="sec-head"><h2>分步引导流程</h2><span class="sub">品牌 → 类型 → 风格规范 → 后端模块 → 需求与文档（可任意顺序选择 / 回退修改；也可直接跳到「需求与文档」仅凭需求与文档生成，前面步骤均可跳过）</span></div>
     <div class="stepper" id="stepper"></div>
     <div class="stepbody" id="stepBody"></div>
     <div class="stepnav">
@@ -7763,6 +7763,28 @@ const BACKEND = [
 const state = { brand:null, type:null, prompt:"", notes:"", backend:[], docs:"", heroImage:null, files:[] };
 const STEPS = ["品牌","网站类型","风格规范","后端模块","需求与文档"];
 
+/* 默认设计语言：当用户跳过「品牌 / 类型」直接凭需求生成时使用，保证产出仍是高品质、非占位 */
+const DEFAULT_BRAND = {
+  id:'__default', title:'光体默认风格', industry:'通用', tone:'现代简约 / 科技感',
+  primary:'#5b6cff',
+  swatches:['#5b6cff','#0f172a','#ffffff','#f8fafc','#5b6cff'],
+  fonts:['Inter','系统默认无衬线'],
+  colorSystem:'靛蓝主色 · 中性灰底',
+  description:'光体平台内置的通用高品质设计语言：靛蓝主色、克制留白、清晰层级、现代无衬线，适用于绝大多数网站与应用的快速起步。'
+};
+function buildDefaultType(){
+  // 类型名优先用提示词首句提炼，否则用通用名；具体内容由上传文档/提示词驱动
+  var first=(state.prompt&&state.prompt.trim())?state.prompt.trim().split(/[。！？\n]/)[0].trim():'';
+  var name=(first&&first.length>=2&&first.length<=24)?first:'我的网站 / 应用';
+  return {
+    id:'__default', name:name, category:'通用',
+    prompt:(state.prompt&&state.prompt.trim())||'基于需求与上传文档开发的应用。',
+    modules:['核心功能','关于我们','服务展示','联系咨询'],
+    structure:['首页','关于我们','服务','联系'],
+    dataModel:[]
+  };
+}
+
 /* ---------- helpers ---------- */
 function el(id){return document.getElementById(id);}
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
@@ -7815,7 +7837,7 @@ function renderBrands(){
       </div></div>`;
   }).join('');
 }
-function pickBrand(id){state.brand=id;renderBrands();if(currentStep===0)wizGoto(1);}
+function pickBrand(id){state.brand=id;renderBrands();if(currentStep===0||currentStep===2)renderStepBody();}
 
 /* ---------- type library ---------- */
 let tf={q:"",cat:"",collapsed:new Set()};
@@ -7853,7 +7875,7 @@ function renderTypes(){
   }).join('');
 }
 function toggleType(id){if(tf.collapsed.has(id))tf.collapsed.delete(id);else tf.collapsed.add(id);renderTypes();}
-function useType(id){const t=TYPES.find(x=>x.id===id);state.type=id;renderTypes();if(currentStep===1)wizGoto(2);}
+function useType(id){const t=TYPES.find(x=>x.id===id);state.type=id;renderTypes();if(currentStep===1)renderStepBody();}
 
 /* ---------- backend ---------- */
 function renderBackend(){
@@ -7899,17 +7921,14 @@ function renderStepBody(){
          :`<div class="selbox">尚未选择。请在「类型库」中点击「选用此类型」。</div>`;
   }else if(currentStep===2){
     h=`<h3>③ 风格规范（自动提取所选品牌设计 token）</h3>`;
-    if(b){
-      const swb=(b.swatches&&b.swatches.length)?b.swatches:[(b.primary||'#667eea')];
-      const toks=swb.slice(0,8).map(c=>`<div class="tok"><span class="sw2" style="background:${c}"></span>${c}</div>`).join('');
-      h+=`<div class="selbox ok" style="text-align:left">
-        <div><b>品牌：</b>${esc(b.title)} ｜ <b>视觉基调：</b>${esc(b.tone)} ｜ <b>色系：</b>${esc(b.colorSystem)}</div>
-        <div style="margin-top:6px"><b>字体：</b>${(b.fonts||[]).join('、')||'系统默认'}</div>
-        <div style="margin-top:8px;font-size:13px;color:var(--muted)">${esc(b.description)}</div>
-        <div class="tokgrid">${toks}</div></div>`;
-    }else{
-      h+=`<div class="selbox">请先在第①步选择品牌，以自动注入配色与字体规范。</div>`;
-    }
+    const bb=b||DEFAULT_BRAND;
+    const swb=(bb.swatches&&bb.swatches.length)?bb.swatches:[(bb.primary||'#667eea')];
+    const toks=swb.slice(0,8).map(c=>`<div class="tok"><span class="sw2" style="background:${c}"></span>${c}</div>`).join('');
+    h+=`<div class="selbox ok" style="text-align:left">
+      <div><b>品牌：</b>${esc(bb.title)}${b?'':' <span style="color:var(--muted);font-size:12px">（未单独选择 · 使用光体默认设计语言，可在第①步更换）</span>'} ｜ <b>视觉基调：</b>${esc(bb.tone)} ｜ <b>色系：</b>${esc(bb.colorSystem||'-')}</div>
+      <div style="margin-top:6px"><b>字体：</b>${(bb.fonts||[]).join('、')||'系统默认'}</div>
+      <div style="margin-top:8px;font-size:13px;color:var(--muted)">${esc(bb.description||'')}</div>
+      <div class="tokgrid">${toks}</div></div>`;
     h+=`<label style="font-size:13px;color:var(--muted);display:block;margin-top:12px">补充风格要求（可选，将合并进设计规范）：</label>`;
     h+=`<textarea class="notes" id="notesInput" placeholder="例如：主色用品牌 indigo，圆角要小，留白多一点，按钮做成胶囊形…">${esc(state.notes)}</textarea>`;
   }else if(currentStep===3){
@@ -7937,6 +7956,7 @@ function renderStepBody(){
       <div id="docFiles" class="docfiles"></div>
       <div class="filein">🖼 上传主视觉图片（可选，用作生成网站 Hero 真实配图）：<input type="file" id="heroImgFile" accept="image/*" onchange="readHeroImg(event)" /></div>
       <div id="docReadout" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+      <div style="margin-top:12px;padding:10px 12px;background:var(--soft,#f8fafc);border-radius:10px;font-size:13px;color:var(--muted);line-height:1.6">💡 <b>前面步骤均可跳过</b>：即使未选品牌 / 类型 / 后端，只要填好本页需求与文档（或上传文档），点下方「⚡ 生成网站」即可直接开发。未选品牌时将自动套用「光体默认设计语言」，未选类型时依据需求自动推导。</div>
     </div>`;
   }
   el('stepBody').innerHTML=h;
@@ -8632,12 +8652,15 @@ function reloadHistory(i){
 }
 
 function generate(){
-  const b=BRANDS.find(x=>x.id===state.brand);
-  const t=TYPES.find(x=>x.id===state.type);
-  if(!b||!t){alert('请先在引导流程中完成「品牌」与「网站类型」的选择。');el('summary').scrollIntoView();return;}
   // 兜底采集：向导最后一步没有"下一步"按钮，需在此把最新填写的需求/文档写入 state，保证生成站点与快照都包含提示词
   if(el('promptInput')) state.prompt=el('promptInput').value||'';
   if(el('docsInput')) state.docs=el('docsInput').value||'';
+  let b=BRANDS.find(x=>x.id===state.brand);
+  let t=TYPES.find(x=>x.id===state.type);
+  // 引导流程所有步骤均可选：未选品牌/类型时，自动套用光体默认设计语言，仅凭需求与文档也能生成
+  const skipped=[];
+  if(!b){ b=DEFAULT_BRAND; skipped.push('品牌风格'); }
+  if(!t){ t=buildDefaultType(); skipped.push('网站类型'); }
   const prog=el('progress');prog.style.display='block';el('outputs').style.display='none';
   const logs=[
     '① 加载品牌视觉规范（配色 / 字体 / 基调）…',
@@ -8691,7 +8714,7 @@ function generate(){
         statusEl.style.background='linear-gradient(135deg,#d1fae5,#a7f3d0)';
         statusEl.style.color='#065f46';
         statusEl.style.border='1px solid #34d399';
-        statusEl.innerHTML='<strong>✅ 网站生成成功！</strong>'+esc(t.name)+' · '+esc(b.title)+' — 共 '+site.length+' 字符（'+Math.round(site.length/1024)+' KB）· 包含 '+((t.structure||[]).length)+' 个板块';
+        statusEl.innerHTML='<strong>✅ 网站生成成功！</strong>'+esc(t.name)+' · '+esc(b.title)+' — 共 '+site.length+' 字符（'+Math.round(site.length/1024)+' KB）· 包含 '+((t.structure||[]).length)+' 个板块'+(skipped.length?'<br><span style="font-weight:400;opacity:.85">（未选：'+esc(skipped.join('、'))+'，已自动套用光体默认设计语言）</span>':'');
       }
       const infoEl=el('siteInfo');
       if(infoEl){
@@ -8725,7 +8748,7 @@ function generate(){
          statusEl.style.background='#fef2f2';
          statusEl.style.color='#991b1b';
          statusEl.style.border='1px solid #f87171';
-         statusEl.innerHTML='<strong>⚠️ 生成失败</strong>：'+esc(err&&err.message?err.message:String(err))+' — 请确认已选择品牌与类型，或刷新页面重试。';
+         statusEl.innerHTML='<strong>⚠️ 生成失败</strong>：'+esc(err&&err.message?err.message:String(err))+' — 可尝试刷新页面重试，或直接跳到「需求与文档」仅凭需求生成。';
        }
        el('outputs').style.display='grid';
        if(el('plog')) {
