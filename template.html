@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>光体 · AI 网站开发设计平台</title>
+<title>光体•网站开发设计平台</title>
 <style>
   :root{
     --bg:#f6f7f9; --panel:#ffffff; --ink:#1b1d29; --muted:#6b7080;
@@ -155,7 +155,7 @@
   .plog{font-size:13px;color:var(--muted);margin-top:10px;font-family:ui-monospace,monospace}
   .plog div{opacity:0;transform:translateY(4px);transition:.3s}
   .plog div.show{opacity:1;transform:none}
-  .outputs{display:none;margin-top:16px;display:grid;gap:14px}
+  .outputs{display:none;margin-top:16px;gap:14px}
   .outcard{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px}
   .outcard h4{margin:0 0 8px;font-size:15px}
   .dl{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:8px 14px;border-radius:9px;background:var(--accent);color:#fff;margin-right:8px;margin-top:6px}
@@ -173,7 +173,7 @@
 <body>
 <header class="top">
   <div class="top-in">
-    <div class="brandmark"><div class="logo">光</div> 光体 · AI 网站开发设计平台 <span class="ver" id="verBadge">v3.5</span></div>
+    <div class="brandmark"><div class="logo">光</div> 光体•网站开发设计平台 <span class="ver" id="verBadge">v3.6</span></div>
     <nav class="nav" id="nav">
       <a href="#brand" class="active">品牌库</a>
       <a href="#types">类型库</a>
@@ -272,7 +272,7 @@
   </section>
 </main>
 
-<footer>光体 · AI 网站开发设计平台</footer>
+<footer>光体•网站开发设计平台</footer>
 
 <script>
 const BRANDS = __BRANDS__;
@@ -355,7 +355,7 @@ function renderBrands(){
       </div></div>`;
   }).join('');
 }
-function pickBrand(id){state.brand=id;renderBrands();if(currentStep===0||currentStep===2)renderStepBody();}
+function pickBrand(id){state.brand=id;renderBrands();if(currentStep===0||currentStep===2){persistStep();renderStepBody();}}
 
 /* ---------- type library ---------- */
 let tf={q:"",cat:"",collapsed:new Set()};
@@ -393,7 +393,7 @@ function renderTypes(){
   }).join('');
 }
 function toggleType(id){if(tf.collapsed.has(id))tf.collapsed.delete(id);else tf.collapsed.add(id);renderTypes();}
-function useType(id){const t=TYPES.find(x=>x.id===id);state.type=id;renderTypes();if(currentStep===1)renderStepBody();}
+function useType(id){const t=TYPES.find(x=>x.id===id);state.type=id;renderTypes();if(currentStep===1){persistStep();renderStepBody();}}
 
 /* ---------- backend ---------- */
 function renderBackend(){
@@ -816,7 +816,7 @@ function genSite(brand,type){
     return {label:String(label),desc:String(desc)};
   });
   var structs=(type.structure&&type.structure.length)?type.structure:['首页','关于我们','服务展示','联系我们'];
-  var dmFields=(type.dataModel&&type.dataModel.length)?type.dataModel.map(function(d){return typeof d==='string'?d:((d&&(d.name||d.field))||'');}).filter(Boolean):[];
+  var dmFields=(type.dataModel&&type.dataModel.length)?type.dataModel.map(function(d){return typeof d==='string'?d:((d&&(d.table||d.name))||'');}).filter(Boolean):[];
   var promptHead=(type.prompt||'').split('\n')[0]||type.name;
   var heroH1=type.name;
   var heroSub=promptHead.length>200?promptHead.slice(0,200)+'…':promptHead;
@@ -844,7 +844,11 @@ function genSite(brand,type){
     var label=(typeof s==='string')?s:((s&&(s.name||s))||'');
     return '<div class="g-step"><div class="g-snum">'+(i+1)+'</div><div><b>'+esc(label)+'</b><p>按 '+esc(brand.title)+' 设计规范构建此板块的布局、交互与视觉细节。</p></div></div>';
   }).join('');
-  var dmHtml=dmFields.length?'<section class="g-sec g-alt" id="data"><div class="g-wrap"><h2 class="g-h2">数据模型</h2><p class="g-lead">基于业务需求定义的数据结构，支撑 '+esc(type.name)+' 的完整信息流转。</p><div class="g-dm">'+dmFields.map(function(f){return '<div class="g-dm-row"><code>'+esc(f)+'</code><span>字段</span></div>';}).join('')+'</div></div></section>':'';
+  var dmHtml=dmFields.length?'<section class="g-sec g-alt" id="data"><div class="g-wrap"><h2 class="g-h2">数据模型</h2><p class="g-lead">基于业务需求定义的数据结构，支撑 '+esc(type.name)+' 的完整信息流转。</p><div class="g-dm">'+dmFields.map(function(f){
+    var nm=(typeof f==='string')?f:(f.table||f.name||'');
+    var fl=(typeof f==='string')?'':(f.fields||'');
+    return '<div class="g-dm-row"><code>'+esc(nm)+'</code><span>'+(fl?esc(fl):'字段')+'</span></div>';
+  }).join('')+'</div></div></section>':'';
   var showSeeds=['a','b','c'];
   var showHtml='<section class="g-sec" id="showcase"><div class="g-wrap"><h2 class="g-h2">作品展示</h2><p class="g-lead">基于 '+esc(brand.title)+' 视觉语言呈现的真实场景示例。</p><div class="g-show">'+showSeeds.map(function(s,i){
     var m=modItems[i]||{label:''};
@@ -993,10 +997,10 @@ function genSite(brand,type){
     .replace('<script src="assets/js/site.js"><\/script>','<script>'+JS+'<\/script>');
 
   /* README */
-  var readme='# '+type.name+' · '+brand.title+'\n\n由「光体 · AI 网站开发设计平台」生成（多文件组件化输出）。\n\n## 文件结构\n- index.html — 页面结构（语义化 nav/main/section/footer，顶部内嵌项目需求注释）\n- assets/css/style.css — 设计系统与组件样式（注入品牌 token）\n- assets/js/site.js — 交互（主题切换 / 移动菜单 / 滚动入场）\n- requirements.md — 本项目需求与上传的开发文档（提示词 / 补充说明 / 解析正文）\n- 图片：通过真实图床 URL 引用（如需自托管，将图片保存到 assets/img/ 并改路径）\n\n## 设计规范\n- 美学方向：'+spec.aesthetic+'\n- 主色：'+P+'\n- 配色板：'+sw.join(' / ')+'\n- 字体：'+((brand.fonts||[]).join('、')||'系统默认')+'\n- 品牌基调：'+brand.tone+'\n\n## 自定义\n编辑 assets/css/style.css 中的 :root 变量即可全局换肤；编辑 index.html 调整板块文案。\n';
+  var readme='# '+type.name+' · '+brand.title+'\n\n由「光体•网站开发设计平台」生成（多文件组件化输出）。\n\n## 文件结构\n- index.html — 页面结构（语义化 nav/main/section/footer，顶部内嵌项目需求注释）\n- assets/css/style.css — 设计系统与组件样式（注入品牌 token）\n- assets/js/site.js — 交互（主题切换 / 移动菜单 / 滚动入场）\n- requirements.md — 本项目需求与上传的开发文档（提示词 / 补充说明 / 解析正文）\n- 图片：通过真实图床 URL 引用（如需自托管，将图片保存到 assets/img/ 并改路径）\n\n## 设计规范\n- 美学方向：'+spec.aesthetic+'\n- 主色：'+P+'\n- 配色板：'+sw.join(' / ')+'\n- 字体：'+((brand.fonts||[]).join('、')||'系统默认')+'\n- 品牌基调：'+brand.tone+'\n\n## 自定义\n编辑 assets/css/style.css 中的 :root 变量即可全局换肤；编辑 index.html 调整板块文案。\n';
 
   /* 需求文档 */
-  var reqMd='# 项目需求与开发文档 · '+type.name+' · '+brand.title+'\n\n> 由「光体 · AI 网站开发设计平台」导出。\n\n';
+  var reqMd='# 项目需求与开发文档 · '+type.name+' · '+brand.title+'\n\n> 由「光体•网站开发设计平台」导出。\n\n';
   if(typeof state!=='undefined'&&state.prompt){ reqMd+='## 网站提示词\n\n'+state.prompt+'\n\n'; }
   if(typeof state!=='undefined'&&state.notes){ reqMd+='## 风格补充\n\n'+state.notes+'\n\n'; }
   if(typeof state!=='undefined'&&state.docs){ reqMd+='## 补充说明 / 项目背景\n\n'+state.docs+'\n\n'; }
@@ -1004,7 +1008,7 @@ function genSite(brand,type){
     reqMd+='## 上传的开发文档（'+state.files.length+' 个）\n\n';
     state.files.forEach(function(f){ reqMd+='### '+f.name+'（'+(f.kind==='text'?'已读入':(f.text?'已解析':'已附加'))+' · '+Math.round(f.size/1024)+' KB）\n\n'+(f.text?f.text:'（二进制文件，正文需在实施端解析）')+'\n\n'; });
   }
-  if(reqMd=== '> 由「光体 · AI 网站开发设计平台」导出。\n\n') reqMd+='（本次未填写提示词或上传文档。）\n';
+  if(reqMd=== '> 由「光体•网站开发设计平台」导出。\n\n') reqMd+='（本次未填写提示词或上传文档。）\n';
 
   var files={'index.html':htmlExternal,'assets/css/style.css':CSS,'assets/js/site.js':JS,'requirements.md':reqMd,'README.md':readme};
   return {inline:inline, files:files};
@@ -1065,7 +1069,7 @@ function downloadProject(name, files){
 function buildBackendDoc(){
   const sel=BACKEND.filter(m=>state.backend.includes(m.id));
   if(!sel.length)return '# 后端配置说明\n\n未选择后端模块，本项目为纯前端静态站点，无需服务端接口与数据库。\n';
-  let md='# 后端配置说明文档\n\n> 由「光体 · AI 网站开发设计平台」根据所选模块自动生成。\n\n';
+  let md='# 后端配置说明文档\n\n> 由「光体•网站开发设计平台」根据所选模块自动生成。\n\n';
   sel.forEach(m=>{
     md+=`## ${m.icon||'•'} ${m.name}\n\n${m.desc||''}\n\n### 接口清单\n\n`;
     (m.apis||[]).forEach(a=>{md+=`- \`${a.method} ${a.path}\` — ${a.desc}\n`;});
@@ -1091,7 +1095,7 @@ function buildTaskBrief(s){
   const files=(s.files&&s.files.length)?s.files.map(f=>'- '+f.name+'（'+(f.kind==='text'?'已读入':(f.text?'已解析 '+f.text.length+' 字':'已附加'))+'）').join('\n'):'（无）';
   return `# 光体网站项目 · 任务简报
 
-> 由「光体 · AI 网站开发设计平台」生成。把本简报粘贴到 WorkBuddy 对话并发送，即可新建一个可追溯的任务卡，方便后期修改优化。
+> 由「光体•网站开发设计平台」生成。把本简报粘贴到 WorkBuddy 对话并发送，即可新建一个可追溯的任务卡，方便后期修改优化。
 
 - **项目名称**：${p.name||'未命名'}
 - **品牌风格**：${br.title||''}（主色 ${br.primary||''} · 字体 ${fo||''} · 基调 ${br.tone||''}）
@@ -1205,7 +1209,7 @@ function generate(){
       const doc=buildBackendDoc();
       /* ── Project Snapshot for WorkBuddy sync ── */
       const selBack=BACKEND.filter(m=>state.backend.includes(m.id));
-      const notes=(el('devNotes')?el('devNotes').value:'')||state.notes||'';
+      const notes=state.notes||'';
       const prompt=(el('promptInput')?el('promptInput').value:'')||state.prompt||'';
       const docs=(el('docsInput')?el('docsInput').value:'')||state.docs||'';
       const snapshot={

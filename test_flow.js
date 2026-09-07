@@ -88,17 +88,20 @@ try{
   assert('category filter SaaS works', tsc.length>0 && tsc.every(t=>t.category==='SaaS'), 'n='+tsc.length);
   tf.cat=''; A.renderTypes();
 
-  console.log('--- WIZARD: pick brand -> auto step1 ---');
+  console.log('--- WIZARD: pick brand (自由导航，不自动跳步) ---');
   const typeId=A.TYPES[0].id;
   A.pickBrand('stripe');
   assert('state.brand set', A.getState().brand==='stripe');
-  assert('auto advanced to step1', A.getStep()===1, 'step='+A.getStep());
+  assert('停留在 step0（自由导航，不自动跳步）', A.getStep()===0, 'step='+A.getStep());
+  const stripeTitle = A.BRANDS.find(b=>b.id==='stripe').title;
+  assert('step0 正文显示已选品牌', store['stepBody'].innerHTML.includes('已选') && store['stepBody'].innerHTML.includes(stripeTitle), 'title='+stripeTitle);
+  A.wizGoto(1);
   assert('step1 body prompts type selection', store['stepBody'].innerHTML.includes('② 选择网站类型'));
 
-  console.log('--- WIZARD: pick type -> auto step2 ---');
+  console.log('--- WIZARD: pick type (自由导航，不自动跳步) ---');
   A.useType(typeId);
   assert('state.type set', A.getState().type===typeId);
-  assert('auto advanced to step2', A.getStep()===2, 'step='+A.getStep());
+  assert('停留在 step1（自由导航，不自动跳步）', A.getStep()===1, 'step='+A.getStep());
   // regression: step1 must render with selected numeric type id (was crashing on esc(t.id))
   A.wizGoto(1);
   assert('step1 renders selected type id without crash', store['stepBody'].innerHTML.includes(String(typeId)), 'step='+A.getStep());
@@ -133,11 +136,13 @@ try{
   assert('dlSite href is data url', (store['dlSite'].href||'').startsWith('data:text/html'));
   assert('dlDoc href is data url', (store['dlDoc'].href||'').startsWith('data:text/markdown'));
 
-  console.log('--- GENERATE (guard: no selection) ---');
+  console.log('--- GENERATE (无选择 -> 自动套默认值，不再拦截) ---');
   // reset selection
   A.getState().brand=null; A.getState().type=null;
+  const alertBefore=alertMsg;
   A.generate();
-  assert('guard triggered alert', !!alertMsg, 'msg='+alertMsg);
+  assert('无 alert（改为自动套用默认设计语言，不再硬拦截）', alertMsg===alertBefore, 'msg='+alertMsg);
+  assert('默认生成仍产出有效站点', store['sitePreview'].srcdoc && store['sitePreview'].srcdoc.includes('<!DOCTYPE html>'), 'len='+(store['sitePreview'].srcdoc||'').length);
 
   console.log('--- WIZARD prev navigation ---');
   A.pickBrand('stripe'); A.useType(typeId); A.wizGoto(3);
