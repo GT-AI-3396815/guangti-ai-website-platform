@@ -39,12 +39,13 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   add('④ 渲染出表名 page', site.includes('>page<') || site.includes('page'));
   add('⑤ 渲染出表名 case', site.includes('case'));
   add('⑥ 渲染出字段定义文本', site.includes('页面内容区块') || site.includes('案例'));
-  add('⑦ 统计区数据字段为数字(非 -)', /<b>\d+<\/b><span>数据字段<\/span>/.test(site));
+  add('⑦ 统计区数据表为数字(非 -)', /<b>\d+<\/b><span>数据表<\/span>/.test(site));
+  add('⑧ 数据模型渲染字段级类型建议', site.includes('VARCHAR') || site.includes('DATETIME') || site.includes('TEXT') || site.includes('INT'));
 
   // 反例：默认类型（无 dataModel）不应出现 #data
   const dType = { id:'__default', name:'测试', category:'通用', prompt:'x', modules:['a'], structure:['首页'], dataModel:[] };
   const genDef = window.genSite(DEFAULT_BRAND, dType);
-  add('⑧ 默认类型(无 dataModel)不渲染 #data', !genDef.inline.includes('id="data"'));
+  add('⑨ 默认类型(无 dataModel)不渲染 #data', !genDef.inline.includes('id="data"'));
 
   let pass = 0;
   checks.forEach(c => { console.log((c.ok ? 'PASS' : 'FAIL') + ' — ' + c.name); if (c.ok) pass++; });

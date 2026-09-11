@@ -160,8 +160,13 @@ try {
   check(fp['assets/css/style.css'].includes('--p:'), 'css contains injected brand token');
   check(fp['assets/js/site.js'].includes('toggleTheme'), 'js contains theme toggle');
   check(fp['README.md'].includes('文件结构'), 'readme documents file structure');
-  check(idx.includes('picsum.photos'), 'generated site uses real image URL (picsum)');
-  check(idx.includes('data:image/svg+xml'), 'generated site has brand-art fallback');
+  check(!idx.includes('picsum.photos'), 'generated site has no external random-image dependency (offline-capable)');
+  check(idx.includes('data:image/svg+xml'), 'generated site uses brand-art SVG visuals');
+  check(idx.includes('id="contact"') && idx.includes('href="#contact"'), 'generated site has contact section + nav/CTA anchor');
+  check(idx.includes('rel="icon"'), 'generated site has favicon');
+  check(idx.includes('og:title') && idx.includes('application/ld+json'), 'generated site has OG tags + JSON-LD');
+  check(idx.includes('<form class="g-cform"'), 'generated site has contact form');
+  check(idx.includes('CONTACT_EMAIL'), 'site.js exposes CONTACT_EMAIL config');
   check(idx.includes('<svg') && !idx.includes('✦'), 'features use SVG icons, no emoji icons');
   check(idx.includes('g-mobile') && idx.includes('toggleMenu'), 'nav has mobile menu + theme toggle (frontend-design)');
   // 抽样 50 组合确保 buildProject 不抛错且含真实内容
@@ -201,7 +206,17 @@ try {
   check(leak===0, 'product: no undefined/NaN/[object] leak in sampled sites, got '+leak);
   check(anchorMiss===0, 'product: every nav anchor has matching section id (no dead nav), got '+anchorMiss);
   check(imgOk===imgTot && imgTot>0, 'product: every <img> has onerror fallback ('+imgOk+'/'+imgTot+')');
-  check(encOk===encTot && encTot>0, 'product: every picsum seed URL is percent-encoded ('+encOk+'/'+encTot+')');
+  // 品牌艺术图为 data URI（encodeURIComponent 编码，含 %XX），且不存在外链图片
+  let artTot=0, artOk=0, extImg=0;
+  combos.forEach(([bi,ti])=>{
+    const s=ctx.buildSite(BRANDS[bi],TYPES[ti]);
+    const arts=[...s.matchAll(/data:image\/svg\+xml,([A-Za-z0-9\-._~!$&'()*+,;=:@/%]+)/g)];
+    artTot+=arts.length;
+    arts.forEach(p=>{ if(/%[0-9A-Fa-f]{2}/.test(p[1])) artOk++; });
+    extImg+=([...s.matchAll(/<img[^>]*src="(https?:)?\/\//g)].length);
+  });
+  check(artOk===artTot && artTot>0, 'product: every brand-art data URI is percent-encoded ('+artOk+'/'+artTot+')');
+  check(extImg===0, 'product: no external <img> hosts (fully offline), got '+extImg);
 } catch(e) {
   check(false, `product check THROW: ${e.message}`);
 }
